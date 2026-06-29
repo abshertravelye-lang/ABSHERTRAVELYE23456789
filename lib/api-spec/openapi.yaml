@@ -3,20 +3,34 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Absher Travel & Tourism API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: offers
+    description: Travel offers
+  - name: destinations
+    description: Tourist destinations
+  - name: bookings
+    description: Booking management
+  - name: visas
+    description: Visa information
+  - name: programs
+    description: Tourist programs
+  - name: contact
+    description: Contact messages
+  - name: dashboard
+    description: Admin dashboard stats
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +38,521 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /offers:
+    get:
+      operationId: listOffers
+      tags: [offers]
+      summary: List all offers
+      parameters:
+        - name: featured
+          in: query
+          schema:
+            type: boolean
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of offers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Offer"
+    post:
+      operationId: createOffer
+      tags: [offers]
+      summary: Create an offer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OfferInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Offer"
+
+  /offers/{id}:
+    get:
+      operationId: getOffer
+      tags: [offers]
+      summary: Get an offer
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Offer details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Offer"
+    patch:
+      operationId: updateOffer
+      tags: [offers]
+      summary: Update an offer
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OfferUpdate"
+      responses:
+        "200":
+          description: Updated offer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Offer"
+    delete:
+      operationId: deleteOffer
+      tags: [offers]
+      summary: Delete an offer
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /destinations:
+    get:
+      operationId: listDestinations
+      tags: [destinations]
+      summary: List all destinations
+      responses:
+        "200":
+          description: List of destinations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Destination"
+    post:
+      operationId: createDestination
+      tags: [destinations]
+      summary: Create a destination
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DestinationInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Destination"
+
+  /destinations/{id}:
+    get:
+      operationId: getDestination
+      tags: [destinations]
+      summary: Get a destination
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Destination details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Destination"
+    patch:
+      operationId: updateDestination
+      tags: [destinations]
+      summary: Update a destination
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DestinationUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Destination"
+    delete:
+      operationId: deleteDestination
+      tags: [destinations]
+      summary: Delete a destination
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /programs:
+    get:
+      operationId: listPrograms
+      tags: [programs]
+      summary: List tourist programs
+      parameters:
+        - name: featured
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: List of programs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Program"
+    post:
+      operationId: createProgram
+      tags: [programs]
+      summary: Create a program
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProgramInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Program"
+
+  /programs/{id}:
+    get:
+      operationId: getProgram
+      tags: [programs]
+      summary: Get a program
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Program details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Program"
+    patch:
+      operationId: updateProgram
+      tags: [programs]
+      summary: Update a program
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProgramUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Program"
+    delete:
+      operationId: deleteProgram
+      tags: [programs]
+      summary: Delete a program
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /visas:
+    get:
+      operationId: listVisas
+      tags: [visas]
+      summary: List visa information by country
+      responses:
+        "200":
+          description: List of visa entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Visa"
+    post:
+      operationId: createVisa
+      tags: [visas]
+      summary: Create visa entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VisaInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Visa"
+
+  /visas/{id}:
+    get:
+      operationId: getVisa
+      tags: [visas]
+      summary: Get visa details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Visa details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Visa"
+    patch:
+      operationId: updateVisa
+      tags: [visas]
+      summary: Update visa entry
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VisaUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Visa"
+    delete:
+      operationId: deleteVisa
+      tags: [visas]
+      summary: Delete visa entry
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /bookings:
+    get:
+      operationId: listBookings
+      tags: [bookings]
+      summary: List all bookings
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [flight, hotel, program, visa]
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, confirmed, cancelled]
+      responses:
+        "200":
+          description: List of bookings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Booking"
+    post:
+      operationId: createBooking
+      tags: [bookings]
+      summary: Create a booking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookingInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+
+  /bookings/{id}:
+    get:
+      operationId: getBooking
+      tags: [bookings]
+      summary: Get a booking
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Booking details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+    patch:
+      operationId: updateBooking
+      tags: [bookings]
+      summary: Update booking status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookingUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+
+  /contact:
+    post:
+      operationId: submitContact
+      tags: [contact]
+      summary: Submit contact message
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContactInput"
+      responses:
+        "201":
+          description: Message submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContactMessage"
+
+  /contact/messages:
+    get:
+      operationId: listContactMessages
+      tags: [contact]
+      summary: List all contact messages (admin)
+      responses:
+        "200":
+          description: Messages list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ContactMessage"
+
+  /dashboard/stats:
+    get:
+      operationId: getDashboardStats
+      tags: [dashboard]
+      summary: Get admin dashboard statistics
+      responses:
+        "200":
+          description: Dashboard stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+  /dashboard/recent-bookings:
+    get:
+      operationId: getRecentBookings
+      tags: [dashboard]
+      summary: Get recent bookings for dashboard
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Recent bookings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Booking"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +563,270 @@ components:
       required:
         - status
 
+    Offer:
+      type: object
+      required: [id, titleAr, titleEn, descriptionAr, descriptionEn, price, duration, imageUrl, featured, createdAt]
+      properties:
+        id: { type: integer }
+        titleAr: { type: string }
+        titleEn: { type: string }
+        descriptionAr: { type: string }
+        descriptionEn: { type: string }
+        price: { type: number }
+        currency: { type: string }
+        duration: { type: string }
+        imageUrl: { type: string }
+        destination: { type: ["string", "null"] }
+        featured: { type: boolean }
+        createdAt: { type: string }
+
+    OfferInput:
+      type: object
+      required: [titleAr, titleEn, descriptionAr, descriptionEn, price, duration, imageUrl]
+      properties:
+        titleAr: { type: string }
+        titleEn: { type: string }
+        descriptionAr: { type: string }
+        descriptionEn: { type: string }
+        price: { type: number }
+        currency: { type: string }
+        duration: { type: string }
+        imageUrl: { type: string }
+        destination: { type: string }
+        featured: { type: boolean }
+
+    OfferUpdate:
+      type: object
+      properties:
+        titleAr: { type: string }
+        titleEn: { type: string }
+        descriptionAr: { type: string }
+        descriptionEn: { type: string }
+        price: { type: number }
+        currency: { type: string }
+        duration: { type: string }
+        imageUrl: { type: string }
+        destination: { type: string }
+        featured: { type: boolean }
+
+    Destination:
+      type: object
+      required: [id, nameAr, nameEn, descriptionAr, descriptionEn, imageUrl, country, createdAt]
+      properties:
+        id: { type: integer }
+        nameAr: { type: string }
+        nameEn: { type: string }
+        descriptionAr: { type: string }
+        descriptionEn: { type: string }
+        imageUrl: { type: string }
+        country: { type: string }
+        popular: { type: boolean }
+        createdAt: { type: string }
+
+    DestinationInput:
+      type: object
+      required: [nameAr, nameEn, descriptionAr, descriptionEn, imageUrl, country]
+      properties:
+        nameAr: { type: string }
+        nameEn: { type: string }
+        descriptionAr: { type: string }
+        descriptionEn: { type: string }
+        imageUrl: { type: string }
+        country: { type: string }
+        popular: { type: boolean }
+
+    DestinationUpdate:
+      type: object
+      properties:
+        nameAr: { type: string }
+        nameEn: { type: string }
+        descriptionAr: { type: string }
+        descriptionEn: { type: string }
+        imageUrl: { type: string }
+        country: { type: string }
+        popular: { type: boolean }
+
+    Program:
+      type: object
+      required: [id, titleAr, titleEn, descriptionAr, descriptionEn, price, days, imageUrl, featured, createdAt]
+      properties:
+        id: { type: integer }
+        titleAr: { type: string }
+        titleEn: { type: string }
+        descriptionAr: { type: string }
+        descriptionEn: { type: string }
+        price: { type: number }
+        currency: { type: string }
+        days: { type: integer }
+        nights: { type: integer }
+        imageUrl: { type: string }
+        included: { type: string }
+        destination: { type: ["string", "null"] }
+        featured: { type: boolean }
+        createdAt: { type: string }
+
+    ProgramInput:
+      type: object
+      required: [titleAr, titleEn, descriptionAr, descriptionEn, price, days, imageUrl]
+      properties:
+        titleAr: { type: string }
+        titleEn: { type: string }
+        descriptionAr: { type: string }
+        descriptionEn: { type: string }
+        price: { type: number }
+        currency: { type: string }
+        days: { type: integer }
+        nights: { type: integer }
+        imageUrl: { type: string }
+        included: { type: string }
+        destination: { type: string }
+        featured: { type: boolean }
+
+    ProgramUpdate:
+      type: object
+      properties:
+        titleAr: { type: string }
+        titleEn: { type: string }
+        descriptionAr: { type: string }
+        descriptionEn: { type: string }
+        price: { type: number }
+        currency: { type: string }
+        days: { type: integer }
+        nights: { type: integer }
+        imageUrl: { type: string }
+        included: { type: string }
+        destination: { type: string }
+        featured: { type: boolean }
+
+    Visa:
+      type: object
+      required: [id, countryAr, countryEn, visaType, requirements, processingDays, fee, currency, createdAt]
+      properties:
+        id: { type: integer }
+        countryAr: { type: string }
+        countryEn: { type: string }
+        countryCode: { type: string }
+        visaType: { type: string }
+        requirements: { type: string }
+        documents: { type: string }
+        processingDays: { type: integer }
+        fee: { type: number }
+        currency: { type: string }
+        imageUrl: { type: ["string", "null"] }
+        createdAt: { type: string }
+
+    VisaInput:
+      type: object
+      required: [countryAr, countryEn, visaType, requirements, processingDays, fee, currency]
+      properties:
+        countryAr: { type: string }
+        countryEn: { type: string }
+        countryCode: { type: string }
+        visaType: { type: string }
+        requirements: { type: string }
+        documents: { type: string }
+        processingDays: { type: integer }
+        fee: { type: number }
+        currency: { type: string }
+        imageUrl: { type: string }
+
+    VisaUpdate:
+      type: object
+      properties:
+        countryAr: { type: string }
+        countryEn: { type: string }
+        countryCode: { type: string }
+        visaType: { type: string }
+        requirements: { type: string }
+        documents: { type: string }
+        processingDays: { type: integer }
+        fee: { type: number }
+        currency: { type: string }
+        imageUrl: { type: string }
+
+    Booking:
+      type: object
+      required: [id, type, clientName, clientPhone, status, createdAt]
+      properties:
+        id: { type: integer }
+        type: { type: string, enum: [flight, hotel, program, visa] }
+        clientName: { type: string }
+        clientPhone: { type: string }
+        clientEmail: { type: ["string", "null"] }
+        destination: { type: ["string", "null"] }
+        travelDate: { type: ["string", "null"] }
+        returnDate: { type: ["string", "null"] }
+        adults: { type: integer }
+        children: { type: integer }
+        notes: { type: ["string", "null"] }
+        status: { type: string, enum: [pending, confirmed, cancelled] }
+        totalPrice: { type: ["number", "null"] }
+        createdAt: { type: string }
+
+    BookingInput:
+      type: object
+      required: [type, clientName, clientPhone]
+      properties:
+        type: { type: string, enum: [flight, hotel, program, visa] }
+        clientName: { type: string }
+        clientPhone: { type: string }
+        clientEmail: { type: string }
+        destination: { type: string }
+        travelDate: { type: string }
+        returnDate: { type: string }
+        adults: { type: integer }
+        children: { type: integer }
+        notes: { type: string }
+        totalPrice: { type: number }
+
+    BookingUpdate:
+      type: object
+      properties:
+        status: { type: string, enum: [pending, confirmed, cancelled] }
+        notes: { type: string }
+        totalPrice: { type: number }
+
+    ContactInput:
+      type: object
+      required: [name, phone, message]
+      properties:
+        name: { type: string }
+        phone: { type: string }
+        email: { type: string }
+        subject: { type: string }
+        message: { type: string }
+
+    ContactMessage:
+      type: object
+      required: [id, name, phone, message, createdAt]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        phone: { type: string }
+        email: { type: ["string", "null"] }
+        subject: { type: ["string", "null"] }
+        message: { type: string }
+        read: { type: boolean }
+        createdAt: { type: string }
+
+    DashboardStats:
+      type: object
+      required: [totalBookings, pendingBookings, confirmedBookings, totalOffers, totalDestinations, totalPrograms, totalMessages]
+      properties:
+        totalBookings: { type: integer }
+        pendingBookings: { type: integer }
+        confirmedBookings: { type: integer }
+        cancelledBookings: { type: integer }
+        totalOffers: { type: integer }
+        totalDestinations: { type: integer }
+        totalPrograms: { type: integer }
+        totalMessages: { type: integer }
+        unreadMessages: { type: integer }
+        bookingsByType:
+          type: array
+          items:
+            type: object
+            required: [type, count]
+            properties:
+              type: { type: string }
+              count: { type: integer }
