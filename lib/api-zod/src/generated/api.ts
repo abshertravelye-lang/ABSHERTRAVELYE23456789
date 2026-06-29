@@ -706,3 +706,202 @@ export const GetRecentBookingsResponseItem = zod.object({
 export const GetRecentBookingsResponse = zod.array(GetRecentBookingsResponseItem)
 
 
+/**
+ * @summary Register a new user
+ */
+export const registerUserBodyPasswordMin = 8;
+
+
+
+export const RegisterUserBody = zod.object({
+  "email": zod.string().email(),
+  "password": zod.string().min(registerUserBodyPasswordMin),
+  "firstName": zod.string().optional(),
+  "lastName": zod.string().optional(),
+  "phone": zod.string().optional()
+})
+
+export const RegisterUserResponse = zod.object({
+  "user": zod.object({
+  "id": zod.string().uuid(),
+  "email": zod.string(),
+  "firstName": zod.string().nullish(),
+  "lastName": zod.string().nullish(),
+  "phone": zod.string().nullish(),
+  "nationality": zod.string().nullish(),
+  "role": zod.enum(['customer', 'agent', 'admin', 'super_admin']),
+  "isActive": zod.boolean(),
+  "lastLoginAt": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+}),
+  "accessToken": zod.string(),
+  "refreshToken": zod.string()
+})
+
+
+/**
+ * @summary Login with email and password
+ */
+export const LoginUserBody = zod.object({
+  "email": zod.string().email(),
+  "password": zod.string()
+})
+
+export const LoginUserResponse = zod.object({
+  "user": zod.object({
+  "id": zod.string().uuid(),
+  "email": zod.string(),
+  "firstName": zod.string().nullish(),
+  "lastName": zod.string().nullish(),
+  "phone": zod.string().nullish(),
+  "nationality": zod.string().nullish(),
+  "role": zod.enum(['customer', 'agent', 'admin', 'super_admin']),
+  "isActive": zod.boolean(),
+  "lastLoginAt": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+}),
+  "accessToken": zod.string(),
+  "refreshToken": zod.string()
+})
+
+
+/**
+ * @summary Refresh access token
+ */
+export const RefreshTokenBody = zod.object({
+  "refreshToken": zod.string()
+})
+
+export const RefreshTokenResponse = zod.object({
+  "accessToken": zod.string(),
+  "refreshToken": zod.string()
+})
+
+
+/**
+ * @summary Logout and revoke session
+ */
+export const LogoutUserBody = zod.object({
+  "refreshToken": zod.string().optional()
+})
+
+export const LogoutUserResponse = zod.unknown()
+
+
+/**
+ * @summary Get current authenticated user
+ */
+export const GetCurrentUserResponse = zod.object({
+  "id": zod.string().uuid(),
+  "email": zod.string(),
+  "firstName": zod.string().nullish(),
+  "lastName": zod.string().nullish(),
+  "phone": zod.string().nullish(),
+  "nationality": zod.string().nullish(),
+  "role": zod.enum(['customer', 'agent', 'admin', 'super_admin']),
+  "isActive": zod.boolean(),
+  "lastLoginAt": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Search for flights across all providers
+ */
+export const searchFlightsQueryOriginMin = 3;
+export const searchFlightsQueryOriginMax = 3;
+
+export const searchFlightsQueryDestinationMin = 3;
+export const searchFlightsQueryDestinationMax = 3;
+
+export const searchFlightsQueryTripTypeDefault = `one_way`;
+export const searchFlightsQueryCabinClassDefault = `economy`;
+export const searchFlightsQueryAdultsDefault = 1;
+export const searchFlightsQueryAdultsMax = 9;
+
+export const searchFlightsQueryChildrenDefault = 0;
+export const searchFlightsQueryChildrenMin = 0;
+export const searchFlightsQueryChildrenMax = 8;
+
+export const searchFlightsQueryInfantsDefault = 0;
+export const searchFlightsQueryInfantsMin = 0;
+export const searchFlightsQueryInfantsMax = 4;
+
+export const searchFlightsQueryCurrencyDefault = `USD`;
+export const searchFlightsQuerySortDefault = `cheapest`;
+
+export const SearchFlightsQueryParams = zod.object({
+  "origin": zod.coerce.string().min(searchFlightsQueryOriginMin).max(searchFlightsQueryOriginMax).optional().describe('Origin IATA code (e.g. CAI, DXB)'),
+  "destination": zod.coerce.string().min(searchFlightsQueryDestinationMin).max(searchFlightsQueryDestinationMax).optional().describe('Destination IATA code'),
+  "departureDate": zod.date().optional().describe('Departure date YYYY-MM-DD'),
+  "returnDate": zod.date().optional().describe('Return date for round trips'),
+  "tripType": zod.enum(['one_way', 'round_trip', 'multi_city']).default(searchFlightsQueryTripTypeDefault),
+  "cabinClass": zod.enum(['economy', 'premium_economy', 'business', 'first']).default(searchFlightsQueryCabinClassDefault),
+  "adults": zod.coerce.number().min(1).max(searchFlightsQueryAdultsMax).default(searchFlightsQueryAdultsDefault),
+  "children": zod.coerce.number().min(searchFlightsQueryChildrenMin).max(searchFlightsQueryChildrenMax).default(searchFlightsQueryChildrenDefault),
+  "infants": zod.coerce.number().min(searchFlightsQueryInfantsMin).max(searchFlightsQueryInfantsMax).default(searchFlightsQueryInfantsDefault),
+  "currency": zod.coerce.string().default(searchFlightsQueryCurrencyDefault),
+  "sort": zod.enum(['cheapest', 'fastest', 'best_value']).default(searchFlightsQuerySortDefault),
+  "legs": zod.coerce.string().optional().describe('JSON array of legs for multi-city (overrides origin\/destination)')
+})
+
+export const SearchFlightsResponse = zod.object({
+  "searchHash": zod.string(),
+  "cachedAt": zod.string().nullish(),
+  "totalResults": zod.number(),
+  "providerSummary": zod.array(zod.object({
+  "provider": zod.string(),
+  "count": zod.number(),
+  "lowestPrice": zod.number(),
+  "currency": zod.string()
+})),
+  "offers": zod.array(zod.object({
+  "providerSlug": zod.string(),
+  "providerOfferId": zod.string(),
+  "totalPrice": zod.number(),
+  "baseFare": zod.number(),
+  "taxes": zod.number(),
+  "currency": zod.string(),
+  "stops": zod.number(),
+  "totalDurationMin": zod.number(),
+  "isRefundable": zod.boolean(),
+  "baggageIncludedKg": zod.number(),
+  "carryOnIncluded": zod.boolean(),
+  "deeplinkUrl": zod.string().nullish(),
+  "segments": zod.array(zod.object({
+  "legOrder": zod.number(),
+  "segmentOrder": zod.number(),
+  "flightNumber": zod.string(),
+  "airlineIata": zod.string(),
+  "airlineName": zod.string(),
+  "airlineLogoUrl": zod.string().nullish(),
+  "operatingAirlineIata": zod.string().nullish(),
+  "originIata": zod.string(),
+  "originCity": zod.string().optional(),
+  "destinationIata": zod.string(),
+  "destinationCity": zod.string().optional(),
+  "departureAt": zod.string(),
+  "arrivalAt": zod.string(),
+  "durationMin": zod.number(),
+  "aircraftType": zod.string().nullish(),
+  "cabinClass": zod.string()
+}))
+}))
+})
+
+
+/**
+ * @summary List registered flight providers and their availability
+ */
+export const ListFlightProvidersResponseItem = zod.object({
+  "slug": zod.string(),
+  "name": zod.string(),
+  "supportsBooking": zod.boolean(),
+  "isAvailable": zod.boolean()
+})
+export const ListFlightProvidersResponse = zod.array(ListFlightProvidersResponseItem)
+
+

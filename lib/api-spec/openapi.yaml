@@ -24,6 +24,10 @@ tags:
     description: Contact messages
   - name: dashboard
     description: Admin dashboard stats
+  - name: auth
+    description: Authentication and user management
+  - name: flights
+    description: Flight search and comparison
 
 paths:
   /healthz:
@@ -553,6 +557,194 @@ paths:
                 items:
                   $ref: "#/components/schemas/Booking"
 
+
+  # ── AUTH ─────────────────────────────────────────────────────────────────
+
+  /auth/register:
+    post:
+      operationId: registerUser
+      tags: [auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterInput"
+      responses:
+        "201":
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "409":
+          description: Email already registered
+
+  /auth/login:
+    post:
+      operationId: loginUser
+      tags: [auth]
+      summary: Login with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+
+  /auth/refresh:
+    post:
+      operationId: refreshToken
+      tags: [auth]
+      summary: Refresh access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties:
+                refreshToken: { type: string }
+      responses:
+        "200":
+          description: New tokens issued
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [accessToken, refreshToken]
+                properties:
+                  accessToken: { type: string }
+                  refreshToken: { type: string }
+
+  /auth/logout:
+    post:
+      operationId: logoutUser
+      tags: [auth]
+      security:
+        - bearerAuth: []
+      summary: Logout and revoke session
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshToken: { type: string }
+      responses:
+        "200":
+          description: Logged out
+
+  /auth/me:
+    get:
+      operationId: getCurrentUser
+      tags: [auth]
+      security:
+        - bearerAuth: []
+      summary: Get current authenticated user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SafeUser"
+
+  # ── FLIGHTS ──────────────────────────────────────────────────────────────
+
+  /flights/search:
+    get:
+      operationId: searchFlights
+      tags: [flights]
+      summary: Search for flights across all providers
+      parameters:
+        - name: origin
+          in: query
+          schema: { type: string, minLength: 3, maxLength: 3 }
+          description: Origin IATA code (e.g. CAI, DXB)
+        - name: destination
+          in: query
+          schema: { type: string, minLength: 3, maxLength: 3 }
+          description: Destination IATA code
+        - name: departureDate
+          in: query
+          schema: { type: string, format: date }
+          description: Departure date YYYY-MM-DD
+        - name: returnDate
+          in: query
+          schema: { type: string, format: date }
+          description: Return date for round trips
+        - name: tripType
+          in: query
+          schema:
+            type: string
+            enum: [one_way, round_trip, multi_city]
+            default: one_way
+        - name: cabinClass
+          in: query
+          schema:
+            type: string
+            enum: [economy, premium_economy, business, first]
+            default: economy
+        - name: adults
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 9, default: 1 }
+        - name: children
+          in: query
+          schema: { type: integer, minimum: 0, maximum: 8, default: 0 }
+        - name: infants
+          in: query
+          schema: { type: integer, minimum: 0, maximum: 4, default: 0 }
+        - name: currency
+          in: query
+          schema: { type: string, default: USD }
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [cheapest, fastest, best_value]
+            default: cheapest
+        - name: legs
+          in: query
+          schema: { type: string }
+          description: JSON array of legs for multi-city (overrides origin/destination)
+      responses:
+        "200":
+          description: Flight search results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FlightSearchResults"
+        "400":
+          description: Invalid search parameters
+
+  /flights/providers:
+    get:
+      operationId: listFlightProviders
+      tags: [flights]
+      summary: List registered flight providers and their availability
+      responses:
+        "200":
+          description: Provider list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProviderStatus"
+
+
 components:
   schemas:
     HealthStatus:
@@ -830,3 +1022,131 @@ components:
             properties:
               type: { type: string }
               count: { type: integer }
+
+  # ── AUTH SCHEMAS ─────────────────────────────────────────────────────────
+
+    RegisterInput:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, minLength: 8 }
+        firstName: { type: string }
+        lastName: { type: string }
+        phone: { type: string }
+
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string }
+
+    SafeUser:
+      type: object
+      required: [id, email, role, isActive, createdAt, updatedAt]
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string }
+        firstName: { type: ["string", "null"] }
+        lastName: { type: ["string", "null"] }
+        phone: { type: ["string", "null"] }
+        nationality: { type: ["string", "null"] }
+        role: { type: string, enum: [customer, agent, admin, super_admin] }
+        isActive: { type: boolean }
+        lastLoginAt: { type: ["string", "null"] }
+        createdAt: { type: string }
+        updatedAt: { type: string }
+
+    AuthResponse:
+      type: object
+      required: [user, accessToken, refreshToken]
+      properties:
+        user:
+          $ref: "#/components/schemas/SafeUser"
+        accessToken: { type: string }
+        refreshToken: { type: string }
+
+  # ── FLIGHT SCHEMAS ───────────────────────────────────────────────────────
+
+    FlightSegment:
+      type: object
+      required: [legOrder, segmentOrder, flightNumber, airlineIata, airlineName, originIata, destinationIata, departureAt, arrivalAt, durationMin, cabinClass]
+      properties:
+        legOrder: { type: integer }
+        segmentOrder: { type: integer }
+        flightNumber: { type: string }
+        airlineIata: { type: string }
+        airlineName: { type: string }
+        airlineLogoUrl: { type: ["string", "null"] }
+        operatingAirlineIata: { type: ["string", "null"] }
+        originIata: { type: string }
+        originCity: { type: string }
+        destinationIata: { type: string }
+        destinationCity: { type: string }
+        departureAt: { type: string }
+        arrivalAt: { type: string }
+        durationMin: { type: integer }
+        aircraftType: { type: ["string", "null"] }
+        cabinClass: { type: string }
+
+    FlightOffer:
+      type: object
+      required: [providerSlug, providerOfferId, totalPrice, baseFare, taxes, currency, stops, totalDurationMin, isRefundable, baggageIncludedKg, carryOnIncluded, segments]
+      properties:
+        providerSlug: { type: string }
+        providerOfferId: { type: string }
+        totalPrice: { type: number }
+        baseFare: { type: number }
+        taxes: { type: number }
+        currency: { type: string }
+        stops: { type: integer }
+        totalDurationMin: { type: integer }
+        isRefundable: { type: boolean }
+        baggageIncludedKg: { type: integer }
+        carryOnIncluded: { type: boolean }
+        deeplinkUrl: { type: ["string", "null"] }
+        segments:
+          type: array
+          items:
+            $ref: "#/components/schemas/FlightSegment"
+
+    ProviderSummary:
+      type: object
+      required: [provider, count, lowestPrice, currency]
+      properties:
+        provider: { type: string }
+        count: { type: integer }
+        lowestPrice: { type: number }
+        currency: { type: string }
+
+    FlightSearchResults:
+      type: object
+      required: [searchHash, totalResults, providerSummary, offers]
+      properties:
+        searchHash: { type: string }
+        cachedAt: { type: ["string", "null"] }
+        totalResults: { type: integer }
+        providerSummary:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProviderSummary"
+        offers:
+          type: array
+          items:
+            $ref: "#/components/schemas/FlightOffer"
+
+    ProviderStatus:
+      type: object
+      required: [slug, name, supportsBooking, isAvailable]
+      properties:
+        slug: { type: string }
+        name: { type: string }
+        supportsBooking: { type: boolean }
+        isAvailable: { type: boolean }
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

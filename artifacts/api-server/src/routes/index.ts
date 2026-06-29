@@ -7,10 +7,14 @@ import visasRouter from "./visas";
 import bookingsRouter from "./bookings";
 import contactRouter from "./contact";
 import dashboardRouter from "./dashboard";
+import authRouter from "./auth";
+import flightsRouter from "./flights";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
+router.use(authRouter);
+router.use(flightsRouter);
 router.use(offersRouter);
 router.use(destinationsRouter);
 router.use(programsRouter);

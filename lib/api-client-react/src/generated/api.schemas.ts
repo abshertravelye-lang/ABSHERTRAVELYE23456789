@@ -293,6 +293,117 @@ export interface DashboardStats {
   bookingsByType?: DashboardStatsBookingsByTypeItem[];
 }
 
+export interface RegisterInput {
+  email: string;
+  /** @minLength 8 */
+  password: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+}
+
+export interface LoginInput {
+  email: string;
+  password: string;
+}
+
+export type SafeUserRole = typeof SafeUserRole[keyof typeof SafeUserRole];
+
+
+export const SafeUserRole = {
+  customer: 'customer',
+  agent: 'agent',
+  admin: 'admin',
+  super_admin: 'super_admin',
+} as const;
+
+export interface SafeUser {
+  id: string;
+  email: string;
+  /** @nullable */
+  firstName?: string | null;
+  /** @nullable */
+  lastName?: string | null;
+  /** @nullable */
+  phone?: string | null;
+  /** @nullable */
+  nationality?: string | null;
+  role: SafeUserRole;
+  isActive: boolean;
+  /** @nullable */
+  lastLoginAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AuthResponse {
+  user: SafeUser;
+  accessToken: string;
+  refreshToken: string;
+}
+
+export interface FlightSegment {
+  legOrder: number;
+  segmentOrder: number;
+  flightNumber: string;
+  airlineIata: string;
+  airlineName: string;
+  /** @nullable */
+  airlineLogoUrl?: string | null;
+  /** @nullable */
+  operatingAirlineIata?: string | null;
+  originIata: string;
+  originCity?: string;
+  destinationIata: string;
+  destinationCity?: string;
+  departureAt: string;
+  arrivalAt: string;
+  durationMin: number;
+  /** @nullable */
+  aircraftType?: string | null;
+  cabinClass: string;
+}
+
+export interface FlightOffer {
+  providerSlug: string;
+  providerOfferId: string;
+  totalPrice: number;
+  baseFare: number;
+  taxes: number;
+  currency: string;
+  stops: number;
+  totalDurationMin: number;
+  isRefundable: boolean;
+  baggageIncludedKg: number;
+  carryOnIncluded: boolean;
+  /** @nullable */
+  deeplinkUrl?: string | null;
+  segments: FlightSegment[];
+}
+
+export interface ProviderSummary {
+  provider: string;
+  count: number;
+  lowestPrice: number;
+  currency: string;
+}
+
+export interface FlightSearchResults {
+  searchHash: string;
+  /** @nullable */
+  cachedAt?: string | null;
+  totalResults: number;
+  providerSummary: ProviderSummary[];
+  offers: FlightOffer[];
+}
+
+export interface ProviderStatus {
+  slug: string;
+  name: string;
+  supportsBooking: boolean;
+  isAvailable: boolean;
+}
+
 export type ListOffersParams = {
 featured?: boolean;
 limit?: number;
@@ -329,4 +440,91 @@ export const ListBookingsStatus = {
 export type GetRecentBookingsParams = {
 limit?: number;
 };
+
+export type RefreshTokenBody = {
+  refreshToken: string;
+};
+
+export type RefreshToken200 = {
+  accessToken: string;
+  refreshToken: string;
+};
+
+export type LogoutUserBody = {
+  refreshToken?: string;
+};
+
+export type SearchFlightsParams = {
+/**
+ * Origin IATA code (e.g. CAI, DXB)
+ * @minLength 3
+ * @maxLength 3
+ */
+origin?: string;
+/**
+ * Destination IATA code
+ * @minLength 3
+ * @maxLength 3
+ */
+destination?: string;
+/**
+ * Departure date YYYY-MM-DD
+ */
+departureDate?: string;
+/**
+ * Return date for round trips
+ */
+returnDate?: string;
+tripType?: SearchFlightsTripType;
+cabinClass?: SearchFlightsCabinClass;
+/**
+ * @minimum 1
+ * @maximum 9
+ */
+adults?: number;
+/**
+ * @minimum 0
+ * @maximum 8
+ */
+children?: number;
+/**
+ * @minimum 0
+ * @maximum 4
+ */
+infants?: number;
+currency?: string;
+sort?: SearchFlightsSort;
+/**
+ * JSON array of legs for multi-city (overrides origin/destination)
+ */
+legs?: string;
+};
+
+export type SearchFlightsTripType = typeof SearchFlightsTripType[keyof typeof SearchFlightsTripType];
+
+
+export const SearchFlightsTripType = {
+  one_way: 'one_way',
+  round_trip: 'round_trip',
+  multi_city: 'multi_city',
+} as const;
+
+export type SearchFlightsCabinClass = typeof SearchFlightsCabinClass[keyof typeof SearchFlightsCabinClass];
+
+
+export const SearchFlightsCabinClass = {
+  economy: 'economy',
+  premium_economy: 'premium_economy',
+  business: 'business',
+  first: 'first',
+} as const;
+
+export type SearchFlightsSort = typeof SearchFlightsSort[keyof typeof SearchFlightsSort];
+
+
+export const SearchFlightsSort = {
+  cheapest: 'cheapest',
+  fastest: 'fastest',
+  best_value: 'best_value',
+} as const;
 
