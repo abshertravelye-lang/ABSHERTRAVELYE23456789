@@ -2,33 +2,44 @@ import { Router } from "express";
 import bcrypt from "bcryptjs";
 import { db } from "@workspace/db";
 import { usersTable, userSessionsTable } from "@workspace/db";
-import { eq, and, isNull } from "drizzle-orm";
+import { eq, and, isNull, or } from "drizzle-orm";
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from "../lib/jwt";
 import { createHash } from "crypto";
-import { z } from "zod/v4";
+import { z } from "zod";
 import { requireAuth } from "../middleware/auth";
 
 const router = Router();
 
 const registerSchema = z.object({
-  email: z.string().email(),
+  email: z.string().email().optional(),
+  phone: z.string().optional(),
   password: z.string().min(8),
   firstName: z.string().min(1).optional(),
   lastName: z.string().min(1).optional(),
-  phone: z.string().optional(),
-});
+  nationality: z.string().optional(),
+  gender: z.enum(["male", "female", "other"]).optional(),
+  dateOfBirth: z.string().optional(),
+}).refine((d) => d.email || d.phone, { message: "Email or phone is required" });
 
 const loginSchema = z.object({
-  email: z.string().email(),
+  email: z.string().email().optional(),
+  phone: z.string().optional(),
   password: z.string().min(1),
-});
+}).refine((d) => d.email || d.phone, { message: "Email or phone is required" });
 
 function hashToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
 }
 
 function safeUser(user: typeof usersTable.$inferSelect) {
-  const { passwordHash: _, deletedAt: __, ...safe } = user;
+  const {
+    passwordHash: _,
+    deletedAt: __,
+    emailVerifyToken: ___,
+    phoneOtp: ____,
+    phoneOtpExpiresAt: _____,
+    ...safe
+  } = user;
   return safe;
 }
 
@@ -37,23 +48,37 @@ router.post("/auth/register", async (req, res) => {
   try {
     const body = registerSchema.parse(req.body);
 
-    const existing = await db.select({ id: usersTable.id })
-      .from(usersTable)
-      .where(and(eq(usersTable.email, body.email), isNull(usersTable.deletedAt)));
-    if (existing.length > 0) {
-      return res.status(409).json({ error: "Email already registered" });
+    if (body.email) {
+      const existing = await db.select({ id: usersTable.id })
+        .from(usersTable)
+        .where(and(eq(usersTable.email, body.email), isNull(usersTable.deletedAt)));
+      if (existing.length > 0) {
+        return res.status(409).json({ error: "Email already registered" });
+      }
+    }
+
+    if (body.phone) {
+      const existing = await db.select({ id: usersTable.id })
+        .from(usersTable)
+        .where(and(eq(usersTable.phone, body.phone), isNull(usersTable.deletedAt)));
+      if (existing.length > 0) {
+        return res.status(409).json({ error: "Phone already registered" });
+      }
     }
 
     const passwordHash = await bcrypt.hash(body.password, 12);
     const [user] = await db.insert(usersTable).values({
       email: body.email,
+      phone: body.phone,
       passwordHash,
       firstName: body.firstName,
       lastName: body.lastName,
-      phone: body.phone,
+      nationality: body.nationality,
+      gender: body.gender,
+      dateOfBirth: body.dateOfBirth,
     }).returning();
 
-    const tokenPayload = { sub: user.id, email: user.email, role: user.role };
+    const tokenPayload = { sub: user.id, email: user.email ?? "", role: user.role };
     const accessToken = signAccessToken(tokenPayload);
     const refreshToken = signRefreshToken(tokenPayload);
 
@@ -79,21 +104,24 @@ router.post("/auth/login", async (req, res) => {
   try {
     const body = loginSchema.parse(req.body);
 
-    const [user] = await db.select().from(usersTable)
-      .where(and(eq(usersTable.email, body.email), isNull(usersTable.deletedAt)));
+    const whereClause = body.email
+      ? and(eq(usersTable.email, body.email), isNull(usersTable.deletedAt))
+      : and(eq(usersTable.phone, body.phone!), isNull(usersTable.deletedAt));
+
+    const [user] = await db.select().from(usersTable).where(whereClause);
 
     if (!user || !user.isActive) {
-      return res.status(401).json({ error: "Invalid email or password" });
+      return res.status(401).json({ error: "Invalid credentials" });
     }
 
     const valid = await bcrypt.compare(body.password, user.passwordHash);
-    if (!valid) return res.status(401).json({ error: "Invalid email or password" });
+    if (!valid) return res.status(401).json({ error: "Invalid credentials" });
 
     await db.update(usersTable)
       .set({ lastLoginAt: new Date() })
       .where(eq(usersTable.id, user.id));
 
-    const tokenPayload = { sub: user.id, email: user.email, role: user.role };
+    const tokenPayload = { sub: user.id, email: user.email ?? "", role: user.role };
     const accessToken = signAccessToken(tokenPayload);
     const refreshToken = signRefreshToken(tokenPayload);
 
@@ -141,12 +169,11 @@ router.post("/auth/refresh", async (req, res) => {
       .where(and(eq(usersTable.id, payload.sub), isNull(usersTable.deletedAt)));
     if (!user || !user.isActive) return res.status(401).json({ error: "User not found" });
 
-    // Rotate refresh token
     await db.update(userSessionsTable)
       .set({ revokedAt: new Date() })
       .where(eq(userSessionsTable.id, session.id));
 
-    const tokenPayload = { sub: user.id, email: user.email, role: user.role };
+    const tokenPayload = { sub: user.id, email: user.email ?? "", role: user.role };
     const newAccessToken = signAccessToken(tokenPayload);
     const newRefreshToken = signRefreshToken(tokenPayload);
 

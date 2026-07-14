@@ -83,53 +83,162 @@ export interface DestinationUpdate {
   popular?: boolean;
 }
 
+export interface DailyItineraryItem {
+  day: number;
+  titleAr: string;
+  titleEn: string;
+  descriptionAr: string;
+  descriptionEn: string;
+}
+
+export interface ProgramHotel {
+  nameAr: string;
+  nameEn: string;
+  stars: number;
+  city: string;
+}
+
+export type ProgramStatus = typeof ProgramStatus[keyof typeof ProgramStatus];
+
+
+export const ProgramStatus = {
+  active: 'active',
+  featured: 'featured',
+  new: 'new',
+  special_offer: 'special_offer',
+  expired: 'expired',
+  hidden: 'hidden',
+} as const;
+
 export interface Program {
   id: number;
   titleAr: string;
   titleEn: string;
-  descriptionAr: string;
-  descriptionEn: string;
+  descriptionAr?: string;
+  descriptionEn?: string;
+  country?: string;
+  cities?: string[];
   price: number;
   currency?: string;
   days: number;
   nights?: number;
   imageUrl: string;
-  included?: string;
+  images?: string[];
+  dailyItinerary?: DailyItineraryItem[];
+  hotels?: ProgramHotel[];
+  airlines?: string[];
+  includedServices?: string[];
+  excludedServices?: string[];
+  /** @nullable */
+  included?: string | null;
+  /** @nullable */
+  bookingTerms?: string | null;
+  /** @nullable */
+  cancellationPolicy?: string | null;
   /** @nullable */
   destination?: string | null;
+  status: ProgramStatus;
   featured: boolean;
+  isActive: boolean;
   createdAt: string;
+  updatedAt?: string;
 }
+
+export type ProgramInputStatus = typeof ProgramInputStatus[keyof typeof ProgramInputStatus];
+
+
+export const ProgramInputStatus = {
+  active: 'active',
+  featured: 'featured',
+  new: 'new',
+  special_offer: 'special_offer',
+  expired: 'expired',
+  hidden: 'hidden',
+} as const;
 
 export interface ProgramInput {
   titleAr: string;
   titleEn: string;
-  descriptionAr: string;
-  descriptionEn: string;
+  descriptionAr?: string;
+  descriptionEn?: string;
+  country?: string;
+  cities?: string[];
   price: number;
   currency?: string;
   days: number;
   nights?: number;
-  imageUrl: string;
+  imageUrl?: string;
+  images?: string[];
+  dailyItinerary?: DailyItineraryItem[];
+  hotels?: ProgramHotel[];
+  airlines?: string[];
+  includedServices?: string[];
+  excludedServices?: string[];
   included?: string;
+  bookingTerms?: string;
+  cancellationPolicy?: string;
   destination?: string;
+  status?: ProgramInputStatus;
   featured?: boolean;
+  isActive?: boolean;
 }
+
+export type ProgramUpdateStatus = typeof ProgramUpdateStatus[keyof typeof ProgramUpdateStatus];
+
+
+export const ProgramUpdateStatus = {
+  active: 'active',
+  featured: 'featured',
+  new: 'new',
+  special_offer: 'special_offer',
+  expired: 'expired',
+  hidden: 'hidden',
+} as const;
 
 export interface ProgramUpdate {
   titleAr?: string;
   titleEn?: string;
   descriptionAr?: string;
   descriptionEn?: string;
+  country?: string;
+  cities?: string[];
   price?: number;
   currency?: string;
   days?: number;
   nights?: number;
   imageUrl?: string;
+  images?: string[];
+  dailyItinerary?: DailyItineraryItem[];
+  hotels?: ProgramHotel[];
+  airlines?: string[];
+  includedServices?: string[];
+  excludedServices?: string[];
   included?: string;
+  bookingTerms?: string;
+  cancellationPolicy?: string;
   destination?: string;
+  status?: ProgramUpdateStatus;
   featured?: boolean;
+  isActive?: boolean;
 }
+
+export type VisaEntryType = typeof VisaEntryType[keyof typeof VisaEntryType];
+
+
+export const VisaEntryType = {
+  single: 'single',
+  multiple: 'multiple',
+  transit: 'transit',
+} as const;
+
+export type VisaStatus = typeof VisaStatus[keyof typeof VisaStatus];
+
+
+export const VisaStatus = {
+  available: 'available',
+  suspended: 'suspended',
+  closed: 'closed',
+} as const;
 
 export interface Visa {
   id: number;
@@ -137,28 +246,86 @@ export interface Visa {
   countryEn: string;
   countryCode?: string;
   visaType: string;
-  requirements: string;
-  documents?: string;
+  requirements?: string;
+  /** @nullable */
+  documents?: string | null;
+  /** @nullable */
+  notes?: string | null;
   processingDays: number;
   fee: number;
   currency: string;
   /** @nullable */
+  stayDuration?: number | null;
+  /** @nullable */
+  validityDays?: number | null;
+  entryType: VisaEntryType;
+  /** @nullable */
+  entryCount?: number | null;
+  allowedNationalities?: string[];
+  /** @nullable */
   imageUrl?: string | null;
+  status: VisaStatus;
+  isActive: boolean;
   createdAt: string;
+  updatedAt?: string;
 }
+
+export type VisaInputEntryType = typeof VisaInputEntryType[keyof typeof VisaInputEntryType];
+
+
+export const VisaInputEntryType = {
+  single: 'single',
+  multiple: 'multiple',
+  transit: 'transit',
+} as const;
+
+export type VisaInputStatus = typeof VisaInputStatus[keyof typeof VisaInputStatus];
+
+
+export const VisaInputStatus = {
+  available: 'available',
+  suspended: 'suspended',
+  closed: 'closed',
+} as const;
 
 export interface VisaInput {
   countryAr: string;
   countryEn: string;
   countryCode?: string;
   visaType: string;
-  requirements: string;
+  requirements?: string;
   documents?: string;
+  notes?: string;
   processingDays: number;
   fee: number;
   currency: string;
+  stayDuration?: number;
+  validityDays?: number;
+  entryType?: VisaInputEntryType;
+  entryCount?: number;
+  allowedNationalities?: string[];
   imageUrl?: string;
+  status?: VisaInputStatus;
+  isActive?: boolean;
 }
+
+export type VisaUpdateEntryType = typeof VisaUpdateEntryType[keyof typeof VisaUpdateEntryType];
+
+
+export const VisaUpdateEntryType = {
+  single: 'single',
+  multiple: 'multiple',
+  transit: 'transit',
+} as const;
+
+export type VisaUpdateStatus = typeof VisaUpdateStatus[keyof typeof VisaUpdateStatus];
+
+
+export const VisaUpdateStatus = {
+  available: 'available',
+  suspended: 'suspended',
+  closed: 'closed',
+} as const;
 
 export interface VisaUpdate {
   countryAr?: string;
@@ -167,10 +334,18 @@ export interface VisaUpdate {
   visaType?: string;
   requirements?: string;
   documents?: string;
+  notes?: string;
   processingDays?: number;
   fee?: number;
   currency?: string;
+  stayDuration?: number;
+  validityDays?: number;
+  entryType?: VisaUpdateEntryType;
+  entryCount?: number;
+  allowedNationalities?: string[];
   imageUrl?: string;
+  status?: VisaUpdateStatus;
+  isActive?: boolean;
 }
 
 export type BookingType = typeof BookingType[keyof typeof BookingType];
@@ -293,17 +468,30 @@ export interface DashboardStats {
   bookingsByType?: DashboardStatsBookingsByTypeItem[];
 }
 
+export type RegisterInputGender = typeof RegisterInputGender[keyof typeof RegisterInputGender];
+
+
+export const RegisterInputGender = {
+  male: 'male',
+  female: 'female',
+  other: 'other',
+} as const;
+
 export interface RegisterInput {
-  email: string;
+  email?: string;
+  phone?: string;
   /** @minLength 8 */
   password: string;
   firstName?: string;
   lastName?: string;
-  phone?: string;
+  nationality?: string;
+  gender?: RegisterInputGender;
+  dateOfBirth?: string;
 }
 
 export interface LoginInput {
-  email: string;
+  email?: string;
+  phone?: string;
   password: string;
 }
 
@@ -319,17 +507,26 @@ export const SafeUserRole = {
 
 export interface SafeUser {
   id: string;
-  email: string;
+  /** @nullable */
+  email?: string | null;
+  /** @nullable */
+  phone?: string | null;
   /** @nullable */
   firstName?: string | null;
   /** @nullable */
   lastName?: string | null;
   /** @nullable */
-  phone?: string | null;
-  /** @nullable */
   nationality?: string | null;
+  /** @nullable */
+  gender?: string | null;
+  /** @nullable */
+  dateOfBirth?: string | null;
   role: SafeUserRole;
   isActive: boolean;
+  /** @nullable */
+  emailVerifiedAt?: string | null;
+  /** @nullable */
+  phoneVerifiedAt?: string | null;
   /** @nullable */
   lastLoginAt?: string | null;
   createdAt: string;

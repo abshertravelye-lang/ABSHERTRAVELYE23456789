@@ -838,41 +838,117 @@ components:
         country: { type: string }
         popular: { type: boolean }
 
+    DailyItineraryItem:
+      type: object
+      required: [day, titleAr, titleEn, descriptionAr, descriptionEn]
+      properties:
+        day: { type: integer }
+        titleAr: { type: string }
+        titleEn: { type: string }
+        descriptionAr: { type: string }
+        descriptionEn: { type: string }
+
+    ProgramHotel:
+      type: object
+      required: [nameAr, nameEn, stars, city]
+      properties:
+        nameAr: { type: string }
+        nameEn: { type: string }
+        stars: { type: integer }
+        city: { type: string }
+
     Program:
       type: object
-      required: [id, titleAr, titleEn, descriptionAr, descriptionEn, price, days, imageUrl, featured, createdAt]
+      required: [id, titleAr, titleEn, price, days, imageUrl, status, featured, isActive, createdAt]
       properties:
         id: { type: integer }
         titleAr: { type: string }
         titleEn: { type: string }
         descriptionAr: { type: string }
         descriptionEn: { type: string }
+        country: { type: string }
+        cities:
+          type: array
+          items: { type: string }
         price: { type: number }
         currency: { type: string }
         days: { type: integer }
         nights: { type: integer }
         imageUrl: { type: string }
-        included: { type: string }
+        images:
+          type: array
+          items: { type: string }
+        dailyItinerary:
+          type: array
+          items: { $ref: "#/components/schemas/DailyItineraryItem" }
+        hotels:
+          type: array
+          items: { $ref: "#/components/schemas/ProgramHotel" }
+        airlines:
+          type: array
+          items: { type: string }
+        includedServices:
+          type: array
+          items: { type: string }
+        excludedServices:
+          type: array
+          items: { type: string }
+        included: { type: ["string", "null"] }
+        bookingTerms: { type: ["string", "null"] }
+        cancellationPolicy: { type: ["string", "null"] }
         destination: { type: ["string", "null"] }
+        status:
+          type: string
+          enum: [active, featured, new, special_offer, expired, hidden]
         featured: { type: boolean }
+        isActive: { type: boolean }
         createdAt: { type: string }
+        updatedAt: { type: string }
 
     ProgramInput:
       type: object
-      required: [titleAr, titleEn, descriptionAr, descriptionEn, price, days, imageUrl]
+      required: [titleAr, titleEn, price, days]
       properties:
         titleAr: { type: string }
         titleEn: { type: string }
         descriptionAr: { type: string }
         descriptionEn: { type: string }
+        country: { type: string }
+        cities:
+          type: array
+          items: { type: string }
         price: { type: number }
         currency: { type: string }
         days: { type: integer }
         nights: { type: integer }
         imageUrl: { type: string }
+        images:
+          type: array
+          items: { type: string }
+        dailyItinerary:
+          type: array
+          items: { $ref: "#/components/schemas/DailyItineraryItem" }
+        hotels:
+          type: array
+          items: { $ref: "#/components/schemas/ProgramHotel" }
+        airlines:
+          type: array
+          items: { type: string }
+        includedServices:
+          type: array
+          items: { type: string }
+        excludedServices:
+          type: array
+          items: { type: string }
         included: { type: string }
+        bookingTerms: { type: string }
+        cancellationPolicy: { type: string }
         destination: { type: string }
+        status:
+          type: string
+          enum: [active, featured, new, special_offer, expired, hidden]
         featured: { type: boolean }
+        isActive: { type: boolean }
 
     ProgramUpdate:
       type: object
@@ -881,18 +957,46 @@ components:
         titleEn: { type: string }
         descriptionAr: { type: string }
         descriptionEn: { type: string }
+        country: { type: string }
+        cities:
+          type: array
+          items: { type: string }
         price: { type: number }
         currency: { type: string }
         days: { type: integer }
         nights: { type: integer }
         imageUrl: { type: string }
+        images:
+          type: array
+          items: { type: string }
+        dailyItinerary:
+          type: array
+          items: { $ref: "#/components/schemas/DailyItineraryItem" }
+        hotels:
+          type: array
+          items: { $ref: "#/components/schemas/ProgramHotel" }
+        airlines:
+          type: array
+          items: { type: string }
+        includedServices:
+          type: array
+          items: { type: string }
+        excludedServices:
+          type: array
+          items: { type: string }
         included: { type: string }
+        bookingTerms: { type: string }
+        cancellationPolicy: { type: string }
         destination: { type: string }
+        status:
+          type: string
+          enum: [active, featured, new, special_offer, expired, hidden]
         featured: { type: boolean }
+        isActive: { type: boolean }
 
     Visa:
       type: object
-      required: [id, countryAr, countryEn, visaType, requirements, processingDays, fee, currency, createdAt]
+      required: [id, countryAr, countryEn, visaType, processingDays, fee, currency, entryType, status, isActive, createdAt]
       properties:
         id: { type: integer }
         countryAr: { type: string }
@@ -900,16 +1004,31 @@ components:
         countryCode: { type: string }
         visaType: { type: string }
         requirements: { type: string }
-        documents: { type: string }
+        documents: { type: ["string", "null"] }
+        notes: { type: ["string", "null"] }
         processingDays: { type: integer }
         fee: { type: number }
         currency: { type: string }
+        stayDuration: { type: ["integer", "null"] }
+        validityDays: { type: ["integer", "null"] }
+        entryType:
+          type: string
+          enum: [single, multiple, transit]
+        entryCount: { type: ["integer", "null"] }
+        allowedNationalities:
+          type: array
+          items: { type: string }
         imageUrl: { type: ["string", "null"] }
+        status:
+          type: string
+          enum: [available, suspended, closed]
+        isActive: { type: boolean }
         createdAt: { type: string }
+        updatedAt: { type: string }
 
     VisaInput:
       type: object
-      required: [countryAr, countryEn, visaType, requirements, processingDays, fee, currency]
+      required: [countryAr, countryEn, visaType, processingDays, fee, currency]
       properties:
         countryAr: { type: string }
         countryEn: { type: string }
@@ -917,10 +1036,24 @@ components:
         visaType: { type: string }
         requirements: { type: string }
         documents: { type: string }
+        notes: { type: string }
         processingDays: { type: integer }
         fee: { type: number }
         currency: { type: string }
+        stayDuration: { type: integer }
+        validityDays: { type: integer }
+        entryType:
+          type: string
+          enum: [single, multiple, transit]
+        entryCount: { type: integer }
+        allowedNationalities:
+          type: array
+          items: { type: string }
         imageUrl: { type: string }
+        status:
+          type: string
+          enum: [available, suspended, closed]
+        isActive: { type: boolean }
 
     VisaUpdate:
       type: object
@@ -931,10 +1064,24 @@ components:
         visaType: { type: string }
         requirements: { type: string }
         documents: { type: string }
+        notes: { type: string }
         processingDays: { type: integer }
         fee: { type: number }
         currency: { type: string }
+        stayDuration: { type: integer }
+        validityDays: { type: integer }
+        entryType:
+          type: string
+          enum: [single, multiple, transit]
+        entryCount: { type: integer }
+        allowedNationalities:
+          type: array
+          items: { type: string }
         imageUrl: { type: string }
+        status:
+          type: string
+          enum: [available, suspended, closed]
+        isActive: { type: boolean }
 
     Booking:
       type: object
@@ -1027,33 +1174,43 @@ components:
 
     RegisterInput:
       type: object
-      required: [email, password]
+      required: [password]
       properties:
         email: { type: string, format: email }
+        phone: { type: string }
         password: { type: string, minLength: 8 }
         firstName: { type: string }
         lastName: { type: string }
-        phone: { type: string }
+        nationality: { type: string }
+        gender:
+          type: string
+          enum: [male, female, other]
+        dateOfBirth: { type: string, format: date }
 
     LoginInput:
       type: object
-      required: [email, password]
+      required: [password]
       properties:
         email: { type: string, format: email }
+        phone: { type: string }
         password: { type: string }
 
     SafeUser:
       type: object
-      required: [id, email, role, isActive, createdAt, updatedAt]
+      required: [id, role, isActive, createdAt, updatedAt]
       properties:
         id: { type: string, format: uuid }
-        email: { type: string }
+        email: { type: ["string", "null"] }
+        phone: { type: ["string", "null"] }
         firstName: { type: ["string", "null"] }
         lastName: { type: ["string", "null"] }
-        phone: { type: ["string", "null"] }
         nationality: { type: ["string", "null"] }
+        gender: { type: ["string", "null"] }
+        dateOfBirth: { type: ["string", "null"] }
         role: { type: string, enum: [customer, agent, admin, super_admin] }
         isActive: { type: boolean }
+        emailVerifiedAt: { type: ["string", "null"] }
+        phoneVerifiedAt: { type: ["string", "null"] }
         lastLoginAt: { type: ["string", "null"] }
         createdAt: { type: string }
         updatedAt: { type: string }

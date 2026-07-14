@@ -256,17 +256,41 @@ export const ListProgramsResponseItem = zod.object({
   "id": zod.number(),
   "titleAr": zod.string(),
   "titleEn": zod.string(),
-  "descriptionAr": zod.string(),
-  "descriptionEn": zod.string(),
+  "descriptionAr": zod.string().optional(),
+  "descriptionEn": zod.string().optional(),
+  "country": zod.string().optional(),
+  "cities": zod.array(zod.string()).optional(),
   "price": zod.number(),
   "currency": zod.string().optional(),
   "days": zod.number(),
   "nights": zod.number().optional(),
   "imageUrl": zod.string(),
-  "included": zod.string().optional(),
+  "images": zod.array(zod.string()).optional(),
+  "dailyItinerary": zod.array(zod.object({
+  "day": zod.number(),
+  "titleAr": zod.string(),
+  "titleEn": zod.string(),
+  "descriptionAr": zod.string(),
+  "descriptionEn": zod.string()
+})).optional(),
+  "hotels": zod.array(zod.object({
+  "nameAr": zod.string(),
+  "nameEn": zod.string(),
+  "stars": zod.number(),
+  "city": zod.string()
+})).optional(),
+  "airlines": zod.array(zod.string()).optional(),
+  "includedServices": zod.array(zod.string()).optional(),
+  "excludedServices": zod.array(zod.string()).optional(),
+  "included": zod.string().nullish(),
+  "bookingTerms": zod.string().nullish(),
+  "cancellationPolicy": zod.string().nullish(),
   "destination": zod.string().nullish(),
+  "status": zod.enum(['active', 'featured', 'new', 'special_offer', 'expired', 'hidden']),
   "featured": zod.boolean(),
-  "createdAt": zod.string()
+  "isActive": zod.boolean(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string().optional()
 })
 export const ListProgramsResponse = zod.array(ListProgramsResponseItem)
 
@@ -277,33 +301,80 @@ export const ListProgramsResponse = zod.array(ListProgramsResponseItem)
 export const CreateProgramBody = zod.object({
   "titleAr": zod.string(),
   "titleEn": zod.string(),
-  "descriptionAr": zod.string(),
-  "descriptionEn": zod.string(),
+  "descriptionAr": zod.string().optional(),
+  "descriptionEn": zod.string().optional(),
+  "country": zod.string().optional(),
+  "cities": zod.array(zod.string()).optional(),
   "price": zod.number(),
   "currency": zod.string().optional(),
   "days": zod.number(),
   "nights": zod.number().optional(),
-  "imageUrl": zod.string(),
+  "imageUrl": zod.string().optional(),
+  "images": zod.array(zod.string()).optional(),
+  "dailyItinerary": zod.array(zod.object({
+  "day": zod.number(),
+  "titleAr": zod.string(),
+  "titleEn": zod.string(),
+  "descriptionAr": zod.string(),
+  "descriptionEn": zod.string()
+})).optional(),
+  "hotels": zod.array(zod.object({
+  "nameAr": zod.string(),
+  "nameEn": zod.string(),
+  "stars": zod.number(),
+  "city": zod.string()
+})).optional(),
+  "airlines": zod.array(zod.string()).optional(),
+  "includedServices": zod.array(zod.string()).optional(),
+  "excludedServices": zod.array(zod.string()).optional(),
   "included": zod.string().optional(),
+  "bookingTerms": zod.string().optional(),
+  "cancellationPolicy": zod.string().optional(),
   "destination": zod.string().optional(),
-  "featured": zod.boolean().optional()
+  "status": zod.enum(['active', 'featured', 'new', 'special_offer', 'expired', 'hidden']).optional(),
+  "featured": zod.boolean().optional(),
+  "isActive": zod.boolean().optional()
 })
 
 export const CreateProgramResponse = zod.object({
   "id": zod.number(),
   "titleAr": zod.string(),
   "titleEn": zod.string(),
-  "descriptionAr": zod.string(),
-  "descriptionEn": zod.string(),
+  "descriptionAr": zod.string().optional(),
+  "descriptionEn": zod.string().optional(),
+  "country": zod.string().optional(),
+  "cities": zod.array(zod.string()).optional(),
   "price": zod.number(),
   "currency": zod.string().optional(),
   "days": zod.number(),
   "nights": zod.number().optional(),
   "imageUrl": zod.string(),
-  "included": zod.string().optional(),
+  "images": zod.array(zod.string()).optional(),
+  "dailyItinerary": zod.array(zod.object({
+  "day": zod.number(),
+  "titleAr": zod.string(),
+  "titleEn": zod.string(),
+  "descriptionAr": zod.string(),
+  "descriptionEn": zod.string()
+})).optional(),
+  "hotels": zod.array(zod.object({
+  "nameAr": zod.string(),
+  "nameEn": zod.string(),
+  "stars": zod.number(),
+  "city": zod.string()
+})).optional(),
+  "airlines": zod.array(zod.string()).optional(),
+  "includedServices": zod.array(zod.string()).optional(),
+  "excludedServices": zod.array(zod.string()).optional(),
+  "included": zod.string().nullish(),
+  "bookingTerms": zod.string().nullish(),
+  "cancellationPolicy": zod.string().nullish(),
   "destination": zod.string().nullish(),
+  "status": zod.enum(['active', 'featured', 'new', 'special_offer', 'expired', 'hidden']),
   "featured": zod.boolean(),
-  "createdAt": zod.string()
+  "isActive": zod.boolean(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string().optional()
 })
 
 
@@ -318,17 +389,41 @@ export const GetProgramResponse = zod.object({
   "id": zod.number(),
   "titleAr": zod.string(),
   "titleEn": zod.string(),
-  "descriptionAr": zod.string(),
-  "descriptionEn": zod.string(),
+  "descriptionAr": zod.string().optional(),
+  "descriptionEn": zod.string().optional(),
+  "country": zod.string().optional(),
+  "cities": zod.array(zod.string()).optional(),
   "price": zod.number(),
   "currency": zod.string().optional(),
   "days": zod.number(),
   "nights": zod.number().optional(),
   "imageUrl": zod.string(),
-  "included": zod.string().optional(),
+  "images": zod.array(zod.string()).optional(),
+  "dailyItinerary": zod.array(zod.object({
+  "day": zod.number(),
+  "titleAr": zod.string(),
+  "titleEn": zod.string(),
+  "descriptionAr": zod.string(),
+  "descriptionEn": zod.string()
+})).optional(),
+  "hotels": zod.array(zod.object({
+  "nameAr": zod.string(),
+  "nameEn": zod.string(),
+  "stars": zod.number(),
+  "city": zod.string()
+})).optional(),
+  "airlines": zod.array(zod.string()).optional(),
+  "includedServices": zod.array(zod.string()).optional(),
+  "excludedServices": zod.array(zod.string()).optional(),
+  "included": zod.string().nullish(),
+  "bookingTerms": zod.string().nullish(),
+  "cancellationPolicy": zod.string().nullish(),
   "destination": zod.string().nullish(),
+  "status": zod.enum(['active', 'featured', 'new', 'special_offer', 'expired', 'hidden']),
   "featured": zod.boolean(),
-  "createdAt": zod.string()
+  "isActive": zod.boolean(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string().optional()
 })
 
 
@@ -344,31 +439,78 @@ export const UpdateProgramBody = zod.object({
   "titleEn": zod.string().optional(),
   "descriptionAr": zod.string().optional(),
   "descriptionEn": zod.string().optional(),
+  "country": zod.string().optional(),
+  "cities": zod.array(zod.string()).optional(),
   "price": zod.number().optional(),
   "currency": zod.string().optional(),
   "days": zod.number().optional(),
   "nights": zod.number().optional(),
   "imageUrl": zod.string().optional(),
+  "images": zod.array(zod.string()).optional(),
+  "dailyItinerary": zod.array(zod.object({
+  "day": zod.number(),
+  "titleAr": zod.string(),
+  "titleEn": zod.string(),
+  "descriptionAr": zod.string(),
+  "descriptionEn": zod.string()
+})).optional(),
+  "hotels": zod.array(zod.object({
+  "nameAr": zod.string(),
+  "nameEn": zod.string(),
+  "stars": zod.number(),
+  "city": zod.string()
+})).optional(),
+  "airlines": zod.array(zod.string()).optional(),
+  "includedServices": zod.array(zod.string()).optional(),
+  "excludedServices": zod.array(zod.string()).optional(),
   "included": zod.string().optional(),
+  "bookingTerms": zod.string().optional(),
+  "cancellationPolicy": zod.string().optional(),
   "destination": zod.string().optional(),
-  "featured": zod.boolean().optional()
+  "status": zod.enum(['active', 'featured', 'new', 'special_offer', 'expired', 'hidden']).optional(),
+  "featured": zod.boolean().optional(),
+  "isActive": zod.boolean().optional()
 })
 
 export const UpdateProgramResponse = zod.object({
   "id": zod.number(),
   "titleAr": zod.string(),
   "titleEn": zod.string(),
-  "descriptionAr": zod.string(),
-  "descriptionEn": zod.string(),
+  "descriptionAr": zod.string().optional(),
+  "descriptionEn": zod.string().optional(),
+  "country": zod.string().optional(),
+  "cities": zod.array(zod.string()).optional(),
   "price": zod.number(),
   "currency": zod.string().optional(),
   "days": zod.number(),
   "nights": zod.number().optional(),
   "imageUrl": zod.string(),
-  "included": zod.string().optional(),
+  "images": zod.array(zod.string()).optional(),
+  "dailyItinerary": zod.array(zod.object({
+  "day": zod.number(),
+  "titleAr": zod.string(),
+  "titleEn": zod.string(),
+  "descriptionAr": zod.string(),
+  "descriptionEn": zod.string()
+})).optional(),
+  "hotels": zod.array(zod.object({
+  "nameAr": zod.string(),
+  "nameEn": zod.string(),
+  "stars": zod.number(),
+  "city": zod.string()
+})).optional(),
+  "airlines": zod.array(zod.string()).optional(),
+  "includedServices": zod.array(zod.string()).optional(),
+  "excludedServices": zod.array(zod.string()).optional(),
+  "included": zod.string().nullish(),
+  "bookingTerms": zod.string().nullish(),
+  "cancellationPolicy": zod.string().nullish(),
   "destination": zod.string().nullish(),
+  "status": zod.enum(['active', 'featured', 'new', 'special_offer', 'expired', 'hidden']),
   "featured": zod.boolean(),
-  "createdAt": zod.string()
+  "isActive": zod.boolean(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string().optional()
 })
 
 
@@ -391,13 +533,22 @@ export const ListVisasResponseItem = zod.object({
   "countryEn": zod.string(),
   "countryCode": zod.string().optional(),
   "visaType": zod.string(),
-  "requirements": zod.string(),
-  "documents": zod.string().optional(),
+  "requirements": zod.string().optional(),
+  "documents": zod.string().nullish(),
+  "notes": zod.string().nullish(),
   "processingDays": zod.number(),
   "fee": zod.number(),
   "currency": zod.string(),
+  "stayDuration": zod.number().nullish(),
+  "validityDays": zod.number().nullish(),
+  "entryType": zod.enum(['single', 'multiple', 'transit']),
+  "entryCount": zod.number().nullish(),
+  "allowedNationalities": zod.array(zod.string()).optional(),
   "imageUrl": zod.string().nullish(),
-  "createdAt": zod.string()
+  "status": zod.enum(['available', 'suspended', 'closed']),
+  "isActive": zod.boolean(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string().optional()
 })
 export const ListVisasResponse = zod.array(ListVisasResponseItem)
 
@@ -410,12 +561,20 @@ export const CreateVisaBody = zod.object({
   "countryEn": zod.string(),
   "countryCode": zod.string().optional(),
   "visaType": zod.string(),
-  "requirements": zod.string(),
+  "requirements": zod.string().optional(),
   "documents": zod.string().optional(),
+  "notes": zod.string().optional(),
   "processingDays": zod.number(),
   "fee": zod.number(),
   "currency": zod.string(),
-  "imageUrl": zod.string().optional()
+  "stayDuration": zod.number().optional(),
+  "validityDays": zod.number().optional(),
+  "entryType": zod.enum(['single', 'multiple', 'transit']).optional(),
+  "entryCount": zod.number().optional(),
+  "allowedNationalities": zod.array(zod.string()).optional(),
+  "imageUrl": zod.string().optional(),
+  "status": zod.enum(['available', 'suspended', 'closed']).optional(),
+  "isActive": zod.boolean().optional()
 })
 
 export const CreateVisaResponse = zod.object({
@@ -424,13 +583,22 @@ export const CreateVisaResponse = zod.object({
   "countryEn": zod.string(),
   "countryCode": zod.string().optional(),
   "visaType": zod.string(),
-  "requirements": zod.string(),
-  "documents": zod.string().optional(),
+  "requirements": zod.string().optional(),
+  "documents": zod.string().nullish(),
+  "notes": zod.string().nullish(),
   "processingDays": zod.number(),
   "fee": zod.number(),
   "currency": zod.string(),
+  "stayDuration": zod.number().nullish(),
+  "validityDays": zod.number().nullish(),
+  "entryType": zod.enum(['single', 'multiple', 'transit']),
+  "entryCount": zod.number().nullish(),
+  "allowedNationalities": zod.array(zod.string()).optional(),
   "imageUrl": zod.string().nullish(),
-  "createdAt": zod.string()
+  "status": zod.enum(['available', 'suspended', 'closed']),
+  "isActive": zod.boolean(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string().optional()
 })
 
 
@@ -447,13 +615,22 @@ export const GetVisaResponse = zod.object({
   "countryEn": zod.string(),
   "countryCode": zod.string().optional(),
   "visaType": zod.string(),
-  "requirements": zod.string(),
-  "documents": zod.string().optional(),
+  "requirements": zod.string().optional(),
+  "documents": zod.string().nullish(),
+  "notes": zod.string().nullish(),
   "processingDays": zod.number(),
   "fee": zod.number(),
   "currency": zod.string(),
+  "stayDuration": zod.number().nullish(),
+  "validityDays": zod.number().nullish(),
+  "entryType": zod.enum(['single', 'multiple', 'transit']),
+  "entryCount": zod.number().nullish(),
+  "allowedNationalities": zod.array(zod.string()).optional(),
   "imageUrl": zod.string().nullish(),
-  "createdAt": zod.string()
+  "status": zod.enum(['available', 'suspended', 'closed']),
+  "isActive": zod.boolean(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string().optional()
 })
 
 
@@ -471,10 +648,18 @@ export const UpdateVisaBody = zod.object({
   "visaType": zod.string().optional(),
   "requirements": zod.string().optional(),
   "documents": zod.string().optional(),
+  "notes": zod.string().optional(),
   "processingDays": zod.number().optional(),
   "fee": zod.number().optional(),
   "currency": zod.string().optional(),
-  "imageUrl": zod.string().optional()
+  "stayDuration": zod.number().optional(),
+  "validityDays": zod.number().optional(),
+  "entryType": zod.enum(['single', 'multiple', 'transit']).optional(),
+  "entryCount": zod.number().optional(),
+  "allowedNationalities": zod.array(zod.string()).optional(),
+  "imageUrl": zod.string().optional(),
+  "status": zod.enum(['available', 'suspended', 'closed']).optional(),
+  "isActive": zod.boolean().optional()
 })
 
 export const UpdateVisaResponse = zod.object({
@@ -483,13 +668,22 @@ export const UpdateVisaResponse = zod.object({
   "countryEn": zod.string(),
   "countryCode": zod.string().optional(),
   "visaType": zod.string(),
-  "requirements": zod.string(),
-  "documents": zod.string().optional(),
+  "requirements": zod.string().optional(),
+  "documents": zod.string().nullish(),
+  "notes": zod.string().nullish(),
   "processingDays": zod.number(),
   "fee": zod.number(),
   "currency": zod.string(),
+  "stayDuration": zod.number().nullish(),
+  "validityDays": zod.number().nullish(),
+  "entryType": zod.enum(['single', 'multiple', 'transit']),
+  "entryCount": zod.number().nullish(),
+  "allowedNationalities": zod.array(zod.string()).optional(),
   "imageUrl": zod.string().nullish(),
-  "createdAt": zod.string()
+  "status": zod.enum(['available', 'suspended', 'closed']),
+  "isActive": zod.boolean(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string().optional()
 })
 
 
@@ -714,23 +908,30 @@ export const registerUserBodyPasswordMin = 8;
 
 
 export const RegisterUserBody = zod.object({
-  "email": zod.string().email(),
+  "email": zod.string().email().optional(),
+  "phone": zod.string().optional(),
   "password": zod.string().min(registerUserBodyPasswordMin),
   "firstName": zod.string().optional(),
   "lastName": zod.string().optional(),
-  "phone": zod.string().optional()
+  "nationality": zod.string().optional(),
+  "gender": zod.enum(['male', 'female', 'other']).optional(),
+  "dateOfBirth": zod.coerce.date().optional()
 })
 
 export const RegisterUserResponse = zod.object({
   "user": zod.object({
   "id": zod.string().uuid(),
-  "email": zod.string(),
+  "email": zod.string().nullish(),
+  "phone": zod.string().nullish(),
   "firstName": zod.string().nullish(),
   "lastName": zod.string().nullish(),
-  "phone": zod.string().nullish(),
   "nationality": zod.string().nullish(),
+  "gender": zod.string().nullish(),
+  "dateOfBirth": zod.string().nullish(),
   "role": zod.enum(['customer', 'agent', 'admin', 'super_admin']),
   "isActive": zod.boolean(),
+  "emailVerifiedAt": zod.string().nullish(),
+  "phoneVerifiedAt": zod.string().nullish(),
   "lastLoginAt": zod.string().nullish(),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
@@ -744,20 +945,25 @@ export const RegisterUserResponse = zod.object({
  * @summary Login with email and password
  */
 export const LoginUserBody = zod.object({
-  "email": zod.string().email(),
+  "email": zod.string().email().optional(),
+  "phone": zod.string().optional(),
   "password": zod.string()
 })
 
 export const LoginUserResponse = zod.object({
   "user": zod.object({
   "id": zod.string().uuid(),
-  "email": zod.string(),
+  "email": zod.string().nullish(),
+  "phone": zod.string().nullish(),
   "firstName": zod.string().nullish(),
   "lastName": zod.string().nullish(),
-  "phone": zod.string().nullish(),
   "nationality": zod.string().nullish(),
+  "gender": zod.string().nullish(),
+  "dateOfBirth": zod.string().nullish(),
   "role": zod.enum(['customer', 'agent', 'admin', 'super_admin']),
   "isActive": zod.boolean(),
+  "emailVerifiedAt": zod.string().nullish(),
+  "phoneVerifiedAt": zod.string().nullish(),
   "lastLoginAt": zod.string().nullish(),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
@@ -795,13 +1001,17 @@ export const LogoutUserResponse = zod.unknown()
  */
 export const GetCurrentUserResponse = zod.object({
   "id": zod.string().uuid(),
-  "email": zod.string(),
+  "email": zod.string().nullish(),
+  "phone": zod.string().nullish(),
   "firstName": zod.string().nullish(),
   "lastName": zod.string().nullish(),
-  "phone": zod.string().nullish(),
   "nationality": zod.string().nullish(),
+  "gender": zod.string().nullish(),
+  "dateOfBirth": zod.string().nullish(),
   "role": zod.enum(['customer', 'agent', 'admin', 'super_admin']),
   "isActive": zod.boolean(),
+  "emailVerifiedAt": zod.string().nullish(),
+  "phoneVerifiedAt": zod.string().nullish(),
   "lastLoginAt": zod.string().nullish(),
   "createdAt": zod.string(),
   "updatedAt": zod.string()

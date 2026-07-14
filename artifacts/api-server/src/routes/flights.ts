@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { z } from "zod/v4";
+import { z } from "zod";
 import { searchFlights } from "../services/FlightSearchService";
 import { ProviderRegistry } from "../providers/ProviderRegistry";
 import { db } from "@workspace/db";

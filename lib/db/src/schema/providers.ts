@@ -1,6 +1,6 @@
 import { pgTable, uuid, text, boolean, integer, timestamp, pgEnum } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
-import { z } from "zod/v4";
+import { z } from "zod";
 
 export const providerTypeEnum = pgEnum("provider_type", ["flight", "hotel", "both"]);
 

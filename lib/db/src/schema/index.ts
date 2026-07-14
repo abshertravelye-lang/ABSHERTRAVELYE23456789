@@ -9,3 +9,4 @@ export * from "./providers";
 export * from "./airports";
 export * from "./flightSearches";
 export * from "./auditLogs";
+export * from "./travelerProfiles";
