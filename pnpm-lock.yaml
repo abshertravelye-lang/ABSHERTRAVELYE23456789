@@ -299,6 +299,9 @@ importers:
       '@workspace/api-client-react':
         specifier: workspace:*
         version: link:../../lib/api-client-react
+      '@workspace/countries':
+        specifier: workspace:*
+        version: link:../../lib/countries
       '@workspace/object-storage-web':
         specifier: workspace:*
         version: link:../../lib/object-storage-web

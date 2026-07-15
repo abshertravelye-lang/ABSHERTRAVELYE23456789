@@ -1,9 +1,40 @@
 import { Link } from "wouter";
 import { useTranslation } from "@/hooks/use-translation";
+import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { Globe, Menu, X, Phone, MapPin } from "lucide-react";
+import { Globe, Menu, X, Phone, MapPin, User, LogOut } from "lucide-react";
 import logo from "@assets/absher-business-logo.png";
 import { useState } from "react";
+
+function AccountNavButton({ language }: { language: string }) {
+  const { isAuthenticated, user, logout } = useAuth();
+  const ar = language === "ar";
+
+  if (!isAuthenticated) {
+    return (
+      <Link href="/login">
+        <Button variant="outline" size="sm" className="ml-2 rtl:mr-2 rtl:ml-0 gap-2">
+          <User size={16} />
+          {ar ? "تسجيل الدخول" : "Sign in"}
+        </Button>
+      </Link>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-2 ml-2 rtl:mr-2 rtl:ml-0">
+      <Link href="/account">
+        <Button variant="outline" size="sm" className="gap-2">
+          <User size={16} />
+          {user?.firstName || (ar ? "حسابي" : "My Account")}
+        </Button>
+      </Link>
+      <Button variant="ghost" size="icon" onClick={logout} title={ar ? "تسجيل الخروج" : "Sign out"}>
+        <LogOut size={16} />
+      </Button>
+    </div>
+  );
+}
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const { t, language, setLanguage } = useTranslation();
@@ -66,6 +97,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 {t("bookNow")}
               </Button>
             </Link>
+            <AccountNavButton language={language} />
           </nav>
 
           {/* Mobile Actions */}
@@ -92,10 +124,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 {link.label}
               </Link>
             ))}
-            <div className="pt-4 border-t">
+            <div className="pt-4 border-t space-y-3">
               <Link href="/book" onClick={() => setMobileMenuOpen(false)}>
                 <Button className="w-full bg-accent text-primary">{t("bookNow")}</Button>
               </Link>
+              <div onClick={() => setMobileMenuOpen(false)}>
+                <AccountNavButton language={language} />
+              </div>
             </div>
           </div>
         )}

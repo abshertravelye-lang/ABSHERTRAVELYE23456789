@@ -237,6 +237,18 @@ export interface ProgramUpdate {
   isActive?: boolean;
 }
 
+export type VisaCategory = typeof VisaCategory[keyof typeof VisaCategory];
+
+
+export const VisaCategory = {
+  tourist: 'tourist',
+  business: 'business',
+  medical: 'medical',
+  visit: 'visit',
+  study: 'study',
+  umrah: 'umrah',
+} as const;
+
 export type VisaEntryType = typeof VisaEntryType[keyof typeof VisaEntryType];
 
 
@@ -261,6 +273,7 @@ export interface Visa {
   countryEn: string;
   countryCode?: string;
   visaType: string;
+  category?: VisaCategory;
   /** @nullable */
   descriptionAr?: string | null;
   /** @nullable */
@@ -304,6 +317,18 @@ export interface Visa {
   updatedAt?: string;
 }
 
+export type VisaInputCategory = typeof VisaInputCategory[keyof typeof VisaInputCategory];
+
+
+export const VisaInputCategory = {
+  tourist: 'tourist',
+  business: 'business',
+  medical: 'medical',
+  visit: 'visit',
+  study: 'study',
+  umrah: 'umrah',
+} as const;
+
 export type VisaInputEntryType = typeof VisaInputEntryType[keyof typeof VisaInputEntryType];
 
 
@@ -327,6 +352,7 @@ export interface VisaInput {
   countryEn: string;
   countryCode?: string;
   visaType: string;
+  category?: VisaInputCategory;
   descriptionAr?: string;
   descriptionEn?: string;
   requirements?: string;
@@ -358,6 +384,18 @@ export interface VisaInput {
   ineligibleMessageEn?: string;
 }
 
+export type VisaUpdateCategory = typeof VisaUpdateCategory[keyof typeof VisaUpdateCategory];
+
+
+export const VisaUpdateCategory = {
+  tourist: 'tourist',
+  business: 'business',
+  medical: 'medical',
+  visit: 'visit',
+  study: 'study',
+  umrah: 'umrah',
+} as const;
+
 export type VisaUpdateEntryType = typeof VisaUpdateEntryType[keyof typeof VisaUpdateEntryType];
 
 
@@ -381,6 +419,7 @@ export interface VisaUpdate {
   countryEn?: string;
   countryCode?: string;
   visaType?: string;
+  category?: VisaUpdateCategory;
   descriptionAr?: string;
   descriptionEn?: string;
   requirements?: string;
@@ -433,15 +472,22 @@ export type VisaApplicationStatus = typeof VisaApplicationStatus[keyof typeof Vi
 
 
 export const VisaApplicationStatus = {
-  pending: 'pending',
+  received: 'received',
   under_review: 'under_review',
-  approved: 'approved',
+  awaiting_documents: 'awaiting_documents',
+  documents_uploaded: 'documents_uploaded',
+  sent_to_embassy: 'sent_to_embassy',
+  processing: 'processing',
+  issued: 'issued',
+  completed: 'completed',
   rejected: 'rejected',
 } as const;
 
 export interface VisaApplication {
   id: number;
   visaId: number;
+  /** @nullable */
+  userId?: string | null;
   eligibilityPath: VisaApplicationEligibilityPath;
   /** @nullable */
   gccCountry?: string | null;
@@ -514,9 +560,14 @@ export type VisaApplicationStatusUpdateStatus = typeof VisaApplicationStatusUpda
 
 
 export const VisaApplicationStatusUpdateStatus = {
-  pending: 'pending',
+  received: 'received',
   under_review: 'under_review',
-  approved: 'approved',
+  awaiting_documents: 'awaiting_documents',
+  documents_uploaded: 'documents_uploaded',
+  sent_to_embassy: 'sent_to_embassy',
+  processing: 'processing',
+  issued: 'issued',
+  completed: 'completed',
   rejected: 'rejected',
 } as const;
 
@@ -632,6 +683,18 @@ export type DashboardStatsBookingsByTypeItem = {
   count: number;
 };
 
+export type DashboardStatsVisaApplicationsByStatusItem = {
+  status: string;
+  count: number;
+};
+
+export type DashboardStatsMonthlyReportItem = {
+  month: string;
+  visaApplications: number;
+  bookings: number;
+  revenue: number;
+};
+
 export interface DashboardStats {
   totalBookings: number;
   pendingBookings: number;
@@ -643,6 +706,105 @@ export interface DashboardStats {
   totalMessages: number;
   unreadMessages?: number;
   bookingsByType?: DashboardStatsBookingsByTypeItem[];
+  totalCustomers?: number;
+  totalVisaApplications?: number;
+  newVisaApplications?: number;
+  completedVisaApplications?: number;
+  pendingVisaApplications?: number;
+  totalRevenue?: number;
+  totalFlightSearches?: number;
+  /** @nullable */
+  mostRequestedCountry?: string | null;
+  /** @nullable */
+  mostApplyingNationality?: string | null;
+  visaApplicationsByStatus?: DashboardStatsVisaApplicationsByStatusItem[];
+  monthlyReport?: DashboardStatsMonthlyReportItem[];
+}
+
+export type NotificationChannel = typeof NotificationChannel[keyof typeof NotificationChannel];
+
+
+export const NotificationChannel = {
+  in_app: 'in_app',
+  email: 'email',
+  whatsapp: 'whatsapp',
+  sms: 'sms',
+} as const;
+
+export interface Notification {
+  id: string;
+  userId: string;
+  titleAr: string;
+  titleEn: string;
+  messageAr: string;
+  messageEn: string;
+  channel: NotificationChannel;
+  /** @nullable */
+  relatedEntityType?: string | null;
+  /** @nullable */
+  relatedEntityId?: string | null;
+  isRead: boolean;
+  createdAt: string;
+}
+
+export type EmployeeRole = typeof EmployeeRole[keyof typeof EmployeeRole];
+
+
+export const EmployeeRole = {
+  customer: 'customer',
+  agent: 'agent',
+  admin: 'admin',
+  super_admin: 'super_admin',
+} as const;
+
+export interface Employee {
+  id: string;
+  /** @nullable */
+  email?: string | null;
+  /** @nullable */
+  phone?: string | null;
+  /** @nullable */
+  firstName?: string | null;
+  /** @nullable */
+  lastName?: string | null;
+  role: EmployeeRole;
+  isActive: boolean;
+  createdAt: string;
+  /** @nullable */
+  lastLoginAt?: string | null;
+}
+
+export type EmployeeInputRole = typeof EmployeeInputRole[keyof typeof EmployeeInputRole];
+
+
+export const EmployeeInputRole = {
+  agent: 'agent',
+  admin: 'admin',
+  super_admin: 'super_admin',
+} as const;
+
+export interface EmployeeInput {
+  email?: string;
+  phone?: string;
+  /** @minLength 8 */
+  password: string;
+  firstName?: string;
+  lastName?: string;
+  role: EmployeeInputRole;
+}
+
+export type EmployeeUpdateRole = typeof EmployeeUpdateRole[keyof typeof EmployeeUpdateRole];
+
+
+export const EmployeeUpdateRole = {
+  agent: 'agent',
+  admin: 'admin',
+  super_admin: 'super_admin',
+} as const;
+
+export interface EmployeeUpdate {
+  role?: EmployeeUpdateRole;
+  isActive?: boolean;
 }
 
 export type RegisterInputGender = typeof RegisterInputGender[keyof typeof RegisterInputGender];
@@ -796,9 +958,14 @@ export type ListVisaApplicationsStatus = typeof ListVisaApplicationsStatus[keyof
 
 
 export const ListVisaApplicationsStatus = {
-  pending: 'pending',
+  received: 'received',
   under_review: 'under_review',
-  approved: 'approved',
+  awaiting_documents: 'awaiting_documents',
+  documents_uploaded: 'documents_uploaded',
+  sent_to_embassy: 'sent_to_embassy',
+  processing: 'processing',
+  issued: 'issued',
+  completed: 'completed',
   rejected: 'rejected',
 } as const;
 
@@ -916,4 +1083,12 @@ export const SearchFlightsSort = {
   fastest: 'fastest',
   best_value: 'best_value',
 } as const;
+
+export type ListNotificationsParams = {
+unreadOnly?: boolean;
+};
+
+export type MarkAllNotificationsRead200 = {
+  updated: number;
+};
 

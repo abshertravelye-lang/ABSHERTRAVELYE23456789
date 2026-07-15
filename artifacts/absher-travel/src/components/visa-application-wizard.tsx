@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCreateVisaApplication, Visa, VisaApplicationInput } from "@workspace/api-client-react";
 import { useUpload } from "@workspace/object-storage-web";
+import { CountrySelect } from "@/components/country-select";
 import { CheckCircle, X, UploadCloud, AlertCircle, ArrowRight, ArrowLeft } from "lucide-react";
 
 type StepId =
@@ -330,7 +331,7 @@ export function VisaApplicationWizard({ visa, open, onOpenChange }: { visa: Visa
               <h3 className="text-lg font-bold text-slate-800">{ar ? "الرجاء إدخال جنسيتك للتحقق من أهليتك" : "Please enter your nationality to check eligibility"}</h3>
               <div className="space-y-2">
                 <Label>{ar ? "الجنسية" : "Nationality"}</Label>
-                <Input placeholder={ar ? "مثال: مصري" : "e.g. Egyptian"} value={data.nationality || ""} onChange={e => updateData({ nationality: e.target.value })} />
+                <CountrySelect language={language as "ar" | "en"} value={data.nationality} onChange={(code) => updateData({ nationality: code })} />
               </div>
             </div>
           )}
@@ -355,7 +356,7 @@ export function VisaApplicationWizard({ visa, open, onOpenChange }: { visa: Visa
                   {!hasNationalityFromStep2 && (
                     <div className="space-y-2">
                       <Label>{ar ? "الجنسية" : "Nationality"} *</Label>
-                      <Input value={data.nationality || ""} onChange={e => updateData({ nationality: e.target.value })} />
+                      <CountrySelect language={language as "ar" | "en"} value={data.nationality} onChange={(code) => updateData({ nationality: code })} />
                     </div>
                   )}
 

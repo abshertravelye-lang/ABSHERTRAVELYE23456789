@@ -7,6 +7,7 @@ const API = "/api";
 
 type VisaStatus = "available" | "suspended" | "closed";
 type EntryType = "single" | "multiple" | "transit";
+type VisaCategory = "tourist" | "business" | "medical" | "visit" | "study" | "umrah";
 
 interface Visa {
   id: number;
@@ -14,6 +15,7 @@ interface Visa {
   countryEn: string;
   countryCode?: string;
   visaType: string;
+  category?: VisaCategory;
   descriptionAr?: string;
   descriptionEn?: string;
   requirements?: string;
@@ -52,6 +54,7 @@ const emptyVisa = (): Omit<Visa, "id" | "createdAt" | "updatedAt"> => ({
   countryEn: "",
   countryCode: "",
   visaType: "",
+  category: "tourist",
   descriptionAr: "",
   descriptionEn: "",
   requirements: "",
@@ -93,6 +96,15 @@ const ENTRY_TYPE_LABELS: Record<EntryType, { ar: string; en: string }> = {
   single:   { ar: "دخول واحد",   en: "Single Entry" },
   multiple: { ar: "دخول متعدد",  en: "Multiple Entry" },
   transit:  { ar: "عبور",        en: "Transit" },
+};
+
+const CATEGORY_LABELS: Record<VisaCategory, { ar: string; en: string }> = {
+  tourist:  { ar: "سياحية", en: "Tourist" },
+  business: { ar: "تجارية", en: "Business" },
+  medical:  { ar: "طبية",   en: "Medical" },
+  visit:    { ar: "زيارة",  en: "Visit" },
+  study:    { ar: "دراسية", en: "Study" },
+  umrah:    { ar: "عمرة",   en: "Umrah" },
 };
 
 function VisaForm({
@@ -157,6 +169,14 @@ function VisaForm({
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">{ar ? "نوع التأشيرة" : "Visa Type"} *</label>
                 <input placeholder={ar ? "مثال: سياحية، عمل، دراسة" : "e.g. Tourist, Business, Student"} className="w-full border rounded-xl px-4 py-2.5 text-sm" value={form.visaType} onChange={e => set("visaType", e.target.value)} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{ar ? "التصنيف" : "Category"}</label>
+                <select className="w-full border rounded-xl px-4 py-2.5 text-sm" value={form.category ?? "tourist"} onChange={e => set("category", e.target.value as VisaCategory)}>
+                  {Object.entries(CATEGORY_LABELS).map(([k, v]) => (
+                    <option key={k} value={k}>{ar ? v.ar : v.en}</option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">{ar ? "وصف مختصر بالعربية" : "Description (Arabic)"}</label>
@@ -453,6 +473,7 @@ export default function VisasAdmin() {
                 <span className="text-xs px-2.5 py-1 rounded-full bg-green-50 text-green-700 font-bold">{v.currency} {v.fee.toLocaleString()}</span>
                 <span className="text-xs px-2.5 py-1 rounded-full bg-blue-50 text-blue-600">⏱ {v.processingDays} {ar ? "أيام" : "days"}</span>
                 {entryMeta && <span className="text-xs px-2.5 py-1 rounded-full bg-slate-100 text-slate-600">{ar ? entryMeta.ar : entryMeta.en}</span>}
+                {v.category && CATEGORY_LABELS[v.category] && <span className="text-xs px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-600">{ar ? CATEGORY_LABELS[v.category].ar : CATEGORY_LABELS[v.category].en}</span>}
                 {v.stayDuration && <span className="text-xs px-2.5 py-1 rounded-full bg-purple-50 text-purple-600">{v.stayDuration} {ar ? "يوم إقامة" : "days stay"}</span>}
               </div>
             </div>

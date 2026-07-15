@@ -533,6 +533,7 @@ export const ListVisasResponseItem = zod.object({
   "countryEn": zod.string(),
   "countryCode": zod.string().optional(),
   "visaType": zod.string(),
+  "category": zod.enum(['tourist', 'business', 'medical', 'visit', 'study', 'umrah']).optional(),
   "descriptionAr": zod.string().nullish(),
   "descriptionEn": zod.string().nullish(),
   "requirements": zod.string().optional(),
@@ -576,6 +577,7 @@ export const CreateVisaBody = zod.object({
   "countryEn": zod.string(),
   "countryCode": zod.string().optional(),
   "visaType": zod.string(),
+  "category": zod.enum(['tourist', 'business', 'medical', 'visit', 'study', 'umrah']).optional(),
   "descriptionAr": zod.string().optional(),
   "descriptionEn": zod.string().optional(),
   "requirements": zod.string().optional(),
@@ -613,6 +615,7 @@ export const CreateVisaResponse = zod.object({
   "countryEn": zod.string(),
   "countryCode": zod.string().optional(),
   "visaType": zod.string(),
+  "category": zod.enum(['tourist', 'business', 'medical', 'visit', 'study', 'umrah']).optional(),
   "descriptionAr": zod.string().nullish(),
   "descriptionEn": zod.string().nullish(),
   "requirements": zod.string().optional(),
@@ -660,6 +663,7 @@ export const GetVisaResponse = zod.object({
   "countryEn": zod.string(),
   "countryCode": zod.string().optional(),
   "visaType": zod.string(),
+  "category": zod.enum(['tourist', 'business', 'medical', 'visit', 'study', 'umrah']).optional(),
   "descriptionAr": zod.string().nullish(),
   "descriptionEn": zod.string().nullish(),
   "requirements": zod.string().optional(),
@@ -706,6 +710,7 @@ export const UpdateVisaBody = zod.object({
   "countryEn": zod.string().optional(),
   "countryCode": zod.string().optional(),
   "visaType": zod.string().optional(),
+  "category": zod.enum(['tourist', 'business', 'medical', 'visit', 'study', 'umrah']).optional(),
   "descriptionAr": zod.string().optional(),
   "descriptionEn": zod.string().optional(),
   "requirements": zod.string().optional(),
@@ -743,6 +748,7 @@ export const UpdateVisaResponse = zod.object({
   "countryEn": zod.string(),
   "countryCode": zod.string().optional(),
   "visaType": zod.string(),
+  "category": zod.enum(['tourist', 'business', 'medical', 'visit', 'study', 'umrah']).optional(),
   "descriptionAr": zod.string().nullish(),
   "descriptionEn": zod.string().nullish(),
   "requirements": zod.string().optional(),
@@ -792,12 +798,13 @@ export const DeleteVisaResponse = zod.void()
  */
 export const ListVisaApplicationsQueryParams = zod.object({
   "visaId": zod.coerce.number().optional(),
-  "status": zod.enum(['pending', 'under_review', 'approved', 'rejected']).optional()
+  "status": zod.enum(['received', 'under_review', 'awaiting_documents', 'documents_uploaded', 'sent_to_embassy', 'processing', 'issued', 'completed', 'rejected']).optional()
 })
 
 export const ListVisaApplicationsResponseItem = zod.object({
   "id": zod.number(),
   "visaId": zod.number(),
+  "userId": zod.string().nullish(),
   "eligibilityPath": zod.enum(['gcc', 'alternative', 'direct']),
   "gccCountry": zod.string().nullish(),
   "alternativeRegion": zod.string().nullish(),
@@ -815,7 +822,7 @@ export const ListVisaApplicationsResponseItem = zod.object({
   "residencyImageUrl": zod.string().nullish(),
   "visaImageUrl": zod.string().nullish(),
   "agreedToTerms": zod.boolean(),
-  "status": zod.enum(['pending', 'under_review', 'approved', 'rejected']),
+  "status": zod.enum(['received', 'under_review', 'awaiting_documents', 'documents_uploaded', 'sent_to_embassy', 'processing', 'issued', 'completed', 'rejected']),
   "adminNotes": zod.string().nullish(),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
@@ -850,6 +857,7 @@ export const CreateVisaApplicationBody = zod.object({
 export const CreateVisaApplicationResponse = zod.object({
   "id": zod.number(),
   "visaId": zod.number(),
+  "userId": zod.string().nullish(),
   "eligibilityPath": zod.enum(['gcc', 'alternative', 'direct']),
   "gccCountry": zod.string().nullish(),
   "alternativeRegion": zod.string().nullish(),
@@ -867,7 +875,7 @@ export const CreateVisaApplicationResponse = zod.object({
   "residencyImageUrl": zod.string().nullish(),
   "visaImageUrl": zod.string().nullish(),
   "agreedToTerms": zod.boolean(),
-  "status": zod.enum(['pending', 'under_review', 'approved', 'rejected']),
+  "status": zod.enum(['received', 'under_review', 'awaiting_documents', 'documents_uploaded', 'sent_to_embassy', 'processing', 'issued', 'completed', 'rejected']),
   "adminNotes": zod.string().nullish(),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
@@ -884,6 +892,7 @@ export const GetVisaApplicationParams = zod.object({
 export const GetVisaApplicationResponse = zod.object({
   "id": zod.number(),
   "visaId": zod.number(),
+  "userId": zod.string().nullish(),
   "eligibilityPath": zod.enum(['gcc', 'alternative', 'direct']),
   "gccCountry": zod.string().nullish(),
   "alternativeRegion": zod.string().nullish(),
@@ -901,7 +910,7 @@ export const GetVisaApplicationResponse = zod.object({
   "residencyImageUrl": zod.string().nullish(),
   "visaImageUrl": zod.string().nullish(),
   "agreedToTerms": zod.boolean(),
-  "status": zod.enum(['pending', 'under_review', 'approved', 'rejected']),
+  "status": zod.enum(['received', 'under_review', 'awaiting_documents', 'documents_uploaded', 'sent_to_embassy', 'processing', 'issued', 'completed', 'rejected']),
   "adminNotes": zod.string().nullish(),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
@@ -916,13 +925,14 @@ export const UpdateVisaApplicationParams = zod.object({
 })
 
 export const UpdateVisaApplicationBody = zod.object({
-  "status": zod.enum(['pending', 'under_review', 'approved', 'rejected']).optional(),
+  "status": zod.enum(['received', 'under_review', 'awaiting_documents', 'documents_uploaded', 'sent_to_embassy', 'processing', 'issued', 'completed', 'rejected']).optional(),
   "adminNotes": zod.string().optional()
 })
 
 export const UpdateVisaApplicationResponse = zod.object({
   "id": zod.number(),
   "visaId": zod.number(),
+  "userId": zod.string().nullish(),
   "eligibilityPath": zod.enum(['gcc', 'alternative', 'direct']),
   "gccCountry": zod.string().nullish(),
   "alternativeRegion": zod.string().nullish(),
@@ -940,7 +950,7 @@ export const UpdateVisaApplicationResponse = zod.object({
   "residencyImageUrl": zod.string().nullish(),
   "visaImageUrl": zod.string().nullish(),
   "agreedToTerms": zod.boolean(),
-  "status": zod.enum(['pending', 'under_review', 'approved', 'rejected']),
+  "status": zod.enum(['received', 'under_review', 'awaiting_documents', 'documents_uploaded', 'sent_to_embassy', 'processing', 'issued', 'completed', 'rejected']),
   "adminNotes": zod.string().nullish(),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
@@ -1135,6 +1145,25 @@ export const GetDashboardStatsResponse = zod.object({
   "bookingsByType": zod.array(zod.object({
   "type": zod.string(),
   "count": zod.number()
+})).optional(),
+  "totalCustomers": zod.number().optional(),
+  "totalVisaApplications": zod.number().optional(),
+  "newVisaApplications": zod.number().optional(),
+  "completedVisaApplications": zod.number().optional(),
+  "pendingVisaApplications": zod.number().optional(),
+  "totalRevenue": zod.number().optional(),
+  "totalFlightSearches": zod.number().optional(),
+  "mostRequestedCountry": zod.string().nullish(),
+  "mostApplyingNationality": zod.string().nullish(),
+  "visaApplicationsByStatus": zod.array(zod.object({
+  "status": zod.string(),
+  "count": zod.number()
+})).optional(),
+  "monthlyReport": zod.array(zod.object({
+  "month": zod.string(),
+  "visaApplications": zod.number(),
+  "bookings": zod.number(),
+  "revenue": zod.number()
 })).optional()
 })
 
@@ -1378,5 +1407,129 @@ export const ListFlightProvidersResponseItem = zod.object({
   "isAvailable": zod.boolean()
 })
 export const ListFlightProvidersResponse = zod.array(ListFlightProvidersResponseItem)
+
+
+/**
+ * @summary List the authenticated user's notifications
+ */
+export const ListNotificationsQueryParams = zod.object({
+  "unreadOnly": zod.coerce.boolean().optional()
+})
+
+export const ListNotificationsResponseItem = zod.object({
+  "id": zod.string(),
+  "userId": zod.string(),
+  "titleAr": zod.string(),
+  "titleEn": zod.string(),
+  "messageAr": zod.string(),
+  "messageEn": zod.string(),
+  "channel": zod.enum(['in_app', 'email', 'whatsapp', 'sms']),
+  "relatedEntityType": zod.string().nullish(),
+  "relatedEntityId": zod.string().nullish(),
+  "isRead": zod.boolean(),
+  "createdAt": zod.string()
+})
+export const ListNotificationsResponse = zod.array(ListNotificationsResponseItem)
+
+
+/**
+ * @summary Mark a notification as read
+ */
+export const MarkNotificationReadParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const MarkNotificationReadResponse = zod.object({
+  "id": zod.string(),
+  "userId": zod.string(),
+  "titleAr": zod.string(),
+  "titleEn": zod.string(),
+  "messageAr": zod.string(),
+  "messageEn": zod.string(),
+  "channel": zod.enum(['in_app', 'email', 'whatsapp', 'sms']),
+  "relatedEntityType": zod.string().nullish(),
+  "relatedEntityId": zod.string().nullish(),
+  "isRead": zod.boolean(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Mark all of the authenticated user's notifications as read
+ */
+export const MarkAllNotificationsReadResponse = zod.object({
+  "updated": zod.number()
+})
+
+
+/**
+ * @summary List staff accounts (admin, super_admin only)
+ */
+export const ListEmployeesResponseItem = zod.object({
+  "id": zod.string(),
+  "email": zod.string().nullish(),
+  "phone": zod.string().nullish(),
+  "firstName": zod.string().nullish(),
+  "lastName": zod.string().nullish(),
+  "role": zod.enum(['customer', 'agent', 'admin', 'super_admin']),
+  "isActive": zod.boolean(),
+  "createdAt": zod.string(),
+  "lastLoginAt": zod.string().nullish()
+})
+export const ListEmployeesResponse = zod.array(ListEmployeesResponseItem)
+
+
+/**
+ * @summary Create a new staff account (super_admin only)
+ */
+export const createEmployeeBodyPasswordMin = 8;
+
+
+
+export const CreateEmployeeBody = zod.object({
+  "email": zod.string().email().optional(),
+  "phone": zod.string().optional(),
+  "password": zod.string().min(createEmployeeBodyPasswordMin),
+  "firstName": zod.string().optional(),
+  "lastName": zod.string().optional(),
+  "role": zod.enum(['agent', 'admin', 'super_admin'])
+})
+
+export const CreateEmployeeResponse = zod.object({
+  "id": zod.string(),
+  "email": zod.string().nullish(),
+  "phone": zod.string().nullish(),
+  "firstName": zod.string().nullish(),
+  "lastName": zod.string().nullish(),
+  "role": zod.enum(['customer', 'agent', 'admin', 'super_admin']),
+  "isActive": zod.boolean(),
+  "createdAt": zod.string(),
+  "lastLoginAt": zod.string().nullish()
+})
+
+
+/**
+ * @summary Update a staff account's role or active status (super_admin only)
+ */
+export const UpdateEmployeeParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const UpdateEmployeeBody = zod.object({
+  "role": zod.enum(['agent', 'admin', 'super_admin']).optional(),
+  "isActive": zod.boolean().optional()
+})
+
+export const UpdateEmployeeResponse = zod.object({
+  "id": zod.string(),
+  "email": zod.string().nullish(),
+  "phone": zod.string().nullish(),
+  "firstName": zod.string().nullish(),
+  "lastName": zod.string().nullish(),
+  "role": zod.enum(['customer', 'agent', 'admin', 'super_admin']),
+  "isActive": zod.boolean(),
+  "createdAt": zod.string(),
+  "lastLoginAt": zod.string().nullish()
+})
 
 

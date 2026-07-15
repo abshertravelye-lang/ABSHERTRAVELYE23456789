@@ -28,6 +28,10 @@ tags:
     description: Authentication and user management
   - name: flights
     description: Flight search and comparison
+  - name: notifications
+    description: Customer notification center
+  - name: employees
+    description: Admin/staff account management
   - name: visa-applications
     description: Visa application submissions
   - name: storage
@@ -423,7 +427,7 @@ paths:
           in: query
           schema:
             type: string
-            enum: [pending, under_review, approved, rejected]
+            enum: [received, under_review, awaiting_documents, documents_uploaded, sent_to_embassy, processing, issued, completed, rejected]
       responses:
         "200":
           description: List of visa applications
@@ -857,6 +861,118 @@ paths:
                 items:
                   $ref: "#/components/schemas/ProviderStatus"
 
+  # ── NOTIFICATIONS ────────────────────────────────────────────────────────
+
+  /notifications:
+    get:
+      operationId: listNotifications
+      tags: [notifications]
+      summary: List the authenticated user's notifications
+      parameters:
+        - name: unreadOnly
+          in: query
+          schema: { type: boolean }
+      responses:
+        "200":
+          description: Notification list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Notification"
+
+  /notifications/{id}/read:
+    patch:
+      operationId: markNotificationRead
+      tags: [notifications]
+      summary: Mark a notification as read
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Notification"
+
+  /notifications/read-all:
+    post:
+      operationId: markAllNotificationsRead
+      tags: [notifications]
+      summary: Mark all of the authenticated user's notifications as read
+      responses:
+        "200":
+          description: Marked as read
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [updated]
+                properties:
+                  updated: { type: integer }
+
+  # ── EMPLOYEES / STAFF ────────────────────────────────────────────────────
+
+  /employees:
+    get:
+      operationId: listEmployees
+      tags: [employees]
+      summary: List staff accounts (admin, super_admin only)
+      responses:
+        "200":
+          description: Employee list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Employee"
+    post:
+      operationId: createEmployee
+      tags: [employees]
+      summary: Create a new staff account (super_admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmployeeInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Employee"
+
+  /employees/{id}:
+    patch:
+      operationId: updateEmployee
+      tags: [employees]
+      summary: Update a staff account's role or active status (super_admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmployeeUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Employee"
 
 components:
   schemas:
@@ -1137,6 +1253,9 @@ components:
         countryEn: { type: string }
         countryCode: { type: string }
         visaType: { type: string }
+        category:
+          type: string
+          enum: [tourist, business, medical, visit, study, umrah]
         descriptionAr: { type: ["string", "null"] }
         descriptionEn: { type: ["string", "null"] }
         requirements: { type: string }
@@ -1185,6 +1304,9 @@ components:
         countryEn: { type: string }
         countryCode: { type: string }
         visaType: { type: string }
+        category:
+          type: string
+          enum: [tourist, business, medical, visit, study, umrah]
         descriptionAr: { type: string }
         descriptionEn: { type: string }
         requirements: { type: string }
@@ -1230,6 +1352,9 @@ components:
         countryEn: { type: string }
         countryCode: { type: string }
         visaType: { type: string }
+        category:
+          type: string
+          enum: [tourist, business, medical, visit, study, umrah]
         descriptionAr: { type: string }
         descriptionEn: { type: string }
         requirements: { type: string }
@@ -1274,6 +1399,7 @@ components:
       properties:
         id: { type: integer }
         visaId: { type: integer }
+        userId: { type: ["string", "null"] }
         eligibilityPath:
           type: string
           enum: [gcc, alternative, direct]
@@ -1297,7 +1423,7 @@ components:
         agreedToTerms: { type: boolean }
         status:
           type: string
-          enum: [pending, under_review, approved, rejected]
+          enum: [received, under_review, awaiting_documents, documents_uploaded, sent_to_embassy, processing, issued, completed, rejected]
         adminNotes: { type: ["string", "null"] }
         createdAt: { type: string }
         updatedAt: { type: string }
@@ -1334,7 +1460,7 @@ components:
       properties:
         status:
           type: string
-          enum: [pending, under_review, approved, rejected]
+          enum: [received, under_review, awaiting_documents, documents_uploaded, sent_to_embassy, processing, issued, completed, rejected]
         adminNotes: { type: string }
 
     Booking:
@@ -1423,6 +1549,88 @@ components:
             properties:
               type: { type: string }
               count: { type: integer }
+        totalCustomers: { type: integer }
+        totalVisaApplications: { type: integer }
+        newVisaApplications: { type: integer }
+        completedVisaApplications: { type: integer }
+        pendingVisaApplications: { type: integer }
+        totalRevenue: { type: number }
+        totalFlightSearches: { type: integer }
+        mostRequestedCountry: { type: ["string", "null"] }
+        mostApplyingNationality: { type: ["string", "null"] }
+        visaApplicationsByStatus:
+          type: array
+          items:
+            type: object
+            required: [status, count]
+            properties:
+              status: { type: string }
+              count: { type: integer }
+        monthlyReport:
+          type: array
+          items:
+            type: object
+            required: [month, visaApplications, bookings, revenue]
+            properties:
+              month: { type: string }
+              visaApplications: { type: integer }
+              bookings: { type: integer }
+              revenue: { type: number }
+
+    Notification:
+      type: object
+      required: [id, userId, titleAr, titleEn, messageAr, messageEn, channel, isRead, createdAt]
+      properties:
+        id: { type: string }
+        userId: { type: string }
+        titleAr: { type: string }
+        titleEn: { type: string }
+        messageAr: { type: string }
+        messageEn: { type: string }
+        channel:
+          type: string
+          enum: [in_app, email, whatsapp, sms]
+        relatedEntityType: { type: ["string", "null"] }
+        relatedEntityId: { type: ["string", "null"] }
+        isRead: { type: boolean }
+        createdAt: { type: string }
+
+    Employee:
+      type: object
+      required: [id, role, isActive, createdAt]
+      properties:
+        id: { type: string }
+        email: { type: ["string", "null"] }
+        phone: { type: ["string", "null"] }
+        firstName: { type: ["string", "null"] }
+        lastName: { type: ["string", "null"] }
+        role:
+          type: string
+          enum: [customer, agent, admin, super_admin]
+        isActive: { type: boolean }
+        createdAt: { type: string }
+        lastLoginAt: { type: ["string", "null"] }
+
+    EmployeeInput:
+      type: object
+      required: [password, role]
+      properties:
+        email: { type: string, format: email }
+        phone: { type: string }
+        password: { type: string, minLength: 8 }
+        firstName: { type: string }
+        lastName: { type: string }
+        role:
+          type: string
+          enum: [agent, admin, super_admin]
+
+    EmployeeUpdate:
+      type: object
+      properties:
+        role:
+          type: string
+          enum: [agent, admin, super_admin]
+        isActive: { type: boolean }
 
   # ── AUTH SCHEMAS ─────────────────────────────────────────────────────────
 

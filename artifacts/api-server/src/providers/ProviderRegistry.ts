@@ -1,14 +1,15 @@
 import type { IFlightProvider } from "./_base/IFlightProvider";
 import { AmadeusProvider } from "./amadeus/AmadeusProvider";
+import { DuffelProvider } from "./duffel/DuffelProvider";
 
 class ProviderRegistryClass {
   private flightProviders: Map<string, IFlightProvider> = new Map();
 
   constructor() {
     // Register built-in providers here
+    this.registerFlight(new DuffelProvider());
     this.registerFlight(new AmadeusProvider());
     // Future: this.registerFlight(new SkyscannerProvider());
-    // Future: this.registerFlight(new DuffelProvider());
   }
 
   registerFlight(provider: IFlightProvider): void {

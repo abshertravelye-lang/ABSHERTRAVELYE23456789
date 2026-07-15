@@ -1,5 +1,7 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { useTranslation } from "@/hooks/use-translation";
+import { useAuth } from "@/hooks/use-auth";
 import { useListVisas, Visa } from "@workspace/api-client-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,6 +12,18 @@ export default function Visas() {
   const { t, language } = useTranslation();
   const { data: visas, isLoading } = useListVisas();
   const [selectedVisa, setSelectedVisa] = useState<Visa | null>(null);
+  const { isAuthenticated } = useAuth();
+  const [, setLocation] = useLocation();
+
+  // Guests can browse visas freely, but must sign in before starting an application,
+  // per the platform's "forced login for sensitive actions" auth policy.
+  const handleApply = (visa: Visa) => {
+    if (!isAuthenticated) {
+      setLocation(`/login?redirect=${encodeURIComponent("/visas")}`);
+      return;
+    }
+    setSelectedVisa(visa);
+  };
 
   return (
     <div className="bg-slate-50 min-h-screen pb-24">
@@ -92,7 +106,7 @@ export default function Visas() {
 
                   <Button 
                     className="w-full bg-primary hover:bg-primary/90 text-white shadow-sm transition-all text-base h-12 rounded-xl"
-                    onClick={() => setSelectedVisa(visa)}
+                    onClick={() => handleApply(visa)}
                   >
                     {language === 'ar' ? 'قدّم الآن' : 'Apply Now'}
                   </Button>

@@ -11,6 +11,8 @@ import contactRouter from "./contact";
 import dashboardRouter from "./dashboard";
 import authRouter from "./auth";
 import flightsRouter from "./flights";
+import notificationsRouter from "./notifications";
+import employeesRouter from "./employees";
 
 const router: IRouter = Router();
 
@@ -26,5 +28,7 @@ router.use(storageRouter);
 router.use(bookingsRouter);
 router.use(contactRouter);
 router.use(dashboardRouter);
+router.use(notificationsRouter);
+router.use(employeesRouter);
 
 export default router;
