@@ -2,13 +2,19 @@ import { Switch, Route, Link, useLocation } from "wouter";
 import { useTranslation } from "@/hooks/use-translation";
 import {
   LayoutDashboard, Ticket, Map, MessageSquare, Briefcase, FileText,
-  Users, Globe, LogOut, Wrench
+  Users, Globe, LogOut, Wrench, Building2
 } from "lucide-react";
 import { lazy, Suspense } from "react";
 import DashboardOverview from "./dashboard-overview";
 
 const ProgramsAdmin = lazy(() => import("./programs-admin"));
 const VisasAdmin = lazy(() => import("./visas-admin"));
+const BookingsAdmin = lazy(() => import("./bookings-admin"));
+const OffersAdmin = lazy(() => import("./offers-admin"));
+const DestinationsAdmin = lazy(() => import("./destinations-admin"));
+const CustomersAdmin = lazy(() => import("./customers-admin"));
+const MessagesAdmin = lazy(() => import("./messages-admin"));
+const VisaApplicationsAdmin = lazy(() => import("./visa-applications-admin"));
 
 function LoadingSpinner() {
   return (
@@ -24,14 +30,15 @@ export default function AdminLayout() {
   const ar = language === "ar";
 
   const navItems = [
-    { href: "/admin",              icon: LayoutDashboard, labelAr: "نظرة عامة",       labelEn: "Overview" },
-    { href: "/admin/programs",     icon: Map,             labelAr: "البرامج السياحية", labelEn: "Programs" },
-    { href: "/admin/visas",        icon: Globe,           labelAr: "التأشيرات",        labelEn: "Visas" },
-    { href: "/admin/bookings",     icon: Ticket,          labelAr: "الحجوزات",         labelEn: "Bookings" },
-    { href: "/admin/offers",       icon: Briefcase,       labelAr: "العروض",           labelEn: "Offers" },
-    { href: "/admin/destinations", icon: Map,             labelAr: "الوجهات",          labelEn: "Destinations" },
-    { href: "/admin/customers",    icon: Users,           labelAr: "العملاء",          labelEn: "Customers" },
-    { href: "/admin/messages",     icon: MessageSquare,   labelAr: "الرسائل",          labelEn: "Messages" },
+    { href: "/admin",                    icon: LayoutDashboard, labelAr: "نظرة عامة",        labelEn: "Overview" },
+    { href: "/admin/bookings",           icon: Ticket,          labelAr: "الحجوزات",          labelEn: "Bookings" },
+    { href: "/admin/visa-applications",  icon: FileText,        labelAr: "طلبات التأشيرة",    labelEn: "Visa Applications" },
+    { href: "/admin/programs",           icon: Map,             labelAr: "البرامج السياحية",  labelEn: "Programs" },
+    { href: "/admin/visas",              icon: Globe,           labelAr: "التأشيرات",         labelEn: "Visas" },
+    { href: "/admin/offers",             icon: Briefcase,       labelAr: "العروض",            labelEn: "Offers" },
+    { href: "/admin/destinations",       icon: Building2,       labelAr: "الوجهات",           labelEn: "Destinations" },
+    { href: "/admin/customers",          icon: Users,           labelAr: "المستخدمون",        labelEn: "Users" },
+    { href: "/admin/messages",           icon: MessageSquare,   labelAr: "الرسائل",           labelEn: "Messages" },
   ];
 
   const currentItem = navItems.find(i =>
@@ -89,15 +96,21 @@ export default function AdminLayout() {
           <Suspense fallback={<LoadingSpinner />}>
             <Switch>
               <Route path="/admin" component={DashboardOverview} />
+              <Route path="/admin/bookings" component={BookingsAdmin} />
+              <Route path="/admin/visa-applications" component={VisaApplicationsAdmin} />
               <Route path="/admin/programs" component={ProgramsAdmin} />
               <Route path="/admin/visas" component={VisasAdmin} />
+              <Route path="/admin/offers" component={OffersAdmin} />
+              <Route path="/admin/destinations" component={DestinationsAdmin} />
+              <Route path="/admin/customers" component={CustomersAdmin} />
+              <Route path="/admin/messages" component={MessagesAdmin} />
               <Route path="/admin/:rest*">
                 <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-20 text-center text-slate-500 flex flex-col items-center justify-center min-h-[60vh]">
                   <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-6">
                     <Wrench className="w-10 h-10 text-slate-400" />
                   </div>
                   <h3 className="text-2xl font-bold text-slate-800 mb-2">{ar ? "قيد التطوير" : "Under Development"}</h3>
-                  <p className="text-base text-slate-500 max-w-sm">{ar ? "هذا القسم قيد الإنشاء وسيكون متاحاً قريباً في التحديث القادم." : "This section is under construction and will be available in the next update."}</p>
+                  <p className="text-base text-slate-500 max-w-sm">{ar ? "هذا القسم قيد الإنشاء وسيكون متاحاً قريباً." : "This section is under construction and will be available soon."}</p>
                 </div>
               </Route>
             </Switch>

@@ -25,10 +25,15 @@ const toResponse = (u: typeof usersTable.$inferSelect) => ({
 // Only admin/super_admin can view the staff list; only super_admin can create or change roles.
 router.get("/employees", requireAuth, requireRole("admin", "super_admin"), async (req, res) => {
   try {
+    const { all } = req.query;
     const rows = await db
       .select()
       .from(usersTable)
-      .where(and(inArray(usersTable.role, STAFF_ROLES), isNull(usersTable.deletedAt)))
+      .where(
+        all === "true"
+          ? isNull(usersTable.deletedAt)
+          : and(inArray(usersTable.role, STAFF_ROLES), isNull(usersTable.deletedAt))
+      )
       .orderBy(desc(usersTable.createdAt));
     res.json(rows.map(toResponse));
   } catch (e) {

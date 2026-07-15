@@ -31,4 +31,18 @@ router.get("/contact/messages", async (req, res) => {
   }
 });
 
+router.patch("/contact/messages/:id/read", async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ error: "Invalid id" });
+    const { eq } = await import("drizzle-orm");
+    const [row] = await db.update(contactMessagesTable).set({ read: true }).where(eq(contactMessagesTable.id, id)).returning();
+    if (!row) return res.status(404).json({ error: "Not found" });
+    res.json(format(row));
+  } catch (e) {
+    req.log.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 export default router;
