@@ -1,11 +1,15 @@
 import {
-  pgTable, serial, text, integer, numeric, timestamp, boolean, pgEnum,
+  pgTable, serial, text, integer, numeric, timestamp, boolean, pgEnum, uuid,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
+import { usersTable } from "./users";
 
 export const visaStatusEnum = pgEnum("visa_status", ["available", "suspended", "closed"]);
 export const visaEntryTypeEnum = pgEnum("visa_entry_type", ["single", "multiple", "transit"]);
+export const visaCategoryEnum = pgEnum("visa_category", [
+  "tourist", "business", "medical", "visit", "study", "umrah",
+]);
 
 export const visasTable = pgTable("visas", {
   id: serial("id").primaryKey(),
@@ -13,6 +17,7 @@ export const visasTable = pgTable("visas", {
   countryEn: text("country_en").notNull(),
   countryCode: text("country_code"),
   visaType: text("visa_type").notNull(),
+  category: visaCategoryEnum("category").notNull().default("tourist"),
   descriptionAr: text("description_ar"),
   descriptionEn: text("description_en"),
   requirements: text("requirements").notNull().default(""),
@@ -68,11 +73,27 @@ export type Visa = typeof visasTable.$inferSelect;
 // application-wizard submission created from the visas page.
 export const visaApplicationSubmissionEligibilityPathEnum = pgEnum("visa_application_submission_eligibility_path", ["gcc", "alternative", "direct"]);
 export const visaApplicationSubmissionGenderEnum = pgEnum("visa_application_submission_gender", ["male", "female"]);
-export const visaApplicationSubmissionStatusEnum = pgEnum("visa_application_submission_status", ["pending", "under_review", "approved", "rejected"]);
+// Full application lifecycle, per the client-facing tracking workflow:
+// received -> under_review -> awaiting_documents -> documents_uploaded ->
+// sent_to_embassy -> processing -> issued -> completed, or rejected at any point.
+export const visaApplicationSubmissionStatusEnum = pgEnum("visa_application_submission_status", [
+  "received",
+  "under_review",
+  "awaiting_documents",
+  "documents_uploaded",
+  "sent_to_embassy",
+  "processing",
+  "issued",
+  "completed",
+  "rejected",
+]);
 
 export const visaApplicationSubmissionsTable = pgTable("visa_application_submissions", {
   id: serial("id").primaryKey(),
   visaId: integer("visa_id").notNull().references(() => visasTable.id),
+  // Applications are now created only by authenticated customers; this links
+  // each application to the account so it shows up in "My Requests".
+  userId: uuid("user_id").references(() => usersTable.id),
   eligibilityPath: visaApplicationSubmissionEligibilityPathEnum("eligibility_path").notNull(),
   gccCountry: text("gcc_country"),
   alternativeRegion: text("alternative_region"),
@@ -90,17 +111,20 @@ export const visaApplicationSubmissionsTable = pgTable("visa_application_submiss
   residencyImageUrl: text("residency_image_url"),
   visaImageUrl: text("visa_image_url"),
   agreedToTerms: boolean("agreed_to_terms").notNull().default(false),
-  status: visaApplicationSubmissionStatusEnum("status").notNull().default("pending"),
+  status: visaApplicationSubmissionStatusEnum("status").notNull().default("received"),
   adminNotes: text("admin_notes"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
 export const insertVisaApplicationSubmissionSchema = createInsertSchema(visaApplicationSubmissionsTable).omit({
-  id: true, createdAt: true, updatedAt: true, status: true, adminNotes: true,
+  id: true, createdAt: true, updatedAt: true, status: true, adminNotes: true, userId: true,
 });
 export const updateVisaApplicationSubmissionSchema = z.object({
-  status: z.enum(["pending", "under_review", "approved", "rejected"]).optional(),
+  status: z.enum([
+    "received", "under_review", "awaiting_documents", "documents_uploaded",
+    "sent_to_embassy", "processing", "issued", "completed", "rejected",
+  ]).optional(),
   adminNotes: z.string().optional(),
 });
 export const selectVisaApplicationSubmissionSchema = createSelectSchema(visaApplicationSubmissionsTable);

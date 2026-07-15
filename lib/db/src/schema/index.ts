@@ -10,3 +10,4 @@ export * from "./airports";
 export * from "./flightSearches";
 export * from "./auditLogs";
 export * from "./travelerProfiles";
+export * from "./notifications";
