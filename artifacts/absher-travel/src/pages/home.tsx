@@ -1,17 +1,31 @@
+import { useState } from "react";
 import { useTranslation } from "@/hooks/use-translation";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plane, Building, FileText, Map, Star, Car, Shield, MapPin, Briefcase, Users, Calendar, Search, ArrowRight, ArrowLeft } from "lucide-react";
+import { Plane, Building, FileText, Map, Star, Car, Shield, MapPin, Briefcase, Users, ArrowRight, ArrowLeft, Calendar } from "lucide-react";
 import { useListOffers, useListDestinations } from "@workspace/api-client-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
+import { AirportSearch } from "@/components/airport-search";
+import { FlightDatePicker } from "@/components/flight-date-picker";
+import { PassengerSelector, type PassengerConfig } from "@/components/passenger-selector";
+import type { Airport } from "@/data/airports";
 
 export default function Home() {
   const { t, language } = useTranslation();
+  const [, navigate] = useLocation();
+
+  const [heroOrigin, setHeroOrigin] = useState<Airport | null>(null);
+  const [heroDestination, setHeroDestination] = useState<Airport | null>(null);
+  const [heroDates, setHeroDates] = useState<{ departure: Date | null; returnDate: Date | null }>({ departure: null, returnDate: null });
+  const [heroPassengers, setHeroPassengers] = useState<PassengerConfig>({ adults: 1, children: 0, infants: 0, cabinClass: "economy" });
   
   const { data: offers, isLoading: offersLoading } = useListOffers({ featured: true });
   const { data: destinations, isLoading: destLoading } = useListDestinations();
+
+  const handleHeroSearch = () => {
+    navigate("/flights");
+  };
 
   const services = [
     { icon: Plane, label: t("flightTicketBooking"), color: "bg-blue-50 text-blue-600" },
@@ -75,35 +89,18 @@ export default function Home() {
                 <TabsTrigger value="programs" className="py-5 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-accent rounded-none text-base font-semibold transition-all"><Map className="mr-2 h-5 w-5 rtl:ml-2 rtl:mr-0"/> <span className="hidden sm:inline">Programs</span></TabsTrigger>
               </TabsList>
               <div className="p-6 md:p-8 bg-white">
-                <TabsContent value="flights" className="m-0 space-y-4 animate-in fade-in duration-300">
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-semibold text-slate-700">From</label>
-                      <div className="relative">
-                        <MapPin className="absolute left-3 top-3.5 h-5 w-5 text-slate-400 rtl:right-3 rtl:left-auto" />
-                        <Input placeholder="Origin City or Airport" className="pl-10 rtl:pr-10 rtl:pl-3 h-12 bg-slate-50 border-slate-200 focus:bg-white text-base" />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-semibold text-slate-700">To</label>
-                      <div className="relative">
-                        <MapPin className="absolute left-3 top-3.5 h-5 w-5 text-slate-400 rtl:right-3 rtl:left-auto" />
-                        <Input placeholder="Destination City or Airport" className="pl-10 rtl:pr-10 rtl:pl-3 h-12 bg-slate-50 border-slate-200 focus:bg-white text-base" />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-semibold text-slate-700">Departure</label>
-                      <div className="relative">
-                        <Calendar className="absolute left-3 top-3.5 h-5 w-5 text-slate-400 rtl:right-3 rtl:left-auto" />
-                        <Input type="date" className="pl-10 rtl:pr-10 rtl:pl-3 h-12 bg-slate-50 border-slate-200 focus:bg-white text-base tabular-nums" />
-                      </div>
-                    </div>
-                    <div className="space-y-2 flex items-end">
-                      <Button className="w-full h-12 bg-primary text-white hover:bg-primary/90 text-lg font-semibold rounded-xl">
-                        <Search className="mr-2 h-5 w-5 rtl:ml-2 rtl:mr-0" /> Search
-                      </Button>
-                    </div>
+                <TabsContent value="flights" className="m-0 animate-in fade-in duration-300 space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-3">
+                    <AirportSearch value={heroOrigin} onChange={setHeroOrigin} language={language} icon="takeoff" label="From" labelAr="من" />
+                    <AirportSearch value={heroDestination} onChange={setHeroDestination} language={language} icon="landing" label="To" labelAr="إلى" />
                   </div>
+                  <div className="grid grid-cols-1 md:grid-cols-[1fr_240px] gap-3 items-start">
+                    <FlightDatePicker value={heroDates} onChange={setHeroDates} language={language} isRoundTrip={true} labelDepart="Departure" labelDepartAr="الذهاب" labelReturn="Return" labelReturnAr="العودة" />
+                    <PassengerSelector value={heroPassengers} onChange={setHeroPassengers} language={language} />
+                  </div>
+                  <Button onClick={handleHeroSearch} className="w-full h-12 bg-primary text-white hover:bg-primary/90 text-lg font-semibold rounded-xl gap-2">
+                    <Plane className="h-5 w-5" />{language === "ar" ? "بحث عن الرحلات" : "Search Flights"}
+                  </Button>
                 </TabsContent>
                 <TabsContent value="hotels" className="m-0"><div className="py-12 flex flex-col items-center justify-center text-slate-500"><Building className="h-12 w-12 mb-4 text-slate-300" /><p className="text-lg font-medium">{language === 'ar' ? 'البحث عن فنادق' : 'Search hotels'}</p></div></TabsContent>
                 <TabsContent value="visas" className="m-0"><div className="py-12 flex flex-col items-center justify-center text-slate-500"><FileText className="h-12 w-12 mb-4 text-slate-300" /><p className="text-lg font-medium">{language === 'ar' ? 'استعلام عن تأشيرة' : 'Search visas'}</p></div></TabsContent>
