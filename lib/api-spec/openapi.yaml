@@ -28,6 +28,10 @@ tags:
     description: Authentication and user management
   - name: flights
     description: Flight search and comparison
+  - name: visa-applications
+    description: Visa application submissions
+  - name: storage
+    description: File upload and object storage
 
 paths:
   /healthz:
@@ -405,6 +409,115 @@ paths:
         "204":
           description: Deleted
 
+  /visa-applications:
+    get:
+      operationId: listVisaApplications
+      tags: [visa-applications]
+      summary: List visa applications (admin)
+      parameters:
+        - name: visaId
+          in: query
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, under_review, approved, rejected]
+      responses:
+        "200":
+          description: List of visa applications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/VisaApplication"
+    post:
+      operationId: createVisaApplication
+      tags: [visa-applications]
+      summary: Submit a new visa application
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VisaApplicationInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VisaApplication"
+        "422":
+          description: Applicant is not eligible for this visa
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /visa-applications/{id}:
+    get:
+      operationId: getVisaApplication
+      tags: [visa-applications]
+      summary: Get a visa application
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Visa application details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VisaApplication"
+    patch:
+      operationId: updateVisaApplication
+      tags: [visa-applications]
+      summary: Update a visa application status (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VisaApplicationStatusUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VisaApplication"
+
+  /storage/uploads/request-url:
+    post:
+      operationId: requestUploadUrl
+      tags: [storage]
+      summary: Request a presigned upload URL
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UploadUrlRequest"
+      responses:
+        "200":
+          description: Presigned upload URL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UploadUrlResponse"
+
   /bookings:
     get:
       operationId: listBookings
@@ -755,6 +868,27 @@ components:
       required:
         - status
 
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error: { type: string }
+
+    UploadUrlRequest:
+      type: object
+      required: [name, size, contentType]
+      properties:
+        name: { type: string }
+        size: { type: integer }
+        contentType: { type: string }
+
+    UploadUrlResponse:
+      type: object
+      required: [uploadURL, objectPath]
+      properties:
+        uploadURL: { type: string }
+        objectPath: { type: string }
+
     Offer:
       type: object
       required: [id, titleAr, titleEn, descriptionAr, descriptionEn, price, duration, imageUrl, featured, createdAt]
@@ -1003,6 +1137,8 @@ components:
         countryEn: { type: string }
         countryCode: { type: string }
         visaType: { type: string }
+        descriptionAr: { type: ["string", "null"] }
+        descriptionEn: { type: ["string", "null"] }
         requirements: { type: string }
         documents: { type: ["string", "null"] }
         notes: { type: ["string", "null"] }
@@ -1018,11 +1154,26 @@ components:
         allowedNationalities:
           type: array
           items: { type: string }
+        blockedNationalities:
+          type: array
+          items: { type: string }
         imageUrl: { type: ["string", "null"] }
         status:
           type: string
           enum: [available, suspended, closed]
         isActive: { type: boolean }
+        acceptsGccResidency: { type: boolean }
+        acceptsSchengenResidency: { type: boolean }
+        acceptsUkResidency: { type: boolean }
+        acceptsUsVisa: { type: boolean }
+        acceptsCanadaResidency: { type: boolean }
+        acceptsAustraliaResidency: { type: boolean }
+        requiresPassportImage: { type: boolean }
+        requiresPersonalPhoto: { type: boolean }
+        requiresResidencyImage: { type: boolean }
+        requiresVisaImage: { type: boolean }
+        ineligibleMessageAr: { type: ["string", "null"] }
+        ineligibleMessageEn: { type: ["string", "null"] }
         createdAt: { type: string }
         updatedAt: { type: string }
 
@@ -1034,6 +1185,8 @@ components:
         countryEn: { type: string }
         countryCode: { type: string }
         visaType: { type: string }
+        descriptionAr: { type: string }
+        descriptionEn: { type: string }
         requirements: { type: string }
         documents: { type: string }
         notes: { type: string }
@@ -1049,11 +1202,26 @@ components:
         allowedNationalities:
           type: array
           items: { type: string }
+        blockedNationalities:
+          type: array
+          items: { type: string }
         imageUrl: { type: string }
         status:
           type: string
           enum: [available, suspended, closed]
         isActive: { type: boolean }
+        acceptsGccResidency: { type: boolean }
+        acceptsSchengenResidency: { type: boolean }
+        acceptsUkResidency: { type: boolean }
+        acceptsUsVisa: { type: boolean }
+        acceptsCanadaResidency: { type: boolean }
+        acceptsAustraliaResidency: { type: boolean }
+        requiresPassportImage: { type: boolean }
+        requiresPersonalPhoto: { type: boolean }
+        requiresResidencyImage: { type: boolean }
+        requiresVisaImage: { type: boolean }
+        ineligibleMessageAr: { type: string }
+        ineligibleMessageEn: { type: string }
 
     VisaUpdate:
       type: object
@@ -1062,6 +1230,8 @@ components:
         countryEn: { type: string }
         countryCode: { type: string }
         visaType: { type: string }
+        descriptionAr: { type: string }
+        descriptionEn: { type: string }
         requirements: { type: string }
         documents: { type: string }
         notes: { type: string }
@@ -1077,11 +1247,95 @@ components:
         allowedNationalities:
           type: array
           items: { type: string }
+        blockedNationalities:
+          type: array
+          items: { type: string }
         imageUrl: { type: string }
         status:
           type: string
           enum: [available, suspended, closed]
         isActive: { type: boolean }
+        acceptsGccResidency: { type: boolean }
+        acceptsSchengenResidency: { type: boolean }
+        acceptsUkResidency: { type: boolean }
+        acceptsUsVisa: { type: boolean }
+        acceptsCanadaResidency: { type: boolean }
+        acceptsAustraliaResidency: { type: boolean }
+        requiresPassportImage: { type: boolean }
+        requiresPersonalPhoto: { type: boolean }
+        requiresResidencyImage: { type: boolean }
+        requiresVisaImage: { type: boolean }
+        ineligibleMessageAr: { type: string }
+        ineligibleMessageEn: { type: string }
+
+    VisaApplication:
+      type: object
+      required: [id, visaId, eligibilityPath, fullName, nationality, passportNumber, passportIssueDate, passportExpiryDate, dateOfBirth, gender, email, phone, agreedToTerms, status, createdAt, updatedAt]
+      properties:
+        id: { type: integer }
+        visaId: { type: integer }
+        eligibilityPath:
+          type: string
+          enum: [gcc, alternative, direct]
+        gccCountry: { type: ["string", "null"] }
+        alternativeRegion: { type: ["string", "null"] }
+        fullName: { type: string }
+        nationality: { type: string }
+        passportNumber: { type: string }
+        passportIssueDate: { type: string }
+        passportExpiryDate: { type: string }
+        dateOfBirth: { type: string }
+        gender:
+          type: string
+          enum: [male, female]
+        email: { type: string }
+        phone: { type: string }
+        passportImageUrl: { type: ["string", "null"] }
+        personalPhotoUrl: { type: ["string", "null"] }
+        residencyImageUrl: { type: ["string", "null"] }
+        visaImageUrl: { type: ["string", "null"] }
+        agreedToTerms: { type: boolean }
+        status:
+          type: string
+          enum: [pending, under_review, approved, rejected]
+        adminNotes: { type: ["string", "null"] }
+        createdAt: { type: string }
+        updatedAt: { type: string }
+
+    VisaApplicationInput:
+      type: object
+      required: [visaId, eligibilityPath, fullName, nationality, passportNumber, passportIssueDate, passportExpiryDate, dateOfBirth, gender, email, phone, agreedToTerms]
+      properties:
+        visaId: { type: integer }
+        eligibilityPath:
+          type: string
+          enum: [gcc, alternative, direct]
+        gccCountry: { type: string }
+        alternativeRegion: { type: string }
+        fullName: { type: string }
+        nationality: { type: string }
+        passportNumber: { type: string }
+        passportIssueDate: { type: string }
+        passportExpiryDate: { type: string }
+        dateOfBirth: { type: string }
+        gender:
+          type: string
+          enum: [male, female]
+        email: { type: string }
+        phone: { type: string }
+        passportImageUrl: { type: string }
+        personalPhotoUrl: { type: string }
+        residencyImageUrl: { type: string }
+        visaImageUrl: { type: string }
+        agreedToTerms: { type: boolean }
+
+    VisaApplicationStatusUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [pending, under_review, approved, rejected]
+        adminNotes: { type: string }
 
     Booking:
       type: object

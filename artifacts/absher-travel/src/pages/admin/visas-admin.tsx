@@ -14,7 +14,9 @@ interface Visa {
   countryEn: string;
   countryCode?: string;
   visaType: string;
-  requirements: string;
+  descriptionAr?: string;
+  descriptionEn?: string;
+  requirements?: string;
   documents?: string;
   notes?: string;
   processingDays: number;
@@ -25,17 +27,33 @@ interface Visa {
   entryType: EntryType;
   entryCount?: number;
   allowedNationalities: string[];
+  blockedNationalities?: string[];
   imageUrl?: string;
   status: VisaStatus;
   isActive: boolean;
+  acceptsGccResidency?: boolean;
+  acceptsSchengenResidency?: boolean;
+  acceptsUkResidency?: boolean;
+  acceptsUsVisa?: boolean;
+  acceptsCanadaResidency?: boolean;
+  acceptsAustraliaResidency?: boolean;
+  requiresPassportImage?: boolean;
+  requiresPersonalPhoto?: boolean;
+  requiresResidencyImage?: boolean;
+  requiresVisaImage?: boolean;
+  ineligibleMessageAr?: string;
+  ineligibleMessageEn?: string;
   createdAt: string;
+  updatedAt?: string;
 }
 
-const emptyVisa = (): Omit<Visa, "id" | "createdAt"> => ({
+const emptyVisa = (): Omit<Visa, "id" | "createdAt" | "updatedAt"> => ({
   countryAr: "",
   countryEn: "",
   countryCode: "",
   visaType: "",
+  descriptionAr: "",
+  descriptionEn: "",
   requirements: "",
   documents: "",
   notes: "",
@@ -47,9 +65,22 @@ const emptyVisa = (): Omit<Visa, "id" | "createdAt"> => ({
   entryType: "single",
   entryCount: undefined,
   allowedNationalities: [],
+  blockedNationalities: [],
   imageUrl: "",
   status: "available",
   isActive: true,
+  acceptsGccResidency: true,
+  acceptsSchengenResidency: false,
+  acceptsUkResidency: false,
+  acceptsUsVisa: false,
+  acceptsCanadaResidency: false,
+  acceptsAustraliaResidency: false,
+  requiresPassportImage: true,
+  requiresPersonalPhoto: true,
+  requiresResidencyImage: false,
+  requiresVisaImage: false,
+  ineligibleMessageAr: "",
+  ineligibleMessageEn: "",
 });
 
 const STATUS_LABELS: Record<VisaStatus, { ar: string; en: string; color: string }> = {
@@ -70,21 +101,22 @@ function VisaForm({
   onCancel,
   loading,
 }: {
-  initial: Omit<Visa, "id" | "createdAt">;
-  onSave: (data: Omit<Visa, "id" | "createdAt">) => void;
+  initial: Omit<Visa, "id" | "createdAt" | "updatedAt">;
+  onSave: (data: Omit<Visa, "id" | "createdAt" | "updatedAt">) => void;
   onCancel: () => void;
   loading: boolean;
 }) {
   const { language } = useTranslation();
   const ar = language === "ar";
   const [form, setForm] = useState(initial);
-  const [tab, setTab] = useState<"basic" | "details" | "access">("basic");
+  const [tab, setTab] = useState<"basic" | "details" | "access" | "rules">("basic");
   const set = (field: string, value: unknown) => setForm(f => ({ ...f, [field]: value }));
 
   const tabs = [
     { id: "basic",   ar: "المعلومات الأساسية", en: "Basic Info" },
     { id: "details", ar: "تفاصيل التأشيرة",    en: "Visa Details" },
     { id: "access",  ar: "الوصول والشروط",     en: "Access & Terms" },
+    { id: "rules",   ar: "شروط التقديم",       en: "Application Rules" },
   ];
 
   return (
@@ -107,7 +139,7 @@ function VisaForm({
           ))}
         </div>
 
-        <div className="p-6 space-y-5">
+        <div className="p-6 space-y-5 max-h-[60vh] overflow-y-auto">
           {tab === "basic" && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
@@ -125,6 +157,14 @@ function VisaForm({
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">{ar ? "نوع التأشيرة" : "Visa Type"} *</label>
                 <input placeholder={ar ? "مثال: سياحية، عمل، دراسة" : "e.g. Tourist, Business, Student"} className="w-full border rounded-xl px-4 py-2.5 text-sm" value={form.visaType} onChange={e => set("visaType", e.target.value)} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{ar ? "وصف مختصر بالعربية" : "Description (Arabic)"}</label>
+                <input className="w-full border rounded-xl px-4 py-2.5 text-sm" value={form.descriptionAr ?? ""} onChange={e => set("descriptionAr", e.target.value)} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{ar ? "وصف مختصر بالإنجليزية" : "Description (English)"}</label>
+                <input className="w-full border rounded-xl px-4 py-2.5 text-sm" value={form.descriptionEn ?? ""} onChange={e => set("descriptionEn", e.target.value)} />
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">{ar ? "الرسوم" : "Fee"} *</label>
@@ -187,7 +227,7 @@ function VisaForm({
               </div>
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-slate-700 mb-1">{ar ? "المتطلبات" : "Requirements"}</label>
-                <textarea rows={4} className="w-full border rounded-xl px-4 py-2.5 text-sm" value={form.requirements} onChange={e => set("requirements", e.target.value)} placeholder={ar ? "المستندات المطلوبة والشروط..." : "Required documents and conditions..."} />
+                <textarea rows={4} className="w-full border rounded-xl px-4 py-2.5 text-sm" value={form.requirements ?? ""} onChange={e => set("requirements", e.target.value)} placeholder={ar ? "المستندات المطلوبة والشروط..." : "Required documents and conditions..."} />
               </div>
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-slate-700 mb-1">{ar ? "المستندات المطلوبة" : "Required Documents"}</label>
@@ -216,6 +256,99 @@ function VisaForm({
                   : `${form.allowedNationalities.length} ${ar ? "جنسية محددة" : "nationalities specified"}`
                 }
               </p>
+            </div>
+          )}
+
+          {tab === "rules" && (
+            <div className="space-y-8">
+              <div>
+                <h3 className="text-sm font-bold text-slate-800 mb-3">{ar ? "مسارات الإقامة والتأشيرات البديلة" : "Alternative Residency & Visa Paths"}</h3>
+                <p className="text-xs text-slate-500 mb-4">{ar ? "تتيح هذه الخيارات للمتقدمين مسارات أسهل للتقديم بناءً على إقاماتهم الحالية." : "These options allow applicants easier application paths based on their current residencies."}</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <label className="flex items-center gap-3 cursor-pointer text-sm bg-slate-50 p-3 rounded-lg hover:bg-slate-100 transition-colors border border-slate-100">
+                    <input type="checkbox" className="w-4 h-4 accent-primary" checked={form.acceptsGccResidency} onChange={e => set("acceptsGccResidency", e.target.checked)} />
+                    {ar ? "يقبل إقامة دول مجلس التعاون (GCC)" : "Accepts GCC Residency"}
+                  </label>
+                  <label className="flex items-center gap-3 cursor-pointer text-sm bg-slate-50 p-3 rounded-lg hover:bg-slate-100 transition-colors border border-slate-100">
+                    <input type="checkbox" className="w-4 h-4 accent-primary" checked={form.acceptsSchengenResidency} onChange={e => set("acceptsSchengenResidency", e.target.checked)} />
+                    {ar ? "يقبل تأشيرة/إقامة الشنغن" : "Accepts Schengen Visa/Residency"}
+                  </label>
+                  <label className="flex items-center gap-3 cursor-pointer text-sm bg-slate-50 p-3 rounded-lg hover:bg-slate-100 transition-colors border border-slate-100">
+                    <input type="checkbox" className="w-4 h-4 accent-primary" checked={form.acceptsUkResidency} onChange={e => set("acceptsUkResidency", e.target.checked)} />
+                    {ar ? "يقبل تأشيرة/إقامة بريطانيا" : "Accepts UK Visa/Residency"}
+                  </label>
+                  <label className="flex items-center gap-3 cursor-pointer text-sm bg-slate-50 p-3 rounded-lg hover:bg-slate-100 transition-colors border border-slate-100">
+                    <input type="checkbox" className="w-4 h-4 accent-primary" checked={form.acceptsUsVisa} onChange={e => set("acceptsUsVisa", e.target.checked)} />
+                    {ar ? "يقبل تأشيرة/إقامة أمريكا" : "Accepts US Visa/Residency"}
+                  </label>
+                  <label className="flex items-center gap-3 cursor-pointer text-sm bg-slate-50 p-3 rounded-lg hover:bg-slate-100 transition-colors border border-slate-100">
+                    <input type="checkbox" className="w-4 h-4 accent-primary" checked={form.acceptsCanadaResidency} onChange={e => set("acceptsCanadaResidency", e.target.checked)} />
+                    {ar ? "يقبل تأشيرة/إقامة كندا" : "Accepts Canada Visa/Residency"}
+                  </label>
+                  <label className="flex items-center gap-3 cursor-pointer text-sm bg-slate-50 p-3 rounded-lg hover:bg-slate-100 transition-colors border border-slate-100">
+                    <input type="checkbox" className="w-4 h-4 accent-primary" checked={form.acceptsAustraliaResidency} onChange={e => set("acceptsAustraliaResidency", e.target.checked)} />
+                    {ar ? "يقبل تأشيرة/إقامة أستراليا" : "Accepts Australia Visa/Residency"}
+                  </label>
+                </div>
+              </div>
+              <hr />
+              <div>
+                <h3 className="text-sm font-bold text-slate-800 mb-3">{ar ? "المستندات المطلوبة" : "Required Documents"}</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <label className="flex items-center gap-3 cursor-pointer text-sm bg-slate-50 p-3 rounded-lg hover:bg-slate-100 transition-colors border border-slate-100">
+                    <input type="checkbox" className="w-4 h-4 accent-primary" checked={form.requiresPassportImage} onChange={e => set("requiresPassportImage", e.target.checked)} />
+                    {ar ? "صورة الجواز" : "Passport Image"}
+                  </label>
+                  <label className="flex items-center gap-3 cursor-pointer text-sm bg-slate-50 p-3 rounded-lg hover:bg-slate-100 transition-colors border border-slate-100">
+                    <input type="checkbox" className="w-4 h-4 accent-primary" checked={form.requiresPersonalPhoto} onChange={e => set("requiresPersonalPhoto", e.target.checked)} />
+                    {ar ? "صورة شخصية" : "Personal Photo"}
+                  </label>
+                  <label className="flex items-center gap-3 cursor-pointer text-sm bg-slate-50 p-3 rounded-lg hover:bg-slate-100 transition-colors border border-slate-100">
+                    <input type="checkbox" className="w-4 h-4 accent-primary" checked={form.requiresResidencyImage} onChange={e => set("requiresResidencyImage", e.target.checked)} />
+                    {ar ? "صورة الإقامة" : "Residency Image"}
+                  </label>
+                  <label className="flex items-center gap-3 cursor-pointer text-sm bg-slate-50 p-3 rounded-lg hover:bg-slate-100 transition-colors border border-slate-100">
+                    <input type="checkbox" className="w-4 h-4 accent-primary" checked={form.requiresVisaImage} onChange={e => set("requiresVisaImage", e.target.checked)} />
+                    {ar ? "صورة التأشيرة" : "Visa Image"}
+                  </label>
+                </div>
+              </div>
+              <hr />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-slate-700 mb-2">{ar ? "الجنسيات الممنوعة من التقديم (سطر لكل جنسية)" : "Blocked Nationalities (one per line)"}</label>
+                  <textarea
+                    rows={4}
+                    className="w-full border rounded-xl px-4 py-2.5 text-sm"
+                    value={form.blockedNationalities?.join("\n") || ""}
+                    onChange={e => set("blockedNationalities", e.target.value.split("\n").map(s => s.trim()).filter(Boolean))}
+                    placeholder={ar ? "مثال:\nإسرائيلي" : "e.g.\nIsraeli"}
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <p className="text-xs text-slate-500 mb-3">{ar ? "يمكنك تخصيص رسالة الرفض التي تظهر للمتقدمين الذين لا تنطبق عليهم شروط الجنسية." : "You can customize the rejection message shown to applicants who fail the nationality check."}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">{ar ? "رسالة الرفض (بالعربية)" : "Rejection Message (Arabic)"}</label>
+                  <textarea
+                    rows={3}
+                    className="w-full border rounded-xl px-4 py-2.5 text-sm"
+                    value={form.ineligibleMessageAr || ""}
+                    onChange={e => set("ineligibleMessageAr", e.target.value)}
+                    placeholder={ar ? "عذراً، هذه التأشيرة غير متاحة لجنسيتك..." : "Sorry, this visa is not available..."}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">{ar ? "رسالة الرفض (بالإنجليزية)" : "Rejection Message (English)"}</label>
+                  <textarea
+                    rows={3}
+                    className="w-full border rounded-xl px-4 py-2.5 text-sm"
+                    value={form.ineligibleMessageEn || ""}
+                    onChange={e => set("ineligibleMessageEn", e.target.value)}
+                    placeholder="Sorry, this visa is not available for your nationality at the moment..."
+                  />
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -298,7 +431,7 @@ export default function VisasAdmin() {
             <div key={v.id} className={`bg-white rounded-2xl shadow-sm border p-5 ${!v.isActive ? "opacity-60 border-slate-100" : "border-slate-100 hover:border-primary/20"} transition-all`}>
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl overflow-hidden flex items-center justify-center bg-slate-50 text-2xl">
+                  <div className="w-12 h-12 rounded-xl overflow-hidden flex items-center justify-center bg-slate-50 text-2xl shrink-0">
                     {v.imageUrl ? <img src={v.imageUrl} alt="" className="w-full h-full object-cover" /> : flagEmoji}
                   </div>
                   <div>

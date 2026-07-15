@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 @plugin "@tailwindcss/typography";
@@ -78,11 +78,11 @@
 
   /* Primary: #0A2342 (deep navy) -> HSL: 213, 74%, 15% */
   --primary: 213 74% 15%;
-  --primary-foreground: 210 40% 98%;
+  --primary-foreground: 0 0% 100%;
 
   /* Secondary: #2563EB (royal blue) -> HSL: 221, 83%, 53% */
   --secondary: 221 83% 53%;
-  --secondary-foreground: 210 40% 98%;
+  --secondary-foreground: 0 0% 100%;
 
   /* Accent: #D4AF37 (gold) -> HSL: 46, 65%, 52% */
   --accent: 46 65% 52%;
@@ -90,39 +90,39 @@
 
   /* Background: #F8FAFC -> HSL: 210, 40%, 98% */
   --background: 210 40% 98%;
-  --foreground: 222.2 84% 4.9%;
+  --foreground: 213 74% 15%;
 
   --card: 0 0% 100%;
-  --card-foreground: 222.2 84% 4.9%;
-  --card-border: 214.3 31.8% 91.4%;
+  --card-foreground: 213 74% 15%;
+  --card-border: 214 32% 91%;
 
   --popover: 0 0% 100%;
-  --popover-foreground: 222.2 84% 4.9%;
-  --popover-border: 214.3 31.8% 91.4%;
+  --popover-foreground: 213 74% 15%;
+  --popover-border: 214 32% 91%;
 
-  --muted: 210 40% 96.1%;
-  --muted-foreground: 215.4 16.3% 46.9%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 215 16% 47%;
 
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 210 40% 98%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
 
-  --border: 214.3 31.8% 91.4%;
-  --input: 214.3 31.8% 91.4%;
-  --ring: 221 83% 53%;
+  --border: 214 32% 91%;
+  --input: 214 32% 91%;
+  --ring: 213 74% 15%;
 
   --chart-1: 221 83% 53%;
   --chart-2: 46 65% 52%;
   --chart-3: 213 74% 15%;
-  --chart-4: 210 40% 96.1%;
-  --chart-5: 0 84.2% 60.2%;
+  --chart-4: 210 40% 96%;
+  --chart-5: 0 84% 60%;
 
   --sidebar: 213 74% 15%;
-  --sidebar-foreground: 210 40% 98%;
+  --sidebar-foreground: 0 0% 100%;
   --sidebar-border: 213 74% 20%;
   --sidebar-primary: 221 83% 53%;
-  --sidebar-primary-foreground: 210 40% 98%;
+  --sidebar-primary-foreground: 0 0% 100%;
   --sidebar-accent: 213 74% 20%;
-  --sidebar-accent-foreground: 210 40% 98%;
+  --sidebar-accent-foreground: 0 0% 100%;
   --sidebar-ring: 46 65% 52%;
 
   --app-font-sans: 'Inter', sans-serif;
@@ -130,41 +130,41 @@
 }
 
 .dark {
-  --background: 222.2 84% 4.9%;
+  --background: 213 74% 10%;
   --foreground: 210 40% 98%;
-  --card: 222.2 84% 4.9%;
+  --card: 213 74% 12%;
   --card-foreground: 210 40% 98%;
-  --card-border: 217.2 32.6% 17.5%;
-  --popover: 222.2 84% 4.9%;
+  --card-border: 213 74% 20%;
+  --popover: 213 74% 12%;
   --popover-foreground: 210 40% 98%;
-  --popover-border: 217.2 32.6% 17.5%;
-  --primary: 213 74% 15%;
-  --primary-foreground: 210 40% 98%;
+  --popover-border: 213 74% 20%;
+  --primary: 210 40% 98%;
+  --primary-foreground: 213 74% 15%;
   --secondary: 221 83% 53%;
   --secondary-foreground: 210 40% 98%;
-  --muted: 217.2 32.6% 17.5%;
-  --muted-foreground: 215 20.2% 65.1%;
+  --muted: 213 74% 20%;
+  --muted-foreground: 215 20% 65%;
   --accent: 46 65% 52%;
-  --accent-foreground: 210 40% 98%;
-  --destructive: 0 62.8% 30.6%;
+  --accent-foreground: 213 74% 15%;
+  --destructive: 0 62% 30%;
   --destructive-foreground: 210 40% 98%;
-  --border: 217.2 32.6% 17.5%;
-  --input: 217.2 32.6% 17.5%;
-  --ring: 221 83% 53%;
+  --border: 213 74% 20%;
+  --input: 213 74% 20%;
+  --ring: 46 65% 52%;
 
   --chart-1: 221 83% 53%;
   --chart-2: 46 65% 52%;
   --chart-3: 213 74% 15%;
-  --chart-4: 210 40% 96.1%;
-  --chart-5: 0 84.2% 60.2%;
+  --chart-4: 210 40% 96%;
+  --chart-5: 0 84% 60%;
 
   --sidebar: 213 74% 15%;
-  --sidebar-foreground: 210 40% 98%;
+  --sidebar-foreground: 0 0% 100%;
   --sidebar-border: 213 74% 20%;
   --sidebar-primary: 221 83% 53%;
-  --sidebar-primary-foreground: 210 40% 98%;
+  --sidebar-primary-foreground: 0 0% 100%;
   --sidebar-accent: 213 74% 20%;
-  --sidebar-accent-foreground: 210 40% 98%;
+  --sidebar-accent-foreground: 0 0% 100%;
   --sidebar-ring: 46 65% 52%;
 }
 
@@ -182,4 +182,9 @@ html[dir="rtl"] {
 }
 html[dir="ltr"] {
   --app-font-sans: 'Inter', sans-serif;
+}
+
+/* Tabular numerals for prices, phone numbers, codes */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
 }

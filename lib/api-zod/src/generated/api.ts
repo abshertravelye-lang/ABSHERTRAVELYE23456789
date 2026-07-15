@@ -533,6 +533,8 @@ export const ListVisasResponseItem = zod.object({
   "countryEn": zod.string(),
   "countryCode": zod.string().optional(),
   "visaType": zod.string(),
+  "descriptionAr": zod.string().nullish(),
+  "descriptionEn": zod.string().nullish(),
   "requirements": zod.string().optional(),
   "documents": zod.string().nullish(),
   "notes": zod.string().nullish(),
@@ -544,9 +546,22 @@ export const ListVisasResponseItem = zod.object({
   "entryType": zod.enum(['single', 'multiple', 'transit']),
   "entryCount": zod.number().nullish(),
   "allowedNationalities": zod.array(zod.string()).optional(),
+  "blockedNationalities": zod.array(zod.string()).optional(),
   "imageUrl": zod.string().nullish(),
   "status": zod.enum(['available', 'suspended', 'closed']),
   "isActive": zod.boolean(),
+  "acceptsGccResidency": zod.boolean().optional(),
+  "acceptsSchengenResidency": zod.boolean().optional(),
+  "acceptsUkResidency": zod.boolean().optional(),
+  "acceptsUsVisa": zod.boolean().optional(),
+  "acceptsCanadaResidency": zod.boolean().optional(),
+  "acceptsAustraliaResidency": zod.boolean().optional(),
+  "requiresPassportImage": zod.boolean().optional(),
+  "requiresPersonalPhoto": zod.boolean().optional(),
+  "requiresResidencyImage": zod.boolean().optional(),
+  "requiresVisaImage": zod.boolean().optional(),
+  "ineligibleMessageAr": zod.string().nullish(),
+  "ineligibleMessageEn": zod.string().nullish(),
   "createdAt": zod.string(),
   "updatedAt": zod.string().optional()
 })
@@ -561,6 +576,8 @@ export const CreateVisaBody = zod.object({
   "countryEn": zod.string(),
   "countryCode": zod.string().optional(),
   "visaType": zod.string(),
+  "descriptionAr": zod.string().optional(),
+  "descriptionEn": zod.string().optional(),
   "requirements": zod.string().optional(),
   "documents": zod.string().optional(),
   "notes": zod.string().optional(),
@@ -572,9 +589,22 @@ export const CreateVisaBody = zod.object({
   "entryType": zod.enum(['single', 'multiple', 'transit']).optional(),
   "entryCount": zod.number().optional(),
   "allowedNationalities": zod.array(zod.string()).optional(),
+  "blockedNationalities": zod.array(zod.string()).optional(),
   "imageUrl": zod.string().optional(),
   "status": zod.enum(['available', 'suspended', 'closed']).optional(),
-  "isActive": zod.boolean().optional()
+  "isActive": zod.boolean().optional(),
+  "acceptsGccResidency": zod.boolean().optional(),
+  "acceptsSchengenResidency": zod.boolean().optional(),
+  "acceptsUkResidency": zod.boolean().optional(),
+  "acceptsUsVisa": zod.boolean().optional(),
+  "acceptsCanadaResidency": zod.boolean().optional(),
+  "acceptsAustraliaResidency": zod.boolean().optional(),
+  "requiresPassportImage": zod.boolean().optional(),
+  "requiresPersonalPhoto": zod.boolean().optional(),
+  "requiresResidencyImage": zod.boolean().optional(),
+  "requiresVisaImage": zod.boolean().optional(),
+  "ineligibleMessageAr": zod.string().optional(),
+  "ineligibleMessageEn": zod.string().optional()
 })
 
 export const CreateVisaResponse = zod.object({
@@ -583,6 +613,8 @@ export const CreateVisaResponse = zod.object({
   "countryEn": zod.string(),
   "countryCode": zod.string().optional(),
   "visaType": zod.string(),
+  "descriptionAr": zod.string().nullish(),
+  "descriptionEn": zod.string().nullish(),
   "requirements": zod.string().optional(),
   "documents": zod.string().nullish(),
   "notes": zod.string().nullish(),
@@ -594,9 +626,22 @@ export const CreateVisaResponse = zod.object({
   "entryType": zod.enum(['single', 'multiple', 'transit']),
   "entryCount": zod.number().nullish(),
   "allowedNationalities": zod.array(zod.string()).optional(),
+  "blockedNationalities": zod.array(zod.string()).optional(),
   "imageUrl": zod.string().nullish(),
   "status": zod.enum(['available', 'suspended', 'closed']),
   "isActive": zod.boolean(),
+  "acceptsGccResidency": zod.boolean().optional(),
+  "acceptsSchengenResidency": zod.boolean().optional(),
+  "acceptsUkResidency": zod.boolean().optional(),
+  "acceptsUsVisa": zod.boolean().optional(),
+  "acceptsCanadaResidency": zod.boolean().optional(),
+  "acceptsAustraliaResidency": zod.boolean().optional(),
+  "requiresPassportImage": zod.boolean().optional(),
+  "requiresPersonalPhoto": zod.boolean().optional(),
+  "requiresResidencyImage": zod.boolean().optional(),
+  "requiresVisaImage": zod.boolean().optional(),
+  "ineligibleMessageAr": zod.string().nullish(),
+  "ineligibleMessageEn": zod.string().nullish(),
   "createdAt": zod.string(),
   "updatedAt": zod.string().optional()
 })
@@ -615,6 +660,8 @@ export const GetVisaResponse = zod.object({
   "countryEn": zod.string(),
   "countryCode": zod.string().optional(),
   "visaType": zod.string(),
+  "descriptionAr": zod.string().nullish(),
+  "descriptionEn": zod.string().nullish(),
   "requirements": zod.string().optional(),
   "documents": zod.string().nullish(),
   "notes": zod.string().nullish(),
@@ -626,9 +673,22 @@ export const GetVisaResponse = zod.object({
   "entryType": zod.enum(['single', 'multiple', 'transit']),
   "entryCount": zod.number().nullish(),
   "allowedNationalities": zod.array(zod.string()).optional(),
+  "blockedNationalities": zod.array(zod.string()).optional(),
   "imageUrl": zod.string().nullish(),
   "status": zod.enum(['available', 'suspended', 'closed']),
   "isActive": zod.boolean(),
+  "acceptsGccResidency": zod.boolean().optional(),
+  "acceptsSchengenResidency": zod.boolean().optional(),
+  "acceptsUkResidency": zod.boolean().optional(),
+  "acceptsUsVisa": zod.boolean().optional(),
+  "acceptsCanadaResidency": zod.boolean().optional(),
+  "acceptsAustraliaResidency": zod.boolean().optional(),
+  "requiresPassportImage": zod.boolean().optional(),
+  "requiresPersonalPhoto": zod.boolean().optional(),
+  "requiresResidencyImage": zod.boolean().optional(),
+  "requiresVisaImage": zod.boolean().optional(),
+  "ineligibleMessageAr": zod.string().nullish(),
+  "ineligibleMessageEn": zod.string().nullish(),
   "createdAt": zod.string(),
   "updatedAt": zod.string().optional()
 })
@@ -646,6 +706,8 @@ export const UpdateVisaBody = zod.object({
   "countryEn": zod.string().optional(),
   "countryCode": zod.string().optional(),
   "visaType": zod.string().optional(),
+  "descriptionAr": zod.string().optional(),
+  "descriptionEn": zod.string().optional(),
   "requirements": zod.string().optional(),
   "documents": zod.string().optional(),
   "notes": zod.string().optional(),
@@ -657,9 +719,22 @@ export const UpdateVisaBody = zod.object({
   "entryType": zod.enum(['single', 'multiple', 'transit']).optional(),
   "entryCount": zod.number().optional(),
   "allowedNationalities": zod.array(zod.string()).optional(),
+  "blockedNationalities": zod.array(zod.string()).optional(),
   "imageUrl": zod.string().optional(),
   "status": zod.enum(['available', 'suspended', 'closed']).optional(),
-  "isActive": zod.boolean().optional()
+  "isActive": zod.boolean().optional(),
+  "acceptsGccResidency": zod.boolean().optional(),
+  "acceptsSchengenResidency": zod.boolean().optional(),
+  "acceptsUkResidency": zod.boolean().optional(),
+  "acceptsUsVisa": zod.boolean().optional(),
+  "acceptsCanadaResidency": zod.boolean().optional(),
+  "acceptsAustraliaResidency": zod.boolean().optional(),
+  "requiresPassportImage": zod.boolean().optional(),
+  "requiresPersonalPhoto": zod.boolean().optional(),
+  "requiresResidencyImage": zod.boolean().optional(),
+  "requiresVisaImage": zod.boolean().optional(),
+  "ineligibleMessageAr": zod.string().optional(),
+  "ineligibleMessageEn": zod.string().optional()
 })
 
 export const UpdateVisaResponse = zod.object({
@@ -668,6 +743,8 @@ export const UpdateVisaResponse = zod.object({
   "countryEn": zod.string(),
   "countryCode": zod.string().optional(),
   "visaType": zod.string(),
+  "descriptionAr": zod.string().nullish(),
+  "descriptionEn": zod.string().nullish(),
   "requirements": zod.string().optional(),
   "documents": zod.string().nullish(),
   "notes": zod.string().nullish(),
@@ -679,9 +756,22 @@ export const UpdateVisaResponse = zod.object({
   "entryType": zod.enum(['single', 'multiple', 'transit']),
   "entryCount": zod.number().nullish(),
   "allowedNationalities": zod.array(zod.string()).optional(),
+  "blockedNationalities": zod.array(zod.string()).optional(),
   "imageUrl": zod.string().nullish(),
   "status": zod.enum(['available', 'suspended', 'closed']),
   "isActive": zod.boolean(),
+  "acceptsGccResidency": zod.boolean().optional(),
+  "acceptsSchengenResidency": zod.boolean().optional(),
+  "acceptsUkResidency": zod.boolean().optional(),
+  "acceptsUsVisa": zod.boolean().optional(),
+  "acceptsCanadaResidency": zod.boolean().optional(),
+  "acceptsAustraliaResidency": zod.boolean().optional(),
+  "requiresPassportImage": zod.boolean().optional(),
+  "requiresPersonalPhoto": zod.boolean().optional(),
+  "requiresResidencyImage": zod.boolean().optional(),
+  "requiresVisaImage": zod.boolean().optional(),
+  "ineligibleMessageAr": zod.string().nullish(),
+  "ineligibleMessageEn": zod.string().nullish(),
   "createdAt": zod.string(),
   "updatedAt": zod.string().optional()
 })
@@ -695,6 +785,181 @@ export const DeleteVisaParams = zod.object({
 })
 
 export const DeleteVisaResponse = zod.void()
+
+
+/**
+ * @summary List visa applications (admin)
+ */
+export const ListVisaApplicationsQueryParams = zod.object({
+  "visaId": zod.coerce.number().optional(),
+  "status": zod.enum(['pending', 'under_review', 'approved', 'rejected']).optional()
+})
+
+export const ListVisaApplicationsResponseItem = zod.object({
+  "id": zod.number(),
+  "visaId": zod.number(),
+  "eligibilityPath": zod.enum(['gcc', 'alternative', 'direct']),
+  "gccCountry": zod.string().nullish(),
+  "alternativeRegion": zod.string().nullish(),
+  "fullName": zod.string(),
+  "nationality": zod.string(),
+  "passportNumber": zod.string(),
+  "passportIssueDate": zod.string(),
+  "passportExpiryDate": zod.string(),
+  "dateOfBirth": zod.string(),
+  "gender": zod.enum(['male', 'female']),
+  "email": zod.string(),
+  "phone": zod.string(),
+  "passportImageUrl": zod.string().nullish(),
+  "personalPhotoUrl": zod.string().nullish(),
+  "residencyImageUrl": zod.string().nullish(),
+  "visaImageUrl": zod.string().nullish(),
+  "agreedToTerms": zod.boolean(),
+  "status": zod.enum(['pending', 'under_review', 'approved', 'rejected']),
+  "adminNotes": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+export const ListVisaApplicationsResponse = zod.array(ListVisaApplicationsResponseItem)
+
+
+/**
+ * @summary Submit a new visa application
+ */
+export const CreateVisaApplicationBody = zod.object({
+  "visaId": zod.number(),
+  "eligibilityPath": zod.enum(['gcc', 'alternative', 'direct']),
+  "gccCountry": zod.string().optional(),
+  "alternativeRegion": zod.string().optional(),
+  "fullName": zod.string(),
+  "nationality": zod.string(),
+  "passportNumber": zod.string(),
+  "passportIssueDate": zod.string(),
+  "passportExpiryDate": zod.string(),
+  "dateOfBirth": zod.string(),
+  "gender": zod.enum(['male', 'female']),
+  "email": zod.string(),
+  "phone": zod.string(),
+  "passportImageUrl": zod.string().optional(),
+  "personalPhotoUrl": zod.string().optional(),
+  "residencyImageUrl": zod.string().optional(),
+  "visaImageUrl": zod.string().optional(),
+  "agreedToTerms": zod.boolean()
+})
+
+export const CreateVisaApplicationResponse = zod.object({
+  "id": zod.number(),
+  "visaId": zod.number(),
+  "eligibilityPath": zod.enum(['gcc', 'alternative', 'direct']),
+  "gccCountry": zod.string().nullish(),
+  "alternativeRegion": zod.string().nullish(),
+  "fullName": zod.string(),
+  "nationality": zod.string(),
+  "passportNumber": zod.string(),
+  "passportIssueDate": zod.string(),
+  "passportExpiryDate": zod.string(),
+  "dateOfBirth": zod.string(),
+  "gender": zod.enum(['male', 'female']),
+  "email": zod.string(),
+  "phone": zod.string(),
+  "passportImageUrl": zod.string().nullish(),
+  "personalPhotoUrl": zod.string().nullish(),
+  "residencyImageUrl": zod.string().nullish(),
+  "visaImageUrl": zod.string().nullish(),
+  "agreedToTerms": zod.boolean(),
+  "status": zod.enum(['pending', 'under_review', 'approved', 'rejected']),
+  "adminNotes": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Get a visa application
+ */
+export const GetVisaApplicationParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetVisaApplicationResponse = zod.object({
+  "id": zod.number(),
+  "visaId": zod.number(),
+  "eligibilityPath": zod.enum(['gcc', 'alternative', 'direct']),
+  "gccCountry": zod.string().nullish(),
+  "alternativeRegion": zod.string().nullish(),
+  "fullName": zod.string(),
+  "nationality": zod.string(),
+  "passportNumber": zod.string(),
+  "passportIssueDate": zod.string(),
+  "passportExpiryDate": zod.string(),
+  "dateOfBirth": zod.string(),
+  "gender": zod.enum(['male', 'female']),
+  "email": zod.string(),
+  "phone": zod.string(),
+  "passportImageUrl": zod.string().nullish(),
+  "personalPhotoUrl": zod.string().nullish(),
+  "residencyImageUrl": zod.string().nullish(),
+  "visaImageUrl": zod.string().nullish(),
+  "agreedToTerms": zod.boolean(),
+  "status": zod.enum(['pending', 'under_review', 'approved', 'rejected']),
+  "adminNotes": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Update a visa application status (admin)
+ */
+export const UpdateVisaApplicationParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateVisaApplicationBody = zod.object({
+  "status": zod.enum(['pending', 'under_review', 'approved', 'rejected']).optional(),
+  "adminNotes": zod.string().optional()
+})
+
+export const UpdateVisaApplicationResponse = zod.object({
+  "id": zod.number(),
+  "visaId": zod.number(),
+  "eligibilityPath": zod.enum(['gcc', 'alternative', 'direct']),
+  "gccCountry": zod.string().nullish(),
+  "alternativeRegion": zod.string().nullish(),
+  "fullName": zod.string(),
+  "nationality": zod.string(),
+  "passportNumber": zod.string(),
+  "passportIssueDate": zod.string(),
+  "passportExpiryDate": zod.string(),
+  "dateOfBirth": zod.string(),
+  "gender": zod.enum(['male', 'female']),
+  "email": zod.string(),
+  "phone": zod.string(),
+  "passportImageUrl": zod.string().nullish(),
+  "personalPhotoUrl": zod.string().nullish(),
+  "residencyImageUrl": zod.string().nullish(),
+  "visaImageUrl": zod.string().nullish(),
+  "agreedToTerms": zod.boolean(),
+  "status": zod.enum(['pending', 'under_review', 'approved', 'rejected']),
+  "adminNotes": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Request a presigned upload URL
+ */
+export const RequestUploadUrlBody = zod.object({
+  "name": zod.string(),
+  "size": zod.number(),
+  "contentType": zod.string()
+})
+
+export const RequestUploadUrlResponse = zod.object({
+  "uploadURL": zod.string(),
+  "objectPath": zod.string()
+})
 
 
 /**

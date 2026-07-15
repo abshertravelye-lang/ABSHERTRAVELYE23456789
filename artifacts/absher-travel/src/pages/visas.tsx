@@ -1,17 +1,15 @@
+import { useState } from "react";
 import { useTranslation } from "@/hooks/use-translation";
-import { useListVisas } from "@workspace/api-client-react";
+import { useListVisas, Visa } from "@workspace/api-client-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Clock, FileText, CreditCard, CheckCircle } from "lucide-react";
+import { Clock, FileText, CreditCard } from "lucide-react";
+import { VisaApplicationWizard } from "@/components/visa-application-wizard";
 
 export default function Visas() {
   const { t, language } = useTranslation();
   const { data: visas, isLoading } = useListVisas();
-
-  const handleWhatsAppBook = (country: string, visaType: string) => {
-    const text = encodeURIComponent(`أرغب في الاستفسار عن تأشيرة ${country} - نوع التأشيرة: ${visaType}`);
-    window.open(`https://wa.me/967779055511?text=${text}`, "_blank");
-  };
+  const [selectedVisa, setSelectedVisa] = useState<Visa | null>(null);
 
   return (
     <div className="bg-slate-50 min-h-screen pb-24">
@@ -40,9 +38,9 @@ export default function Visas() {
                 <CardContent className="p-6 flex-1 flex flex-col">
                   <div className="flex items-center gap-4 mb-6 pb-4 border-b border-slate-100">
                     {visa.imageUrl ? (
-                      <img src={visa.imageUrl} alt={language === 'ar' ? visa.countryAr : visa.countryEn} className="w-16 h-16 rounded-full object-cover border-2 border-slate-100 shadow-sm" />
+                      <img src={visa.imageUrl} alt={language === 'ar' ? visa.countryAr : visa.countryEn} className="w-16 h-16 rounded-full object-cover border-2 border-slate-100 shadow-sm shrink-0" />
                     ) : (
-                      <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-2xl border-2 border-primary/20 shadow-sm">
+                      <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-2xl border-2 border-primary/20 shadow-sm shrink-0">
                         {visa.countryCode ? (
                           <span className={`fi fi-${visa.countryCode.toLowerCase()}`}></span>
                         ) : (
@@ -73,21 +71,30 @@ export default function Visas() {
                       </div>
                     </div>
 
-                    <div className="flex items-start gap-3">
-                      <FileText className="w-5 h-5 text-slate-400 shrink-0 mt-0.5" />
-                      <div>
-                        <div className="text-xs text-slate-500 font-medium uppercase tracking-wider">{language === 'ar' ? 'المتطلبات' : 'Requirements'}</div>
-                        <p className="text-sm text-slate-600 line-clamp-3">{visa.requirements}</p>
+                    {(visa.descriptionAr || visa.descriptionEn) ? (
+                      <div className="flex items-start gap-3">
+                        <FileText className="w-5 h-5 text-slate-400 shrink-0 mt-0.5" />
+                        <div>
+                          <div className="text-xs text-slate-500 font-medium uppercase tracking-wider">{language === 'ar' ? 'وصف التأشيرة' : 'Description'}</div>
+                          <p className="text-sm text-slate-600 line-clamp-3">{language === 'ar' ? (visa.descriptionAr || visa.descriptionEn) : (visa.descriptionEn || visa.descriptionAr)}</p>
+                        </div>
                       </div>
-                    </div>
+                    ) : visa.requirements && (
+                      <div className="flex items-start gap-3">
+                        <FileText className="w-5 h-5 text-slate-400 shrink-0 mt-0.5" />
+                        <div>
+                          <div className="text-xs text-slate-500 font-medium uppercase tracking-wider">{language === 'ar' ? 'المتطلبات' : 'Requirements'}</div>
+                          <p className="text-sm text-slate-600 line-clamp-3">{visa.requirements}</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <Button 
-                    className="w-full bg-[#25D366] hover:bg-[#1ebd5a] text-white"
-                    onClick={() => handleWhatsAppBook(language === 'ar' ? visa.countryAr : visa.countryEn, visa.visaType)}
+                    className="w-full bg-primary hover:bg-primary/90 text-white shadow-sm transition-all text-base h-12 rounded-xl"
+                    onClick={() => setSelectedVisa(visa)}
                   >
-                    <svg xmlns="http://www.0000.com/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 rtl:ml-2 rtl:mr-0"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
-                    {language === 'ar' ? 'استفسار عبر واتساب' : 'Inquire via WhatsApp'}
+                    {language === 'ar' ? 'قدّم الآن' : 'Apply Now'}
                   </Button>
                 </CardContent>
               </Card>
@@ -99,6 +106,14 @@ export default function Visas() {
           </div>
         )}
       </div>
+
+      {selectedVisa && (
+        <VisaApplicationWizard
+          visa={selectedVisa}
+          open={!!selectedVisa}
+          onOpenChange={(open) => !open && setSelectedVisa(null)}
+        />
+      )}
     </div>
   );
 }

@@ -18,6 +18,7 @@ const toResponse = (r: typeof visasTable.$inferSelect) => ({
   createdAt: r.createdAt.toISOString(),
   updatedAt: r.updatedAt.toISOString(),
   allowedNationalities: r.allowedNationalities ?? [],
+  blockedNationalities: r.blockedNationalities ?? [],
 });
 
 router.get("/visas", async (req, res) => {

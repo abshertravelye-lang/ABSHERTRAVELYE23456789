@@ -9,6 +9,21 @@ export interface HealthStatus {
   status: string;
 }
 
+export interface ErrorResponse {
+  error: string;
+}
+
+export interface UploadUrlRequest {
+  name: string;
+  size: number;
+  contentType: string;
+}
+
+export interface UploadUrlResponse {
+  uploadURL: string;
+  objectPath: string;
+}
+
 export interface Offer {
   id: number;
   titleAr: string;
@@ -246,6 +261,10 @@ export interface Visa {
   countryEn: string;
   countryCode?: string;
   visaType: string;
+  /** @nullable */
+  descriptionAr?: string | null;
+  /** @nullable */
+  descriptionEn?: string | null;
   requirements?: string;
   /** @nullable */
   documents?: string | null;
@@ -262,10 +281,25 @@ export interface Visa {
   /** @nullable */
   entryCount?: number | null;
   allowedNationalities?: string[];
+  blockedNationalities?: string[];
   /** @nullable */
   imageUrl?: string | null;
   status: VisaStatus;
   isActive: boolean;
+  acceptsGccResidency?: boolean;
+  acceptsSchengenResidency?: boolean;
+  acceptsUkResidency?: boolean;
+  acceptsUsVisa?: boolean;
+  acceptsCanadaResidency?: boolean;
+  acceptsAustraliaResidency?: boolean;
+  requiresPassportImage?: boolean;
+  requiresPersonalPhoto?: boolean;
+  requiresResidencyImage?: boolean;
+  requiresVisaImage?: boolean;
+  /** @nullable */
+  ineligibleMessageAr?: string | null;
+  /** @nullable */
+  ineligibleMessageEn?: string | null;
   createdAt: string;
   updatedAt?: string;
 }
@@ -293,6 +327,8 @@ export interface VisaInput {
   countryEn: string;
   countryCode?: string;
   visaType: string;
+  descriptionAr?: string;
+  descriptionEn?: string;
   requirements?: string;
   documents?: string;
   notes?: string;
@@ -304,9 +340,22 @@ export interface VisaInput {
   entryType?: VisaInputEntryType;
   entryCount?: number;
   allowedNationalities?: string[];
+  blockedNationalities?: string[];
   imageUrl?: string;
   status?: VisaInputStatus;
   isActive?: boolean;
+  acceptsGccResidency?: boolean;
+  acceptsSchengenResidency?: boolean;
+  acceptsUkResidency?: boolean;
+  acceptsUsVisa?: boolean;
+  acceptsCanadaResidency?: boolean;
+  acceptsAustraliaResidency?: boolean;
+  requiresPassportImage?: boolean;
+  requiresPersonalPhoto?: boolean;
+  requiresResidencyImage?: boolean;
+  requiresVisaImage?: boolean;
+  ineligibleMessageAr?: string;
+  ineligibleMessageEn?: string;
 }
 
 export type VisaUpdateEntryType = typeof VisaUpdateEntryType[keyof typeof VisaUpdateEntryType];
@@ -332,6 +381,8 @@ export interface VisaUpdate {
   countryEn?: string;
   countryCode?: string;
   visaType?: string;
+  descriptionAr?: string;
+  descriptionEn?: string;
   requirements?: string;
   documents?: string;
   notes?: string;
@@ -343,9 +394,135 @@ export interface VisaUpdate {
   entryType?: VisaUpdateEntryType;
   entryCount?: number;
   allowedNationalities?: string[];
+  blockedNationalities?: string[];
   imageUrl?: string;
   status?: VisaUpdateStatus;
   isActive?: boolean;
+  acceptsGccResidency?: boolean;
+  acceptsSchengenResidency?: boolean;
+  acceptsUkResidency?: boolean;
+  acceptsUsVisa?: boolean;
+  acceptsCanadaResidency?: boolean;
+  acceptsAustraliaResidency?: boolean;
+  requiresPassportImage?: boolean;
+  requiresPersonalPhoto?: boolean;
+  requiresResidencyImage?: boolean;
+  requiresVisaImage?: boolean;
+  ineligibleMessageAr?: string;
+  ineligibleMessageEn?: string;
+}
+
+export type VisaApplicationEligibilityPath = typeof VisaApplicationEligibilityPath[keyof typeof VisaApplicationEligibilityPath];
+
+
+export const VisaApplicationEligibilityPath = {
+  gcc: 'gcc',
+  alternative: 'alternative',
+  direct: 'direct',
+} as const;
+
+export type VisaApplicationGender = typeof VisaApplicationGender[keyof typeof VisaApplicationGender];
+
+
+export const VisaApplicationGender = {
+  male: 'male',
+  female: 'female',
+} as const;
+
+export type VisaApplicationStatus = typeof VisaApplicationStatus[keyof typeof VisaApplicationStatus];
+
+
+export const VisaApplicationStatus = {
+  pending: 'pending',
+  under_review: 'under_review',
+  approved: 'approved',
+  rejected: 'rejected',
+} as const;
+
+export interface VisaApplication {
+  id: number;
+  visaId: number;
+  eligibilityPath: VisaApplicationEligibilityPath;
+  /** @nullable */
+  gccCountry?: string | null;
+  /** @nullable */
+  alternativeRegion?: string | null;
+  fullName: string;
+  nationality: string;
+  passportNumber: string;
+  passportIssueDate: string;
+  passportExpiryDate: string;
+  dateOfBirth: string;
+  gender: VisaApplicationGender;
+  email: string;
+  phone: string;
+  /** @nullable */
+  passportImageUrl?: string | null;
+  /** @nullable */
+  personalPhotoUrl?: string | null;
+  /** @nullable */
+  residencyImageUrl?: string | null;
+  /** @nullable */
+  visaImageUrl?: string | null;
+  agreedToTerms: boolean;
+  status: VisaApplicationStatus;
+  /** @nullable */
+  adminNotes?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type VisaApplicationInputEligibilityPath = typeof VisaApplicationInputEligibilityPath[keyof typeof VisaApplicationInputEligibilityPath];
+
+
+export const VisaApplicationInputEligibilityPath = {
+  gcc: 'gcc',
+  alternative: 'alternative',
+  direct: 'direct',
+} as const;
+
+export type VisaApplicationInputGender = typeof VisaApplicationInputGender[keyof typeof VisaApplicationInputGender];
+
+
+export const VisaApplicationInputGender = {
+  male: 'male',
+  female: 'female',
+} as const;
+
+export interface VisaApplicationInput {
+  visaId: number;
+  eligibilityPath: VisaApplicationInputEligibilityPath;
+  gccCountry?: string;
+  alternativeRegion?: string;
+  fullName: string;
+  nationality: string;
+  passportNumber: string;
+  passportIssueDate: string;
+  passportExpiryDate: string;
+  dateOfBirth: string;
+  gender: VisaApplicationInputGender;
+  email: string;
+  phone: string;
+  passportImageUrl?: string;
+  personalPhotoUrl?: string;
+  residencyImageUrl?: string;
+  visaImageUrl?: string;
+  agreedToTerms: boolean;
+}
+
+export type VisaApplicationStatusUpdateStatus = typeof VisaApplicationStatusUpdateStatus[keyof typeof VisaApplicationStatusUpdateStatus];
+
+
+export const VisaApplicationStatusUpdateStatus = {
+  pending: 'pending',
+  under_review: 'under_review',
+  approved: 'approved',
+  rejected: 'rejected',
+} as const;
+
+export interface VisaApplicationStatusUpdate {
+  status?: VisaApplicationStatusUpdateStatus;
+  adminNotes?: string;
 }
 
 export type BookingType = typeof BookingType[keyof typeof BookingType];
@@ -609,6 +786,21 @@ limit?: number;
 export type ListProgramsParams = {
 featured?: boolean;
 };
+
+export type ListVisaApplicationsParams = {
+visaId?: number;
+status?: ListVisaApplicationsStatus;
+};
+
+export type ListVisaApplicationsStatus = typeof ListVisaApplicationsStatus[keyof typeof ListVisaApplicationsStatus];
+
+
+export const ListVisaApplicationsStatus = {
+  pending: 'pending',
+  under_review: 'under_review',
+  approved: 'approved',
+  rejected: 'rejected',
+} as const;
 
 export type ListBookingsParams = {
 type?: ListBookingsType;
