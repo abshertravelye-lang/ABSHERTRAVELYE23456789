@@ -2,7 +2,7 @@ import { Link } from "wouter";
 import { useTranslation } from "@/hooks/use-translation";
 import { Button } from "@/components/ui/button";
 import { Globe, Menu, X, Phone, MapPin } from "lucide-react";
-import logo from "@assets/خلفية_ابشر_اعمال__1782733321222.png";
+import logo from "@assets/absher-business-logo.png";
 import { useState } from "react";
 
 export function Layout({ children }: { children: React.ReactNode }) {
