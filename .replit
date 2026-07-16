@@ -21,3 +21,8 @@ timeoutMs = 20000
 
 [nix]
 channel = "stable-25_05"
+
+[userenv]
+
+[userenv.shared]
+SESSION_SECRET = "aS5h0yg9oBVC8ioovmMDA4Q3X2SRZ3tJdtRNtFe8kS+939SKNRfxvaqRMaCXIIuIUcWWzy/+cESCeH+yIl9sYQ=="
