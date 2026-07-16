@@ -48,6 +48,9 @@ dependencies:
   # Icons
   cupertino_icons: ^1.0.8
 
+dependency_overrides:
+  vector_math: ^2.1.4
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
