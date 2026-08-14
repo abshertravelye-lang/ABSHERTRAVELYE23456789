@@ -48,8 +48,9 @@ function AccountNavButton({ language }: { language: string }) {
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const { t, language, setLanguage } = useTranslation();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileLogoutOpen, setMobileLogoutOpen] = useState(false);
   const [location] = useLocation();
 
   // The B2B Agent Portal renders its own full-screen shell — no site chrome.
@@ -146,9 +147,28 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <Link href="/book" onClick={() => setMobileMenuOpen(false)}>
                 <Button className="w-full bg-accent text-primary">{t("bookNow")}</Button>
               </Link>
-              <div onClick={() => setMobileMenuOpen(false)}>
-                <AccountNavButton language={language} />
-              </div>
+              {isAuthenticated ? (
+                <>
+                  <Link href="/account" onClick={() => setMobileMenuOpen(false)}>
+                    <Button variant="outline" className="w-full gap-2 justify-start">
+                      <User size={16} />
+                      {user?.firstName || (language === "ar" ? "حسابي" : "My Account")}
+                    </Button>
+                  </Link>
+                  <Button
+                    variant="outline"
+                    className="w-full gap-2 justify-start text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+                    onClick={() => { setMobileMenuOpen(false); setMobileLogoutOpen(true); }}
+                  >
+                    <LogOut size={16} />
+                    {language === "ar" ? "تسجيل الخروج" : "Sign out"}
+                  </Button>
+                </>
+              ) : (
+                <div onClick={() => setMobileMenuOpen(false)}>
+                  <AccountNavButton language={language} />
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -161,6 +181,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
       {/* In-app Support Chat (replaces the old WhatsApp redirect) */}
       <SupportChat />
+
+      <LogoutConfirmDialog
+        open={mobileLogoutOpen}
+        onOpenChange={setMobileLogoutOpen}
+        onConfirm={logout}
+        ar={language === "ar"}
+      />
 
       {/* Footer */}
       <footer className="bg-primary text-primary-foreground pt-16 pb-8">
