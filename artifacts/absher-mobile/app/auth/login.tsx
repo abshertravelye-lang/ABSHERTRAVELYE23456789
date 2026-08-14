@@ -242,13 +242,11 @@ export default function AuthScreen() {
 
           {/* Logo + brand */}
           <View style={styles.heroBrand}>
-            <View style={styles.heroLogoCard}>
-              <Image
-                source={require('@/assets/images/icon.png')}
-                style={styles.heroLogoImg}
-                contentFit="contain"
-              />
-            </View>
+            <Image
+              source={require('@/assets/images/logo-icon-transparent.png')}
+              style={styles.heroLogoImg}
+              contentFit="contain"
+            />
             <Text style={[styles.heroTitle, { fontFamily: 'Cairo_700Bold' }]}>رحلتك تبدأ هنا</Text>
             <Text style={[styles.heroSubtitle, { fontFamily: 'Cairo_400Regular' }]}>
               خدمات سفر متكاملة بلمسة واحدة
@@ -489,21 +487,15 @@ const styles = StyleSheet.create({
   },
   langText: { color: NAVY, fontSize: 13 },
   heroBrand: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingBottom: 28 },
-  heroLogoCard: {
-    width: 100,
-    height: 100,
-    borderRadius: 24,
-    backgroundColor: 'rgba(255,255,255,0.9)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.18,
-    shadowRadius: 16,
-    elevation: 10,
+  heroLogoImg: {
+    width: 120,
+    height: 120,
     marginBottom: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.22,
+    shadowRadius: 16,
   },
-  heroLogoImg: { width: 92, height: 92, borderRadius: 20 },
   heroTitle: { color: NAVY, fontSize: 26, textAlign: 'center' },
   heroSubtitle: { color: '#334155', fontSize: 13, marginTop: 4, textAlign: 'center' },
 

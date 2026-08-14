@@ -191,7 +191,7 @@ export default function OnboardingScreen() {
       <Image source={AIRPORT_BG} style={StyleSheet.absoluteFill} contentFit="cover" />
       {/* Soft sky gradient to smooth the top */}
       <LinearGradient
-        colors={['rgba(255,255,255,0.25)', 'rgba(255,255,255,0)']}
+        colors={['rgba(255,255,255,0.18)', 'rgba(255,255,255,0)']}
         style={[StyleSheet.absoluteFill, { height: height * 0.5 }]}
       />
 
@@ -203,15 +203,13 @@ export default function OnboardingScreen() {
         </Pressable>
       </View>
 
-      {/* ── Logo: fixed in the upper area ── */}
-      <View style={[styles.logoArea, { paddingTop: topInset + 60 }]}>
-        <View style={styles.logoCard}>
-          <Image
-            source={require('@/assets/images/icon.png')}
-            style={styles.logoImg}
-            contentFit="contain"
-          />
-        </View>
+      {/* ── Logo: transparent icon floating directly on background ── */}
+      <View style={[styles.logoArea, { paddingTop: topInset + 48 }]}>
+        <Image
+          source={require('@/assets/images/logo-icon-transparent.png')}
+          style={styles.logoImg}
+          contentFit="contain"
+        />
         <Text style={[styles.brandName, { fontFamily: 'Cairo_700Bold' }]}>ABSHER</Text>
         <View style={styles.brandTravelRow}>
           <View style={styles.brandLine} />
@@ -327,21 +325,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingBottom: 16,
   },
-  logoCard: {
-    width: 110,
-    height: 110,
-    borderRadius: 28,
-    backgroundColor: 'rgba(255,255,255,0.85)',
-    alignItems: 'center',
-    justifyContent: 'center',
+  logoImg: {
+    width: 130,
+    height: 130,
+    marginBottom: 6,
+    // Drop shadow to make it pop on the sky background
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.18,
-    shadowRadius: 18,
-    elevation: 10,
-    marginBottom: 8,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.22,
+    shadowRadius: 16,
   },
-  logoImg: { width: 100, height: 100, borderRadius: 24 },
   brandName: { color: NAVY, fontSize: 26, letterSpacing: 4, marginBottom: 2 },
   brandTravelRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   brandLine: { width: 28, height: 1.5, backgroundColor: NAVY, opacity: 0.6 },
