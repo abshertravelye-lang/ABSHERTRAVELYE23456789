@@ -27,10 +27,26 @@ const STORED_TOKEN_KEY = '@absher_push_token';
 // Module-state cache so unregisterPush works even if AsyncStorage is empty.
 let cachedToken: string | null = null;
 
-/** Resolve the EAS/Expo projectId used by getExpoPushTokenAsync (if present). */
+/**
+ * Resolve the EAS/Expo projectId used by getExpoPushTokenAsync.
+ *
+ * Resolution order (first non-empty value wins):
+ *  1. EXPO_PUBLIC_EAS_PROJECT_ID environment variable — set this in Replit
+ *     Secrets to enable push in production builds without touching app.json.
+ *  2. Constants.expoConfig.extra.eas.projectId — present when app.json has
+ *     the extra.eas block (optional; kept for forward-compat).
+ *  3. Constants.easConfig.projectId — older SDK path.
+ *
+ * Returns undefined when none is set; getExpoPushTokenAsync will still attempt
+ * token registration (works in development builds, may fail in production).
+ */
 function resolveProjectId(): string | undefined {
   try {
-    // Available across SDK versions in slightly different places.
+    // Env-var approach: set EXPO_PUBLIC_EAS_PROJECT_ID in Replit Secrets.
+    const envProjectId = process.env.EXPO_PUBLIC_EAS_PROJECT_ID;
+    if (envProjectId && envProjectId.trim().length > 0) return envProjectId.trim();
+
+    // Fallback: read from app.json extra.eas block at runtime.
     const easProjectId =
       (Constants as { expoConfig?: { extra?: { eas?: { projectId?: string } } } }).expoConfig?.extra?.eas
         ?.projectId;
