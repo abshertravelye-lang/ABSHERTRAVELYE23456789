@@ -28,6 +28,7 @@ const apiBase = () => (import.meta.env.BASE_URL ?? "/").replace(/\/$/, "");
 import { CountrySelect } from "@/components/country-select";
 import { getCountryByCode } from "@workspace/countries";
 import { openSupportChat } from "@/components/support-chat";
+import { LogoutConfirmDialog } from "@/components/logout-confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -509,6 +510,7 @@ export default function AgentPortal() {
   const { user, isAuthenticated, logout } = useAuth();
   const [, navigate] = useLocation();
   const [section, setSection] = useState<Section>("dashboard");
+  const [confirmLogout, setConfirmLogout] = useState(false);
 
   // Only check /agent/me when the logged-in user is actually an agent.
   const isAgent = isAuthenticated && user?.role === "agent";
@@ -565,7 +567,7 @@ export default function AgentPortal() {
           </button>
         </nav>
         <div className="px-3 pb-5">
-          <button onClick={() => logout()}
+          <button onClick={() => setConfirmLogout(true)}
             className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-white/70 hover:bg-white/8 transition-colors">
             <LogOut className="h-4 w-4" /> {ar ? "تسجيل الخروج" : "Logout"}
           </button>
@@ -582,7 +584,7 @@ export default function AgentPortal() {
               {ar ? n.ar : n.en}
             </button>
           ))}
-          <button onClick={() => logout()} className="whitespace-nowrap rounded-full px-3 py-1.5 text-xs text-white/75">
+          <button onClick={() => setConfirmLogout(true)} className="whitespace-nowrap rounded-full px-3 py-1.5 text-xs text-white/75">
             {ar ? "خروج" : "Logout"}
           </button>
         </div>
@@ -601,6 +603,13 @@ export default function AgentPortal() {
           {section === "profile" && <ProfileView ar={ar} />}
         </main>
       </div>
+
+      <LogoutConfirmDialog
+        open={confirmLogout}
+        onOpenChange={setConfirmLogout}
+        onConfirm={logout}
+        ar={ar}
+      />
     </div>
   );
 }
