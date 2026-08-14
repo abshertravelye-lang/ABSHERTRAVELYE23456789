@@ -509,8 +509,8 @@ export default function UmrahVisaWizard() {
     }
     // 5) contact info
     if (s === 5) {
-      if (!/^5\d{8}$/.test(phone) && phone.trim().length < 7) { Alert.alert(tr(lang, 'رقم غير صحيح', 'Invalid number'), tr(lang, 'يرجى إدخال رقم جوال المعتمر.', 'Please enter the pilgrim phone.')); return false; }
-      if (!emergencyPhone.trim() || emergencyPhone.trim().length < 7) { Alert.alert(tr(lang, 'رقم غير صحيح', 'Invalid number'), tr(lang, 'يرجى إدخال رقم قريب أو صديق للطوارئ.', 'Please enter an emergency contact phone.')); return false; }
+      if (!phone.trim() || !/^5\d{8}$/.test(phone.trim())) { Alert.alert(tr(lang, 'رقم غير صحيح', 'Invalid number'), tr(lang, 'أدخل رقم جوال المعتمر: 9 أرقام تبدأ بـ 5.', 'Enter the pilgrim phone: 9 digits starting with 5.')); return false; }
+      if (!emergencyPhone.trim() || !/^5\d{8}$/.test(emergencyPhone.trim())) { Alert.alert(tr(lang, 'رقم غير صحيح', 'Invalid number'), tr(lang, 'أدخل رقم الطوارئ: 9 أرقام تبدأ بـ 5.', 'Enter the emergency phone: 9 digits starting with 5.')); return false; }
       return true;
     }
     // 6) fee display — nothing to validate before payment
@@ -540,9 +540,10 @@ export default function UmrahVisaWizard() {
           gender,
           passportIssueDate: passportIssueDate || undefined,
           passportExpiryDate: passportExpiryDate || undefined,
-          phone: phone.trim(),
+          // Prepend +966 so the stored format matches what the web client sends.
+          phone: `+966${phone.trim()}`,
           contactEmail: contactEmail.trim() || undefined,
-          emergencyPhone: emergencyPhone.trim(),
+          emergencyPhone: `+966${emergencyPhone.trim()}`,
           declarationAccepted: declared,
         },
       },
@@ -878,9 +879,49 @@ export default function UmrahVisaWizard() {
               <StepHead icon="chatbubbles-outline" title={tr(lang, 'بيانات التواصل', 'Contact details')} sub={tr(lang, 'تم تعبئة بياناتك تلقائياً — عدّلها إن لزم', 'Your details were prefilled — edit if needed')} />
 
               <View style={[styles.card, { backgroundColor: c.card, borderColor: c.border, gap: 14 }]}>
-                <Field label={tr(lang, 'رقم جوال المعتمر', 'Pilgrim phone')} value={phone} onChangeText={setPhone} keyboardType="phone-pad" ltr required placeholder="+966 5X XXX XXXX" />
+                {/* Phone fields use a fixed +966 prefix to match the host-phone step.
+                    The stored value is always the 9 raw digits (e.g. "512345678"). */}
+                <View style={f.wrap}>
+                  <Text style={[f.label, { color: c.foreground, fontFamily: 'Cairo_600SemiBold' }]}>
+                    {tr(lang, 'رقم جوال المعتمر', 'Pilgrim phone')}<Text style={{ color: c.destructive }}> *</Text>
+                  </Text>
+                  <View style={[styles.phoneRow, { backgroundColor: c.muted, borderColor: c.border }]}>
+                    <TextInput
+                      value={phone}
+                      onChangeText={(v) => setPhone(v.replace(/[^0-9]/g, '').slice(0, 9))}
+                      placeholder="5XXXXXXXX"
+                      placeholderTextColor={c.mutedForeground}
+                      keyboardType="number-pad"
+                      maxLength={9}
+                      style={[styles.phoneInput, { color: c.foreground, fontFamily: 'Cairo_400Regular' }]}
+                    />
+                    <View style={[styles.phonePrefix, { borderColor: c.border }]}>
+                      <Text style={[styles.phonePrefixText, { color: c.foreground, fontFamily: 'Cairo_700Bold' }]}>+966</Text>
+                    </View>
+                  </View>
+                </View>
+
                 <Field label={tr(lang, 'بريد التواصل (اختياري)', 'Contact email (optional)')} value={contactEmail} onChangeText={setContactEmail} keyboardType="email-address" ltr autoCapitalize="none" placeholder="example@email.com" />
-                <Field label={tr(lang, 'رقم جوال قريب أو صديق للطوارئ', 'Emergency contact phone (relative/friend)')} value={emergencyPhone} onChangeText={setEmergencyPhone} keyboardType="phone-pad" ltr required placeholder="+966 5X XXX XXXX" />
+
+                <View style={f.wrap}>
+                  <Text style={[f.label, { color: c.foreground, fontFamily: 'Cairo_600SemiBold' }]}>
+                    {tr(lang, 'رقم جوال الطوارئ (قريب أو صديق)', 'Emergency contact phone')}<Text style={{ color: c.destructive }}> *</Text>
+                  </Text>
+                  <View style={[styles.phoneRow, { backgroundColor: c.muted, borderColor: c.border }]}>
+                    <TextInput
+                      value={emergencyPhone}
+                      onChangeText={(v) => setEmergencyPhone(v.replace(/[^0-9]/g, '').slice(0, 9))}
+                      placeholder="5XXXXXXXX"
+                      placeholderTextColor={c.mutedForeground}
+                      keyboardType="number-pad"
+                      maxLength={9}
+                      style={[styles.phoneInput, { color: c.foreground, fontFamily: 'Cairo_400Regular' }]}
+                    />
+                    <View style={[styles.phonePrefix, { borderColor: c.border }]}>
+                      <Text style={[styles.phonePrefixText, { color: c.foreground, fontFamily: 'Cairo_700Bold' }]}>+966</Text>
+                    </View>
+                  </View>
+                </View>
               </View>
 
               <NextButton label={tr(lang, 'التالي', 'Next')} onPress={handleNext} />

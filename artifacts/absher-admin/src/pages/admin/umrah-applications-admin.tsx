@@ -51,7 +51,10 @@ async function openObjectInNewTab(path: string): Promise<void> {
     });
     if (!res.ok) throw new Error(String(res.status));
     const { url } = await res.json();
-    window.open(`${base}${url}`, "_blank", "noopener");
+    // url is already a root-absolute path (/api/storage/...); do not prepend
+    // the artifact base prefix or it becomes /absher-admin/api/... which routes
+    // to the admin SPA instead of the API server.
+    window.open(url, "_blank", "noopener");
   } catch {
     toast.error("تعذر فتح الملف");
   }

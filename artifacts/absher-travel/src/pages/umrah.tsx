@@ -232,8 +232,10 @@ export default function Umrah() {
       const result = await ocrMutation.mutateAsync({ data: { imageUrl: path } });
       setOcrRan(true);
       if (result?.success) setOcr(result);
+      else setOcr({});
     } catch {
       setOcrRan(true);
+      setOcr({});
     }
   };
 
@@ -537,6 +539,16 @@ export default function Umrah() {
                   <div className="flex items-center gap-2 text-sm text-[#0A2342] font-medium">
                     <Loader2 className="w-4 h-4 animate-spin" />
                     {ar ? "جاري استخراج بيانات الجواز..." : "Extracting passport data..."}
+                  </div>
+                )}
+                {ocrRan && !(ocr.fullName || ocr.fullNameAr || ocr.passportNumber || ocr.nationality) && (
+                  <div className="rounded-2xl border border-amber-100 bg-amber-50 p-4 flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
+                    <p className="text-sm text-amber-800 font-medium">
+                      {ar
+                        ? "لم نتمكن من قراءة بيانات الجواز تلقائياً. تأكد أن الصورة واضحة، أو أدخل البيانات يدوياً في الخطوة التالية."
+                        : "Could not extract passport data automatically. Make sure the image is clear, or you can fill in the details manually in the next step."}
+                    </p>
                   </div>
                 )}
                 {ocrRan && (ocr.fullName || ocr.fullNameAr || ocr.passportNumber || ocr.nationality) && (
