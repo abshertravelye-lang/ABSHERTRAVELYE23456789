@@ -2,7 +2,7 @@ import { Link, useLocation } from "wouter";
 import { useTranslation } from "@/hooks/use-translation";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { Globe, Menu, X, Phone, MapPin, User, LogOut, Mail, MessageCircle, Headphones, Building2 } from "lucide-react";
+import { Globe, Menu, X, User, LogOut, Mail, MessageCircle, Headphones, Building2 } from "lucide-react";
 import logo from "@assets/absher-business-logo.png";
 import { useState } from "react";
 import { AppDownloadLinks } from "@/components/app-download-links";
@@ -230,17 +230,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   className="flex items-center gap-2 hover:text-white transition-colors text-start"
                   data-testid="link-footer-contact"
                 >
-                  <User size={16} className="text-accent shrink-0" />
-                  {language === 'ar' ? 'تواصل معنا' : 'Contact Us'}
-                </button>
-              </li>
-              <li>
-                <button
-                  type="button"
-                  onClick={() => openSupportChat()}
-                  className="flex items-center gap-2 hover:text-white transition-colors text-start"
-                  data-testid="link-footer-chat"
-                >
                   <MessageCircle size={16} className="text-accent shrink-0" />
                   {language === 'ar' ? 'الدردشة المباشرة' : 'Live Chat'}
                 </button>
@@ -250,14 +239,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   <Mail size={16} className="text-accent shrink-0" />
                   info@abshertravel.com
                 </a>
-              </li>
-              <li className="flex items-center gap-2 pt-2 border-t border-white/10 mt-2">
-                <Phone size={16} className="text-accent shrink-0" />
-                <span dir="ltr">+967 779055511 / +967 784055511</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <MapPin size={16} className="text-accent shrink-0 mt-0.5" />
-                <span>{language === 'ar' ? 'اليمن - صنعاء - شارع الزبيري - جولة كنتاكي سابقاً' : 'Yemen - Sana\'a - Zubairi St'}</span>
               </li>
             </ul>
           </div>

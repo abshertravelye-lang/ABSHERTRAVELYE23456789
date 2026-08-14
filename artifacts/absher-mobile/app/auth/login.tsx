@@ -390,14 +390,8 @@ export default function AuthScreen() {
           ) : (
             /* ── REGISTER FORM ── */
             <View style={styles.form}>
-              <View style={[styles.nameRow, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
-                <View style={{ flex: 1 }}>
-                  <Field icon="person-outline" value={form.firstName} onChangeText={(v) => set('firstName', v)} placeholder="الاسم الأول" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Field icon="person-outline" value={form.lastName} onChangeText={(v) => set('lastName', v)} placeholder="الاسم الأخير" />
-                </View>
-              </View>
+              <Field icon="person-outline" value={form.firstName} onChangeText={(v) => set('firstName', v)} placeholder="الاسم الأول" />
+              <Field icon="person-outline" value={form.lastName} onChangeText={(v) => set('lastName', v)} placeholder="الاسم الأخير" />
 
               <Field icon="mail-outline" value={form.email} onChangeText={(v) => set('email', v)} placeholder="البريد الإلكتروني" keyboardType="email-address" ltr />
 
@@ -516,14 +510,14 @@ const styles = StyleSheet.create({
 
   // Tabs
   tabs: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     borderBottomWidth: 1,
     borderBottomColor: '#E2E8F0',
     marginBottom: 20,
   },
   tabItem: { flex: 1, alignItems: 'center', paddingBottom: 12, position: 'relative' },
   tabActive: {},
-  tabText: { fontSize: 14 },
+  tabText: { fontSize: 13 },
   tabUnderline: {
     position: 'absolute',
     bottom: -1,
@@ -607,7 +601,7 @@ const styles = StyleSheet.create({
   dividerText: { fontSize: 12 },
 
   // Social
-  socialRow: { flexDirection: 'row-reverse', gap: 10 },
+  socialRow: { flexDirection: 'row', gap: 10 },
   socialBtn: {
     flex: 1,
     flexDirection: 'row',
