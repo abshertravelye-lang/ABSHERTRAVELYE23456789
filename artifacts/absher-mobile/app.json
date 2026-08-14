@@ -18,7 +18,18 @@
       "bundleIdentifier": "com.abshertravel.app"
     },
     "android": {
-      "package": "com.abshertravel.app"
+      "package": "com.abshertravel.app",
+      "googleServicesFile": "./google-services.json",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/icon.png",
+        "backgroundColor": "#0A2342"
+      },
+      "permissions": [
+        "android.permission.INTERNET",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.VIBRATE",
+        "android.permission.POST_NOTIFICATIONS"
+      ]
     },
     "web": {
       "favicon": "./assets/images/favicon.png"

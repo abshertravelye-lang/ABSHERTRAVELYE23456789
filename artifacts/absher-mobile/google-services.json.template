@@ -1,0 +1,37 @@
+{
+  "_INSTRUCTIONS": [
+    "1. افتح https://console.firebase.google.com",
+    "2. أنشئ مشروعاً جديداً أو افتح مشروعاً موجوداً",
+    "3. Project Settings → General → Your apps → Add app → Android",
+    "4. Package name: com.abshertravel.app",
+    "5. حمّل google-services.json وانسخه هنا باسم: google-services.json",
+    "6. احذف مفتاح _INSTRUCTIONS هذا من الملف النهائي"
+  ],
+  "project_info": {
+    "project_number": "REPLACE_WITH_PROJECT_NUMBER",
+    "project_id": "REPLACE_WITH_PROJECT_ID",
+    "storage_bucket": "REPLACE_WITH_PROJECT_ID.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:REPLACE_PROJECT_NUMBER:android:REPLACE_APP_ID",
+        "android_client_info": {
+          "package_name": "com.abshertravel.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "REPLACE_WITH_YOUR_ANDROID_API_KEY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
