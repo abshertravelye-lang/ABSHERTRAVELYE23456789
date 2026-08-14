@@ -141,11 +141,11 @@ export default function BookingsScreen() {
       {/* Header */}
       <View style={[styles.header, { paddingTop: Math.max(topInset + 16, 40), backgroundColor: colors.background }]}>
         <View style={[styles.topBar, { flexDirection: 'row' }]}>
-          <Pressable style={styles.iconBtn} onPress={() => { if(router.canGoBack()) router.back(); else router.push('/(tabs)'); }}>
+          <Pressable style={[styles.iconBtn, { backgroundColor: colors.card }]} onPress={() => { if(router.canGoBack()) router.back(); else router.push('/(tabs)'); }}>
             <Ionicons name="chevron-back" size={23} color={colors.primary} />
           </Pressable>
-          <Image source={require('@/assets/images/absher-travel-logo-nobg.png')} style={styles.logo} contentFit="contain" />
-          <Pressable style={styles.langPill} onPress={() => {}}>
+          <Image source={require('@/assets/images/absher-travel-logo-nobg.png')} style={styles.logo} contentFit="contain" tintColor={colors.primary} />
+          <Pressable style={[styles.langPill, { backgroundColor: colors.card }]} onPress={() => {}}>
             <Text style={[styles.lang, { color: colors.primary }]}>{lang === 'ar' ? 'AR' : 'EN'}</Text>
             <Ionicons name="globe-outline" size={16} color={colors.primary} />
           </Pressable>
@@ -266,11 +266,10 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 12,
-    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
     elevation: 2,
-    shadowColor: '#0A2342',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 6,
@@ -283,12 +282,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 4,
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 20,
     elevation: 2,
-    shadowColor: '#0A2342',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 6,

@@ -61,7 +61,7 @@ export default function AccountScreen() {
           <View style={[styles.topBar, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
             <View style={{ width: 44 }} />
             <Image source={require('@/assets/images/absher-travel-logo-nobg.png')} style={styles.logo} contentFit="contain" />
-            <Pressable style={styles.langPill} onPress={() => {}}>
+            <Pressable style={[styles.langPill, { backgroundColor: colors.card }]} onPress={() => {}}>
               <Text style={[styles.lang, { color: colors.primary }]}>{lang === 'ar' ? 'AR' : 'EN'}</Text>
               <Ionicons name="globe-outline" size={16} color={colors.primary} />
             </Pressable>
@@ -127,11 +127,11 @@ export default function AccountScreen() {
     >
       <View style={[styles.header, { paddingTop: topInset }]}>
         <View style={[styles.topBar, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
-          <Pressable style={styles.iconBtn} onPress={() => router.push('/(tabs)/notifications')}>
+          <Pressable style={[styles.iconBtn, { backgroundColor: colors.card }]} onPress={() => router.push('/(tabs)/notifications')}>
             <Ionicons name="notifications-outline" size={23} color={colors.primary} />
           </Pressable>
-          <Image source={require('@/assets/images/absher-travel-logo-nobg.png')} style={styles.logo} contentFit="contain" />
-          <Pressable style={styles.langPill} onPress={() => {}}>
+          <Image source={require('@/assets/images/absher-travel-logo-nobg.png')} style={styles.logo} contentFit="contain" tintColor={colors.primary} />
+          <Pressable style={[styles.langPill, { backgroundColor: colors.card }]} onPress={() => {}}>
             <Text style={[styles.lang, { color: colors.primary }]}>{lang === 'ar' ? 'AR' : 'EN'}</Text>
             <Ionicons name="globe-outline" size={16} color={colors.primary} />
           </Pressable>
@@ -174,7 +174,7 @@ export default function AccountScreen() {
             </Pressable>
           </View>
 
-          <View style={[styles.completionBanner, { backgroundColor: isComplete ? '#F0FDF4' : colors.goldTint }]}>
+          <View style={[styles.completionBanner, { backgroundColor: isComplete ? `${colors.success}15` : colors.goldTint }]}>
             <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 8 }}>
                  <Text style={[styles.completionText, { color: isComplete ? colors.success : colors.warning, fontFamily: 'Cairo_600SemiBold' }]}>
@@ -263,9 +263,9 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   header: { paddingHorizontal: 20, paddingBottom: 16 },
   topBar: { justifyContent: 'space-between', alignItems: 'center' },
-  iconBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center', elevation: 2, shadowColor: '#0A2342', shadowOpacity: 0.05, shadowRadius: 8 },
+  iconBtn: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', elevation: 2, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8 },
   logo: { width: 140, height: 40 },
-  langPill: { flexDirection: 'row', gap: 5, alignItems: 'center', backgroundColor: '#FFFFFF', paddingHorizontal: 12, paddingVertical: 9, borderRadius: 20, elevation: 2, shadowColor: '#0A2342', shadowOpacity: 0.05, shadowRadius: 8 },
+  langPill: { flexDirection: 'row', gap: 5, alignItems: 'center', paddingHorizontal: 12, paddingVertical: 9, borderRadius: 20, elevation: 2, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8 },
   lang: { fontFamily: 'Cairo_700Bold', fontSize: 12 },
   
   guestHero: { margin: 20, padding: 32, alignItems: 'center', borderRadius: 24, shadowColor: '#0A2342', shadowOpacity: 0.05, shadowRadius: 12, elevation: 2 },

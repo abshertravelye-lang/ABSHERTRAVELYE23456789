@@ -16,3 +16,4 @@
 - [Document management rules](document-management-rules.md) — scoped staff file ACL, ownership at every upload path, idempotent doc requests/versions, refresh-aware multipart uploads.
 - [Leave/exit guard patterns](leave-guard-patterns.md) — wouter router-level blocker + history sentinel for Back; Expo wizards intercept their own header back, never raw GO_BACK.
 - [Expo build port conflict](expo-build-port-conflict.md) — mobile static builds need port 8081 free; pause mockup-sandbox during the build, then restore it.
+- [Dark mode fix pattern](dark-mode-fix-pattern.md) — StyleSheet backgroundColor must be moved inline with colors.card; logos need tintColor={colors.primary}.

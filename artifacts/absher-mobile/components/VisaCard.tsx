@@ -148,12 +148,13 @@ export function VisaCard({ visa, onPress, style }: Props) {
 
 export function VisaCardHorizontal({ visa, onPress, width = 200 }: { visa: Visa; onPress?: () => void; width?: number }) {
   const { t } = useLanguage();
+  const colors = useColors();
   const img = countryImg(visa);
   const flag = flagEmoji(visa.countryCode || '');
 
   return (
     <Pressable
-      style={({ pressed }) => [styles.hCard, { width, opacity: pressed ? 0.92 : 1 }]}
+      style={({ pressed }) => [styles.hCard, { width, opacity: pressed ? 0.92 : 1, backgroundColor: colors.card }]}
       onPress={onPress}
     >
       <View style={styles.hImgWrap}>
@@ -241,7 +242,7 @@ const styles = StyleSheet.create({
   // Horizontal card
   hCard: {
     borderRadius: 16, overflow: 'hidden',
-    backgroundColor: '#FFFFFF', marginEnd: 12,
+    marginEnd: 12,
     shadowColor: colorsData.static.navy, shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08, shadowRadius: 8, elevation: 3,
   },

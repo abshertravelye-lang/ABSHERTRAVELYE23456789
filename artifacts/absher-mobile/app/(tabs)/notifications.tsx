@@ -158,7 +158,7 @@ export default function NotificationsTab() {
           <View style={[styles.header, { paddingTop: Math.max(insets.top + 16, 40) }]}>
             {/* Top Bar */}
             <View style={[styles.topBar, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
-              <Pressable onPress={() => {}} style={styles.iconBtn}>
+              <Pressable onPress={() => {}} style={[styles.iconBtn, { backgroundColor: colors.card }]}>
                 <Ionicons name="options-outline" size={24} color={colors.primary} />
               </Pressable>
               
@@ -171,7 +171,7 @@ export default function NotificationsTab() {
                 />
               </View>
               
-              <View style={styles.langPill}>
+              <View style={[styles.langPill, { backgroundColor: colors.card }]}>
                 <Text style={[styles.langText, { color: colors.primary }]}>{lang === 'ar' ? 'AR' : 'EN'}</Text>
                 <Ionicons name="globe-outline" size={16} color={colors.primary} />
               </View>
@@ -196,7 +196,7 @@ export default function NotificationsTab() {
                   onPress={() => setActiveFilter(f.id)}
                   style={[
                     styles.filterChip,
-                    { backgroundColor: activeFilter === f.id ? colors.primary : '#FFFFFF' }
+                    { backgroundColor: activeFilter === f.id ? colors.primary : colors.card }
                   ]}
                 >
                   <Text style={[
@@ -232,7 +232,7 @@ const styles = StyleSheet.create({
   header: { paddingHorizontal: 20, paddingBottom: 16, zIndex: 1 },
   topBar: { justifyContent: 'space-between', alignItems: 'center' },
   iconBtn: {
-    width: 44, height: 44, borderRadius: 22, backgroundColor: '#FFFFFF',
+    width: 44, height: 44, borderRadius: 22,
     alignItems: 'center', justifyContent: 'center',
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2
   },
@@ -240,7 +240,7 @@ const styles = StyleSheet.create({
   logo: { flex: 1 },
   langPill: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
-    backgroundColor: '#FFFFFF', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20,
+    paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20,
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2
   },
   langText: { fontSize: 12, fontFamily: 'Cairo_700Bold' },
@@ -261,6 +261,6 @@ const styles = StyleSheet.create({
   cardMessage: { fontSize: 12, lineHeight: 18 },
   cardRight: { alignItems: 'center', gap: 8 },
   iconWrap: { width: 48, height: 48, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  statusCheck: { position: 'absolute', bottom: -4, right: -4, backgroundColor: '#FFFFFF', borderRadius: 8 },
+  statusCheck: { position: 'absolute', bottom: -4, right: -4, borderRadius: 8 },
   dateText: { fontSize: 11 },
 });

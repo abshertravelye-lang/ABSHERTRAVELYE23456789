@@ -98,7 +98,7 @@ export default function MoreScreen() {
           <View style={[styles.header, { paddingTop: Math.max(insets.top + 16, 40) }]}>
             {/* Top Bar */}
             <View style={[styles.topBar, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
-              <Pressable onPress={() => router.push('/(tabs)/notifications' as any)} style={styles.iconBtn}>
+              <Pressable onPress={() => router.push('/(tabs)/notifications' as any)} style={[styles.iconBtn, { backgroundColor: colors.card }]}>
                 <Ionicons name="notifications-outline" size={24} color={colors.primary} />
                 <View style={styles.badge} />
               </Pressable>
@@ -112,7 +112,7 @@ export default function MoreScreen() {
                 />
               </View>
               
-              <View style={styles.langPill}>
+              <View style={[styles.langPill, { backgroundColor: colors.card }]}>
                 <Text style={[styles.langText, { color: colors.primary }]}>{lang === 'ar' ? 'AR' : 'EN'}</Text>
                 <Ionicons name="globe-outline" size={16} color={colors.primary} />
               </View>
@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
   header: { paddingHorizontal: 20, paddingBottom: 32, zIndex: 1 },
   topBar: { justifyContent: 'space-between', alignItems: 'center' },
   iconBtn: {
-    width: 44, height: 44, borderRadius: 22, backgroundColor: '#FFFFFF',
+    width: 44, height: 44, borderRadius: 22,
     alignItems: 'center', justifyContent: 'center',
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2
   },
@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
   logo: { flex: 1 },
   langPill: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
-    backgroundColor: '#FFFFFF', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20,
+    paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20,
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2
   },
   langText: { fontSize: 12, fontFamily: 'Cairo_700Bold' },

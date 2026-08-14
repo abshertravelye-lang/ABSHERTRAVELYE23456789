@@ -347,7 +347,7 @@ export default function HomeScreen() {
         {/* Header */}
         <View style={[styles.header, { paddingTop: Math.max(insets.top + 16, 40), backgroundColor: colors.background }]}>
           <View style={[styles.topBar, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
-            <Pressable style={styles.iconBtn} onPress={() => router.push('/(tabs)/notifications')}>
+            <Pressable style={[styles.iconBtn, { backgroundColor: colors.card }]} onPress={() => router.push('/(tabs)/notifications')}>
               <Ionicons name="notifications-outline" size={23} color={colors.primary} />
               {unreadCount > 0 && <View style={styles.badge} />}
             </Pressable>
@@ -355,8 +355,9 @@ export default function HomeScreen() {
               source={require('@/assets/images/absher-travel-logo-nobg.png')}
               style={styles.logo}
               contentFit="contain"
+              tintColor={colors.primary}
             />
-            <Pressable style={styles.langPill} onPress={toggle}>
+            <Pressable style={[styles.langPill, { backgroundColor: colors.card }]} onPress={toggle}>
               <Text style={[styles.lang, { color: colors.primary }]}>{lang === 'ar' ? 'AR' : 'EN'}</Text>
               <Ionicons name="globe-outline" size={16} color={colors.primary} />
             </Pressable>
@@ -409,11 +410,10 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
     elevation: 2,
-    shadowColor: NAVY,
+    shadowColor: '#000',
     shadowOpacity: 0.08,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 2 },
@@ -424,12 +424,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 5,
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
     paddingHorizontal: 12,
     paddingVertical: 9,
     borderRadius: 20,
     elevation: 2,
-    shadowColor: NAVY,
+    shadowColor: '#000',
     shadowOpacity: 0.08,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 2 },

@@ -203,13 +203,13 @@ export default function VisaDetailScreen() {
   return (
     <View style={[s.container, { backgroundColor: colors.background }]}>
       <View style={[s.topBar, { paddingTop: insets.top + 12 }]}>
-         <Pressable style={s.iconBtn} onPress={() => router.back()}>
+         <Pressable style={[s.iconBtn, { backgroundColor: colors.card }]} onPress={() => router.back()}>
            <Ionicons name="chevron-forward" size={22} color={colors.primary} />
          </Pressable>
-         <Image source={require('@/assets/images/absher-travel-logo-nobg.png')} style={s.logo} contentFit="contain" />
+         <Image source={require('@/assets/images/absher-travel-logo-nobg.png')} style={s.logo} contentFit="contain" tintColor={colors.primary} />
          <View style={s.headerRight}>
-            <Pressable style={s.langPill}><Text style={[s.langText, { color: colors.primary }]}>AR</Text><Ionicons name="globe-outline" size={14} color={colors.primary} /></Pressable>
-            <Pressable style={s.iconBtn}><Ionicons name="headset-outline" size={20} color={colors.primary} /></Pressable>
+            <Pressable style={[s.langPill, { backgroundColor: colors.card }]}><Text style={[s.langText, { color: colors.primary }]}>AR</Text><Ionicons name="globe-outline" size={14} color={colors.primary} /></Pressable>
+            <Pressable style={[s.iconBtn, { backgroundColor: colors.card }]}><Ionicons name="headset-outline" size={20} color={colors.primary} /></Pressable>
          </View>
       </View>
 
@@ -244,13 +244,13 @@ export default function VisaDetailScreen() {
           ].map((step, i) => (
             <React.Fragment key={i}>
               <View style={s.stepItem}>
-                <View style={[s.stepNum, { backgroundColor: i === 0 ? colors.accent : '#F1F5F9' }]}>
+                <View style={[s.stepNum, { backgroundColor: i === 0 ? colors.accent : colors.iconBg }]}>
                   <Text style={[s.stepNumText, { color: i === 0 ? '#FFFFFF' : colors.textSecondary, fontFamily: 'Cairo_700Bold' }]}>{step.num}</Text>
                 </View>
                 <Text style={[s.stepLabel, { color: i === 0 ? colors.text : colors.textSecondary, fontFamily: 'Cairo_700Bold' }]}>{step.label}</Text>
                 <Text style={[s.stepSub, { color: colors.textSecondary, fontFamily: 'Cairo_400Regular' }]}>{step.sub}</Text>
               </View>
-              {i < 4 && <View style={[s.stepLine, { backgroundColor: '#E2E8F0' }]} />}
+              {i < 4 && <View style={[s.stepLine, { backgroundColor: colors.border }]} />}
             </React.Fragment>
           ))}
         </View>
@@ -285,7 +285,7 @@ export default function VisaDetailScreen() {
               ))}
             </View>
 
-            <View style={[s.infoBanner, { backgroundColor: '#F8FAFC' }]}>
+            <View style={[s.infoBanner, { backgroundColor: colors.iconBg }]}>
               <View style={{ flex: 1, paddingRight: 12 }}>
                 <Text style={[s.infoBannerTitle, { color: colors.text, fontFamily: 'Cairo_600SemiBold' }]}>لا تجد جنسيتك في القائمة؟</Text>
                 <Text style={[s.infoBannerSub, { color: colors.textSecondary, fontFamily: 'Cairo_400Regular' }]}>
@@ -299,7 +299,7 @@ export default function VisaDetailScreen() {
           </View>
         )}
 
-        <View style={s.trustStrip}>
+        <View style={[s.trustStrip, { backgroundColor: colors.card }]}>
           <View style={s.trustStripLeft}>
             <View style={s.trustShield}>
               <Ionicons name="shield-checkmark" size={24} color={colors.accent} />
@@ -593,17 +593,17 @@ const s = StyleSheet.create({
   loading:         { flex: 1, alignItems: 'center', justifyContent: 'center' },
   
   topBar: { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingBottom: 10 },
-  iconBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center', elevation: 2, shadowColor: '#0A2342', shadowOpacity: 0.05, shadowRadius: 8 },
+  iconBtn: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', elevation: 2, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8 },
   logo: { width: 120, height: 40 },
   headerRight: { flexDirection: 'row-reverse', gap: 8 },
-  langPill: { flexDirection: 'row-reverse', gap: 4, alignItems: 'center', backgroundColor: '#FFFFFF', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, elevation: 2, shadowColor: '#0A2342', shadowOpacity: 0.05, shadowRadius: 8 },
+  langPill: { flexDirection: 'row-reverse', gap: 4, alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, elevation: 2, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8 },
   langText: { fontFamily: 'Cairo_700Bold', fontSize: 12 },
 
   heroSection: { alignItems: 'center', paddingHorizontal: 24, paddingTop: 24, paddingBottom: 24 },
   heroTitle: { fontSize: 24, textAlign: 'center', marginBottom: 8 },
   heroSub: { fontSize: 14, textAlign: 'center', lineHeight: 22 },
   heroIllustration: { position: 'relative', width: 200, height: 220, alignItems: 'center', justifyContent: 'center', marginTop: 10 },
-  heroCircle: { position: 'absolute', width: 160, height: 160, borderRadius: 80, backgroundColor: '#F0F4F8', alignItems: 'center', justifyContent: 'center' },
+  heroCircle: { position: 'absolute', width: 160, height: 160, borderRadius: 80, alignItems: 'center', justifyContent: 'center' },
   passport: { width: 110, height: 160, borderRadius: 8, padding: 16, alignItems: 'center', elevation: 8, shadowColor: '#0A2342', shadowOpacity: 0.2, shadowRadius: 12, shadowOffset: { width: -4, height: 8 }, transform: [{ rotate: '5deg' }] },
   passportTitle: { color: '#C9A24B', fontSize: 20, fontFamily: 'Cairo_700Bold', marginTop: 10 },
   passportSub: { color: '#C9A24B', fontSize: 12, fontFamily: 'Cairo_600SemiBold', letterSpacing: 2 },
@@ -624,7 +624,7 @@ const s = StyleSheet.create({
 
   flagsGrid: { flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 12, justifyContent: 'space-between' },
   flagCard: { width: '31%', alignItems: 'center', borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 12, padding: 12 },
-  flagCircle: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#F8FAFC', alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
+  flagCircle: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
   flagEmoji: { fontSize: 24 },
   flagName: { fontSize: 10, textAlign: 'center', marginBottom: 8, height: 28 },
   allowedChip: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
@@ -635,7 +635,7 @@ const s = StyleSheet.create({
   infoBannerTitle: { fontSize: 13, textAlign: 'right', marginBottom: 4 },
   infoBannerSub: { fontSize: 11, textAlign: 'right', lineHeight: 18 },
 
-  trustStrip: { flexDirection: 'row-reverse', alignItems: 'center', backgroundColor: '#FFFFFF', marginHorizontal: 20, marginTop: 24, borderRadius: 16, padding: 16, elevation: 2, shadowColor: '#0A2342', shadowOpacity: 0.05, shadowRadius: 6 },
+  trustStrip: { flexDirection: 'row-reverse', alignItems: 'center', marginHorizontal: 20, marginTop: 24, borderRadius: 16, padding: 16, elevation: 2, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 6 },
   trustStripLeft: { marginLeft: 12 },
   trustShield: { width: 46, height: 46, borderRadius: 23, backgroundColor: 'rgba(201,162,75,0.1)', alignItems: 'center', justifyContent: 'center' },
   trustStripRight: { flex: 1, alignItems: 'flex-end' },

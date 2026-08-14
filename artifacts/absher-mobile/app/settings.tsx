@@ -134,11 +134,11 @@ export default function SettingsScreen() {
     <ScrollView showsVerticalScrollIndicator={false} style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={{ paddingBottom: bottomInset + 40 }}>
       <View style={[styles.header, { paddingTop: topInset }]}>
         <View style={[styles.topBar, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
-          <Pressable style={styles.iconBtn} onPress={() => router.back()}>
+          <Pressable style={[styles.iconBtn, { backgroundColor: colors.card }]} onPress={() => router.back()}>
             <Ionicons name={isRTL ? "chevron-forward" : "chevron-back"} size={22} color={colors.primary} />
           </Pressable>
-          <Image source={require('@/assets/images/absher-travel-logo-nobg.png')} style={styles.logo} contentFit="contain" />
-          <Pressable style={styles.langPill} onPress={() => {
+          <Image source={require('@/assets/images/absher-travel-logo-nobg.png')} style={styles.logo} contentFit="contain" tintColor={colors.primary} />
+          <Pressable style={[styles.langPill, { backgroundColor: colors.card }]} onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             toggleLang();
           }}>
@@ -162,7 +162,7 @@ export default function SettingsScreen() {
       <View style={{ paddingHorizontal: 20 }}>
         <View style={[styles.secureCard, { backgroundColor: colors.card, shadowColor: colors.primary }]}>
           <View style={[styles.secureRow, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
-            <View style={[styles.secureIconWrap, { backgroundColor: '#F0FDF4' }]}>
+            <View style={[styles.secureIconWrap, { backgroundColor: `${colors.success}20` }]}>
                <Ionicons name="shield-checkmark" size={24} color={colors.success} />
             </View>
             <View style={[styles.secureTextWrap, { alignItems: isRTL ? 'flex-end' : 'flex-start' }]}>
@@ -231,9 +231,9 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   header: { paddingHorizontal: 20, paddingBottom: 16 },
   topBar: { justifyContent: 'space-between', alignItems: 'center' },
-  iconBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center', elevation: 2, shadowColor: '#0A2342', shadowOpacity: 0.05, shadowRadius: 8 },
+  iconBtn: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', elevation: 2, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8 },
   logo: { width: 140, height: 40 },
-  langPill: { flexDirection: 'row', gap: 5, alignItems: 'center', backgroundColor: '#FFFFFF', paddingHorizontal: 12, paddingVertical: 9, borderRadius: 20, elevation: 2, shadowColor: '#0A2342', shadowOpacity: 0.05, shadowRadius: 8 },
+  langPill: { flexDirection: 'row', gap: 5, alignItems: 'center', paddingHorizontal: 12, paddingVertical: 9, borderRadius: 20, elevation: 2, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8 },
   lang: { fontFamily: 'Cairo_700Bold', fontSize: 12 },
 
   heroSection: { alignItems: 'center', paddingHorizontal: 20, marginTop: 10, marginBottom: 24 },
