@@ -113,7 +113,7 @@ export default function OnboardingScreen() {
               {item.isLogo ? (
                 <View style={styles.logoWrap}>
                   <Image
-                    source={require('@/assets/images/absher-logo-transparent.png')}
+                    source={require('@/assets/images/icon.png')}
                     style={styles.logo}
                     contentFit="contain"
                   />
@@ -207,8 +207,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  logoWrap: { alignItems: 'center', gap: 16 },
-  logo: { width: 150, height: 60, borderRadius: 0 },
+  logoWrap: {
+    width: 220,
+    height: 220,
+    borderRadius: 40,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#071525',
+    shadowColor: '#D4AF37',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.25,
+    shadowRadius: 22,
+    elevation: 8,
+  },
+  logo: { width: 212, height: 212 },
   logoTitle: { fontSize: 24, color: '#D4AF37', letterSpacing: 1 },
   logoSubtitle: { fontSize: 18, color: 'rgba(255,255,255,0.85)' },
   iconCircle: {

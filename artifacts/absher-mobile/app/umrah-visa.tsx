@@ -46,6 +46,7 @@ import colors from '@/constants/colors';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { getImageSource } from '@/hooks/useImageUrl';
+import { uploadFile } from '@/lib/uploadFile';
 import WizardStepper from '@/components/wizard/WizardStepper';
 import {
   ApiError,
@@ -62,8 +63,6 @@ import type {
 } from '@workspace/api-client-react';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-const API_BASE = `https://${process.env.EXPO_PUBLIC_DOMAIN}`;
-
 type Lang = 'ar' | 'en';
 const tr = (lang: Lang, ar: string, en: string) => (lang === 'en' ? en : ar);
 
@@ -72,35 +71,6 @@ interface DocPicked {
   name: string;
   mimeType: string;
   isPdf: boolean;
-}
-
-// ─── Upload helper (multipart POST, authenticated) ─────────────────────────────
-async function uploadToStorage(
-  uri: string,
-  token: string | null,
-  name: string,
-  mimeType: string,
-): Promise<string | null> {
-  try {
-    const formData = new FormData();
-    if (Platform.OS === 'web') {
-      const blob = await (await fetch(uri)).blob();
-      formData.append('file', new File([blob], name, { type: blob.type || mimeType }));
-    } else {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      formData.append('file', { uri, name, type: mimeType } as any);
-    }
-    const res = await fetch(`${API_BASE}/api/storage/uploads`, {
-      method: 'POST',
-      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-      body: formData,
-    });
-    if (!res.ok) return null;
-    const { objectPath } = await res.json();
-    return objectPath as string;
-  } catch {
-    return null;
-  }
 }
 
 async function pickImageAsset(lang: Lang): Promise<DocPicked | null> {
@@ -457,12 +427,15 @@ export default function UmrahVisaWizard() {
   const handlePassportScan = async (a: DocPicked) => {
     setBusyDoc('passport');
     setOcrDone(false);
-    const objectPath = await uploadToStorage(a.uri, accessToken, a.name, a.mimeType);
-    setBusyDoc(null);
-    if (!objectPath) {
-      Alert.alert(tr(lang, 'خطأ في الرفع', 'Upload error'), tr(lang, 'تعذّر رفع صورة الجواز.', 'Could not upload the passport image.'));
+    let objectPath: string;
+    try {
+      objectPath = await uploadFile({ uri: a.uri, token: accessToken, fileName: a.name, mimeType: a.mimeType });
+    } catch {
+      setBusyDoc(null);
+      Alert.alert(tr(lang, 'خطأ في الرفع', 'Upload error'), tr(lang, 'تعذّر رفع صورة الجواز. تحقق من الملف وحاول مجدداً.', 'Could not upload the passport image. Check the file and try again.'));
       return;
     }
+    setBusyDoc(null);
     setPassportImageUrl(objectPath);
     if (a.isPdf) return;
     setOcrRunning(true);
@@ -493,10 +466,15 @@ export default function UmrahVisaWizard() {
 
   const uploadDoc = async (setter: (v: string) => void, key: string, a: DocPicked) => {
     setBusyDoc(key);
-    const objectPath = await uploadToStorage(a.uri, accessToken, a.name, a.mimeType);
-    setBusyDoc(null);
-    if (!objectPath) { Alert.alert(tr(lang, 'خطأ في الرفع', 'Upload error'), tr(lang, 'تعذّر رفع الملف.', 'Could not upload the file.')); return; }
-    setter(objectPath);
+    try {
+      const objectPath = await uploadFile({ uri: a.uri, token: accessToken, fileName: a.name, mimeType: a.mimeType });
+      setter(objectPath);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch {
+      Alert.alert(tr(lang, 'خطأ في الرفع', 'Upload error'), tr(lang, 'تعذّر رفع الملف. تحقق من الملف وحاول مجدداً.', 'Could not upload the file. Check the file and try again.'));
+    } finally {
+      setBusyDoc(null);
+    }
   };
 
   // ── Validation + step advance ─────────────────────────────────────────────

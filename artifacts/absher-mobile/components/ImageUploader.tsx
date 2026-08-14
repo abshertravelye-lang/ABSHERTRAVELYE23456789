@@ -24,6 +24,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { getImageSource } from '@/hooks/useImageUrl';
 import colors from '@/constants/colors';
+import { uploadFile } from '@/lib/uploadFile';
 
 interface Props {
   label: string;
@@ -42,39 +43,6 @@ interface Props {
   allowPdf?: boolean;
 }
 
-const API_BASE = `https://${process.env.EXPO_PUBLIC_DOMAIN}`;
-
-/**
- * Upload a local URI to the server; returns the stored object PATH
- * ("/objects/uploads/<uuid>"), NOT a full URL. Callers store the path; it is
- * later rendered via getImageSource() which attaches the auth header.
- */
-async function uploadFile(localUri: string, token: string | null, mimeType?: string, fileName?: string): Promise<string> {
-  const formData = new FormData();
-  const name = fileName ?? 'photo.jpg';
-  const type = mimeType ?? 'image/jpeg';
-  if (Platform.OS === 'web') {
-    // On web the URI is a blob:/data: URI — convert to a File so multipart works.
-    const blob = await (await fetch(localUri)).blob();
-    formData.append('file', new File([blob], name, { type: blob.type || type }));
-  } else {
-    formData.append('file', { uri: localUri, type, name } as any);
-  }
-
-  const res = await fetch(`${API_BASE}/api/storage/uploads`, {
-    method: 'POST',
-    // Authenticated upload — server requires a bearer token.
-    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-    body: formData,
-    // Do NOT set Content-Type — let the runtime add the boundary automatically
-  });
-
-  if (!res.ok) throw new Error(`Upload failed: ${res.status}`);
-  const { objectPath } = await res.json();
-  // objectPath = "/objects/uploads/<uuid>" — return the bare path.
-  return objectPath;
-}
-
 const isPdfUrl = (url: string) => /\.pdf(\?|$)/i.test(url);
 
 export default function ImageUploader({
@@ -90,7 +58,12 @@ export default function ImageUploader({
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setLoading(true);
     try {
-      const url = await uploadFile(uri, accessToken, mimeType, fileName);
+      const url = await uploadFile({
+        uri,
+        token: accessToken,
+        mimeType: mimeType ?? 'image/jpeg',
+        fileName: fileName ?? 'photo.jpg',
+      });
       onUpload(url);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch {

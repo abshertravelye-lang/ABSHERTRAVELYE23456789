@@ -17,6 +17,8 @@ type AuthContextValue = AuthState & {
   logout: () => Promise<void>;
 };
 
+type MobileRefreshHandler = () => Promise<string | null>;
+
 const AuthContext = createContext<AuthContextValue>({
   user: null,
   accessToken: null,
@@ -27,6 +29,12 @@ const AuthContext = createContext<AuthContextValue>({
 });
 
 const STORAGE_KEY = '@absher_auth';
+let mobileRefreshHandler: MobileRefreshHandler | null = null;
+
+/** Used by multipart uploads, whose FormData body cannot be replayed by customFetch. */
+export async function refreshMobileAccessToken(): Promise<string | null> {
+  return mobileRefreshHandler ? mobileRefreshHandler() : null;
+}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<AuthState>({ user: null, accessToken: null, isLoading: true });
@@ -43,12 +51,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setAuthTokenGetter(() => tokenRef.current);
     // Auto-refresh expired access tokens (15 min TTL) with the stored
     // refresh token so long-lived sessions don't start failing with 401s.
-    setAuthRefreshHandler(async () => {
+    const refreshSession: MobileRefreshHandler = async () => {
       try {
         const raw = await AsyncStorage.getItem(STORAGE_KEY);
-        if (!raw) return false;
+        if (!raw) return null;
         const stored = JSON.parse(raw);
-        if (!stored.refreshToken) return false;
+        if (!stored.refreshToken) return null;
         const res = await fetch(`https://${process.env.EXPO_PUBLIC_DOMAIN}/api/auth/refresh`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -59,7 +67,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           tokenRef.current = null;
           await AsyncStorage.removeItem(STORAGE_KEY);
           setState({ user: null, accessToken: null, isLoading: false });
-          return false;
+          return null;
         }
         const data = await res.json();
         tokenRef.current = data.accessToken;
@@ -68,12 +76,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           JSON.stringify({ ...stored, accessToken: data.accessToken, refreshToken: data.refreshToken }),
         );
         setState((s) => ({ ...s, accessToken: data.accessToken }));
-        return true;
+        return data.accessToken as string;
       } catch {
-        return false;
+        return null;
       }
-    });
-    return () => setAuthRefreshHandler(null);
+    };
+
+    mobileRefreshHandler = refreshSession;
+    setAuthRefreshHandler(async () => !!(await refreshSession()));
+    return () => {
+      mobileRefreshHandler = null;
+      setAuthRefreshHandler(null);
+    };
   }, []);
 
   // Load persisted auth on startup

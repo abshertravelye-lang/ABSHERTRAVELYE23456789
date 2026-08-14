@@ -14,6 +14,7 @@ import { useColors } from '@/hooks/useColors';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { getImageSource } from '@/hooks/useImageUrl';
+import { uploadFile } from '@/lib/uploadFile';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import { useQueryClient } from '@tanstack/react-query';
 import { useOcrPassport, useUpdateProfile, getGetCurrentUserQueryKey } from '@workspace/api-client-react';
@@ -42,31 +43,6 @@ type ProfileState = ProfileUpdate & { email?: string };
 
 function apiBase(): string {
   return `https://${process.env.EXPO_PUBLIC_DOMAIN}`;
-}
-
-/** Upload a picked image to the same endpoint the web app uses. */
-async function uploadAsset(
-  asset: ImagePicker.ImagePickerAsset,
-  token: string | null,
-): Promise<{ objectPath: string } | null> {
-  const formData = new FormData();
-  const name = asset.fileName || `photo-${Date.now()}.jpg`;
-  const type = asset.mimeType || 'image/jpeg';
-  if (Platform.OS === 'web') {
-    // On web the asset URI is a blob:/data: URI — convert to a Blob
-    const blob = await (await fetch(asset.uri)).blob();
-    formData.append('file', new File([blob], name, { type: blob.type || type }));
-  } else {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    formData.append('file', { uri: asset.uri, name, type } as any);
-  }
-  const res = await fetch(`${apiBase()}/api/storage/uploads`, {
-    method: 'POST',
-    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-    body: formData,
-  });
-  if (!res.ok) return null;
-  return res.json();
 }
 
 async function pickImage(
@@ -331,12 +307,13 @@ export default function ProfileEditScreen() {
     setPhotoCheckUnavailable(false);
     setIsUploadingPhoto(true);
     try {
-      const r = await uploadAsset(asset, accessToken);
-      if (!r) {
-        Alert.alert(t('profileEdit.photoUploadFailTitle'), t('profileEdit.photoUploadFailBody'));
-        return;
-      }
-      set({ profilePhotoUrl: r.objectPath });
+      const objectPath = await uploadFile({
+        uri: asset.uri,
+        token: accessToken,
+        fileName: asset.fileName || `photo-${Date.now()}.jpg`,
+        mimeType: asset.mimeType || 'image/jpeg',
+      });
+      set({ profilePhotoUrl: objectPath });
       setIsValidatingPhoto(true);
       try {
         const vRes = await fetch(`${apiBase()}/api/visa-applications/validate-photo`, {
@@ -345,7 +322,7 @@ export default function ProfileEditScreen() {
             'Content-Type': 'application/json',
             ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
           },
-          body: JSON.stringify({ imageUrl: r.objectPath }),
+          body: JSON.stringify({ imageUrl: objectPath }),
         });
         if (!vRes.ok) {
           // Non-2xx (esp. 503) means the AI check is UNAVAILABLE, not that the
@@ -366,6 +343,8 @@ export default function ProfileEditScreen() {
       } finally {
         setIsValidatingPhoto(false);
       }
+    } catch {
+      Alert.alert(t('profileEdit.photoUploadFailTitle'), t('profileEdit.photoUploadFailBody'));
     } finally {
       setIsUploadingPhoto(false);
     }
@@ -378,16 +357,17 @@ export default function ProfileEditScreen() {
     setOcrFailed(false);
     setIsUploadingPassport(true);
     try {
-      const r = await uploadAsset(asset, accessToken);
-      if (!r) {
-        Alert.alert(t('profileEdit.passportUploadFailTitle'), t('profileEdit.passportUploadFailBody'));
-        return;
-      }
-      set({ passportImageUrl: r.objectPath });
+      const objectPath = await uploadFile({
+        uri: asset.uri,
+        token: accessToken,
+        fileName: asset.fileName || `passport-${Date.now()}.jpg`,
+        mimeType: asset.mimeType || 'image/jpeg',
+      });
+      set({ passportImageUrl: objectPath });
       setIsUploadingPassport(false);
       setIsOcrRunning(true);
       try {
-        const ocr = await ocrMutation.mutateAsync({ data: { imageUrl: r.objectPath } });
+        const ocr = await ocrMutation.mutateAsync({ data: { imageUrl: objectPath } });
         if (ocr.success) {
           // Prefer the combined given-name chain (given + father + grand) so
           // Arabic-style multi-part names aren't lost. The DB has no dedicated
@@ -400,7 +380,7 @@ export default function ProfileEditScreen() {
           const surname = ocr.surname || ocr.lastName || '';
           setProfile((p) => ({
             ...p,
-            passportImageUrl: r.objectPath,
+            passportImageUrl: objectPath,
             // OCR is the source of truth for a freshly scanned passport — always
             // overwrite so every readable field prefills the form.
             ...(givenChain ? { firstName: givenChain } : {}),
@@ -427,6 +407,8 @@ export default function ProfileEditScreen() {
       } finally {
         setIsOcrRunning(false);
       }
+    } catch {
+      Alert.alert(t('profileEdit.passportUploadFailTitle'), t('profileEdit.passportUploadFailBody'));
     } finally {
       setIsUploadingPassport(false);
     }
@@ -437,12 +419,15 @@ export default function ProfileEditScreen() {
     if (!asset) return;
     setBusyDoc(key);
     try {
-      const r = await uploadAsset(asset, accessToken);
-      if (!r) {
-        Alert.alert(t('profileEdit.uploadFailTitle'), t('profileEdit.photoUploadFailBody'));
-        return;
-      }
-      set({ [key]: r.objectPath } as Partial<ProfileState>);
+      const objectPath = await uploadFile({
+        uri: asset.uri,
+        token: accessToken,
+        fileName: asset.fileName || `document-${Date.now()}.jpg`,
+        mimeType: asset.mimeType || 'image/jpeg',
+      });
+      set({ [key]: objectPath } as Partial<ProfileState>);
+    } catch {
+      Alert.alert(t('profileEdit.uploadFailTitle'), t('profileEdit.photoUploadFailBody'));
     } finally {
       setBusyDoc(null);
     }

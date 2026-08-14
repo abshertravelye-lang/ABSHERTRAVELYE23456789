@@ -108,7 +108,7 @@ export default function WelcomeScreen() {
         <Animated.View style={[styles.hero, logoStyle]}>
           <View style={styles.logoRing}>
             <Image
-              source={require('@/assets/images/absher-logo-transparent.png')}
+              source={require('@/assets/images/icon.png')}
               style={styles.logo}
               contentFit="contain"
             />
@@ -171,9 +171,9 @@ const styles = StyleSheet.create({
   content: { flex: 1, paddingHorizontal: 28, justifyContent: 'space-between' },
   hero: { alignItems: 'center', flex: 1, justifyContent: 'center', gap: 14 },
   logoRing: {
-    width: 168,
-    height: 168,
-    borderRadius: 84,
+    width: 188,
+    height: 188,
+    borderRadius: 42,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(212,175,55,0.08)',
@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(212,175,55,0.35)',
     marginBottom: 8,
   },
-  logo: { width: 128, height: 100 },
+  logo: { width: 174, height: 174, borderRadius: 36 },
   brand: { fontSize: 26, color: GOLD, letterSpacing: 2 },
   divider: { width: 44, height: 3, borderRadius: 2, backgroundColor: GOLD, opacity: 0.8, marginVertical: 4 },
   tagline: { fontSize: 16, color: 'rgba(255,255,255,0.9)', textAlign: 'center' },

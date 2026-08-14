@@ -91,7 +91,7 @@ export function AnimatedSplash({ hide, onFinish }: AnimatedSplashProps) {
         <Animated.View style={[styles.ring, ringStyle]} />
         <Animated.View style={logoStyle}>
           <Image
-            source={require('@/assets/images/absher-logo-transparent.png')}
+            source={require('@/assets/images/icon.png')}
             style={styles.logo}
             contentFit="contain"
           />
@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: GOLD,
   },
-  logo: { width: 230, height: 92 },
+  logo: { width: 220, height: 220, borderRadius: 46 },
   accent: {
     position: 'absolute',
     width: 320,

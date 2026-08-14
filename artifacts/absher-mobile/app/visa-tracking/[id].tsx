@@ -13,6 +13,7 @@ import { useColors } from '@/hooks/useColors';
 import colors from '@/constants/colors';
 import { useAuth } from '@/context/AuthContext';
 import { getImageSource } from '@/hooks/useImageUrl';
+import { uploadFile } from '@/lib/uploadFile';
 import {
   useGetVisaApplication,
   getGetVisaApplicationQueryKey,
@@ -99,29 +100,6 @@ function docNeedsCustomer(status: ApplicationDocumentStatus): boolean {
   return status === 'required' || status === 'waiting_customer' || status === 'reupload_required' || status === 'rejected';
 }
 
-const API_BASE = `https://${process.env.EXPO_PUBLIC_DOMAIN}`;
-
-/** Upload a local file to secure storage; returns the stored object PATH. */
-async function uploadToStorage(localUri: string, token: string | null, mimeType?: string, fileName?: string): Promise<string> {
-  const formData = new FormData();
-  const name = fileName ?? 'document.jpg';
-  const type = mimeType ?? 'image/jpeg';
-  if (Platform.OS === 'web') {
-    const blob = await (await fetch(localUri)).blob();
-    formData.append('file', new File([blob], name, { type: blob.type || type }));
-  } else {
-    formData.append('file', { uri: localUri, type, name } as any);
-  }
-  const res = await fetch(`${API_BASE}/api/storage/uploads`, {
-    method: 'POST',
-    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-    body: formData,
-  });
-  if (!res.ok) throw new Error(`Upload failed: ${res.status}`);
-  const { objectPath } = await res.json();
-  return objectPath as string;
-}
-
 const isPdfPath = (p: string | null | undefined) => !!p && /\.pdf(\?|$)/i.test(p);
 
 /**
@@ -155,7 +133,12 @@ function DocumentCard({
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setBusy(true);
     try {
-      const storagePath = await uploadToStorage(localUri, accessToken, mimeType, fileName);
+      const storagePath = await uploadFile({
+        uri: localUri,
+        token: accessToken,
+        mimeType: mimeType ?? 'image/jpeg',
+        fileName: fileName ?? 'document.jpg',
+      });
       await uploadMut.mutateAsync({ id: doc.applicationId, docId: doc.id, data: { storagePath } });
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       Alert.alert('تم', 'تم رفع المستند بنجاح');
