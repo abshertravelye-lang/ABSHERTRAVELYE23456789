@@ -113,7 +113,7 @@ export default function AccountScreen() {
     { id: 'docs', icon: 'id-card-outline', title: lang === 'ar' ? 'الوثائق والمستندات' : 'Documents', sub: lang === 'ar' ? 'إدارة مستنداتك وملفاتك الشخصية' : 'Manage your files and documents', route: '/profile-edit' },
     { id: 'pay', icon: 'wallet-outline', title: lang === 'ar' ? 'وسائل الدفع' : 'Payment methods', sub: lang === 'ar' ? 'إدارة بطاقاتك وطرق الدفع الخاصة بك' : 'Manage your cards and payment methods', route: '/wallet' },
     { id: 'sec', icon: 'shield-checkmark-outline', title: lang === 'ar' ? 'الأمان والخصوصية' : 'Security and Privacy', sub: lang === 'ar' ? 'إعدادات الأمان والخصوصية' : 'Security settings and privacy', route: '/settings' },
-    { id: 'notif', icon: 'notifications-outline', title: lang === 'ar' ? 'الإشعارات' : 'Notifications', sub: lang === 'ar' ? 'تخصيص الإشعارات والتنبيهات' : 'Customize notifications and alerts', route: '/notifications' },
+    { id: 'notif', icon: 'notifications-outline', title: lang === 'ar' ? 'الإشعارات' : 'Notifications', sub: lang === 'ar' ? 'تخصيص الإشعارات والتنبيهات' : 'Customize notifications and alerts', route: '/notification-settings' },
     { id: 'help', icon: 'headset-outline', title: lang === 'ar' ? 'الدعم والمساعدة' : 'Help & Support', sub: lang === 'ar' ? 'تواصل معنا للحصول على المساعدة' : 'Contact us for assistance', action: () => router.push('/support-chat') },
     { id: 'logout', icon: 'log-out-outline', title: lang === 'ar' ? 'تسجيل الخروج' : 'Logout', sub: lang === 'ar' ? 'تسجيل الخروج من حسابك' : 'Sign out of your account', action: handleLogout, destructive: true },
   ];

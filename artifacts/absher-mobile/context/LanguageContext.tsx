@@ -1,4 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { I18nManager } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { t as translate, type Language, type TranslationKey } from '@/constants/i18n';
 
@@ -28,11 +29,15 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     AsyncStorage.getItem(STORAGE_KEY).then((val) => {
-      if (val === 'ar' || val === 'en') setLangState(val);
+      if (val === 'ar' || val === 'en') {
+        setLangState(val);
+        I18nManager.forceRTL(val === 'ar');
+      }
     });
   }, []);
 
   const setLang = useCallback(async (next: Language) => {
+    I18nManager.forceRTL(next === 'ar');
     setLangState(next);
     await AsyncStorage.setItem(STORAGE_KEY, next);
   }, []);
@@ -40,6 +45,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const toggle = useCallback(() => {
     setLangState((prev) => {
       const next: Language = prev === 'ar' ? 'en' : 'ar';
+      I18nManager.forceRTL(next === 'ar');
       AsyncStorage.setItem(STORAGE_KEY, next);
       return next;
     });

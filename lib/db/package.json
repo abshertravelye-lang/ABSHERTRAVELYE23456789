@@ -9,7 +9,8 @@
   },
   "scripts": {
     "push": "drizzle-kit push --config ./drizzle.config.ts",
-    "push-force": "drizzle-kit push --force --config ./drizzle.config.ts"
+    "push-force": "drizzle-kit push --force --config ./drizzle.config.ts",
+    "migrate": "node -e \"require('ts-node').register({transpileOnly:true}); require('./migrate.ts')\" 2>/dev/null || npx tsx migrate.ts"
   },
   "dependencies": {
     "drizzle-orm": "catalog:",

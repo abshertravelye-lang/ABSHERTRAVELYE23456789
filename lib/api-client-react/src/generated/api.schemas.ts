@@ -2431,3 +2431,20 @@ agencyId?: number;
 status?: string;
 };
 
+export interface NotificationPreferences {
+  notifyBooking: boolean;
+  notifyVisa:    boolean;
+  notifyPromo:   boolean;
+  notifySystem:  boolean;
+  pushEnabled:   boolean;
+  updatedAt:     string;
+}
+
+export interface NotificationPreferencesUpdate {
+  notifyBooking?: boolean;
+  notifyVisa?:    boolean;
+  notifyPromo?:   boolean;
+  notifySystem?:  boolean;
+  pushEnabled?:   boolean;
+}
+

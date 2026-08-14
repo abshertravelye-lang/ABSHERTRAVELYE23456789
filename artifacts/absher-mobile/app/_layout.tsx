@@ -25,7 +25,8 @@ import { usePreferredLanguageSync } from '@/hooks/usePreferredLanguageSync';
 // Set API base URL — Expo runs outside the proxy and needs an absolute URL
 setBaseUrl(`https://${process.env.EXPO_PUBLIC_DOMAIN}`);
 
-// Force RTL for Arabic
+// Default to RTL (Arabic). LanguageProvider overrides this dynamically
+// when a stored language preference is found.
 I18nManager.allowRTL(true);
 I18nManager.forceRTL(true);
 

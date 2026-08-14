@@ -1,5 +1,5 @@
 import { db } from "@workspace/db";
-import { notificationsTable, pushTokensTable, usersTable } from "@workspace/db";
+import { notificationsTable, pushTokensTable, usersTable, notificationPreferencesTable } from "@workspace/db";
 import { and, eq, inArray, isNull } from "drizzle-orm";
 import { logger } from "./logger";
 
@@ -10,6 +10,11 @@ import { logger } from "./logger";
  * Expo push to every registered device of the recipient. Push copy is chosen
  * from the recipient's `preferredLanguage` ("ar" → Arabic, "en" → English) so
  * languages are never mixed inside one notification.
+ *
+ * Push delivery respects the user's notification preferences:
+ *   - pushEnabled=false  → no push sent (in-app row still written)
+ *   - notifyBooking/Visa/Promo/System=false → push skipped for that category
+ * In-app rows are ALWAYS written so the inbox stays complete.
  *
  * All push sending is fire-and-forget: failures are logged and never thrown
  * into the calling route. Tokens that Expo reports as "DeviceNotRegistered"
@@ -50,12 +55,94 @@ interface Recipient {
   preferredLanguage: string;
 }
 
+/** Preference row (all booleans; missing row treated as all-enabled defaults). */
+interface PrefRow {
+  userId: string;
+  notifyBooking: boolean;
+  notifyVisa: boolean;
+  notifyPromo: boolean;
+  notifySystem: boolean;
+  pushEnabled: boolean;
+}
+
+/**
+ * Map a relatedEntityType string to one of the four preference categories.
+ * Returns "system" for unknown/null types (safe default).
+ */
+function entityTypeToCategory(
+  entityType?: string | null,
+): "notifyBooking" | "notifyVisa" | "notifyPromo" | "notifySystem" {
+  if (!entityType) return "notifySystem";
+  const t = entityType.toLowerCase();
+  if (t.includes("booking") || t.includes("flight")) return "notifyBooking";
+  if (t.includes("visa") || t.includes("umrah") || t.includes("application")) return "notifyVisa";
+  if (t.includes("offer") || t.includes("program") || t.includes("promo")) return "notifyPromo";
+  return "notifySystem";
+}
+
 function pickCopy(payload: NotifyPayload, lang: string) {
   const ar = lang !== "en";
   return {
     title: ar ? payload.titleAr : payload.titleEn,
     body: ar ? payload.messageAr : payload.messageEn,
   };
+}
+
+/**
+ * Load notification preferences for a list of user IDs.
+ * Returns a map userId → PrefRow. Missing rows default to all-enabled.
+ */
+async function loadPreferences(userIds: string[]): Promise<Map<string, PrefRow>> {
+  const map = new Map<string, PrefRow>();
+  if (userIds.length === 0) return map;
+
+  for (let i = 0; i < userIds.length; i += DB_CHUNK) {
+    const slice = userIds.slice(i, i + DB_CHUNK);
+    const rows = await db
+      .select()
+      .from(notificationPreferencesTable)
+      .where(inArray(notificationPreferencesTable.userId, slice));
+    for (const row of rows) {
+      map.set(row.userId, {
+        userId: row.userId,
+        notifyBooking: row.notifyBooking,
+        notifyVisa: row.notifyVisa,
+        notifyPromo: row.notifyPromo,
+        notifySystem: row.notifySystem,
+        pushEnabled: row.pushEnabled,
+      });
+    }
+  }
+  // Fill in defaults for users without a preferences row
+  for (const uid of userIds) {
+    if (!map.has(uid)) {
+      map.set(uid, {
+        userId: uid,
+        notifyBooking: true,
+        notifyVisa: true,
+        notifyPromo: true,
+        notifySystem: true,
+        pushEnabled: true,
+      });
+    }
+  }
+  return map;
+}
+
+/**
+ * Filter recipients to those who should receive a push for this payload.
+ * In-app rows are ALWAYS inserted; this filter applies only to push delivery.
+ */
+function filterForPush(
+  recipients: Recipient[],
+  prefsMap: Map<string, PrefRow>,
+  category: "notifyBooking" | "notifyVisa" | "notifyPromo" | "notifySystem",
+): Recipient[] {
+  return recipients.filter((r) => {
+    const pref = prefsMap.get(r.userId);
+    if (!pref) return true; // default: allow
+    return pref.pushEnabled && pref[category];
+  });
 }
 
 /**
@@ -106,8 +193,8 @@ async function sendExpoPush(messages: Array<ExpoMessage>): Promise<void> {
 }
 
 /**
- * Load push tokens for the given user ids and build Expo messages using each
- * user's preferred language. Never throws.
+ * Load push tokens for the given recipients and build Expo messages.
+ * Never throws.
  */
 async function buildMessagesForRecipients(
   recipients: Array<Recipient>,
@@ -169,7 +256,7 @@ async function insertInAppRows(userIds: Array<string>, payload: NotifyPayload): 
 
 /**
  * Notify a single user: records an in-app row and fires a real push to all of
- * that user's devices in the user's preferred language.
+ * that user's devices, respecting their notification preferences.
  */
 export async function notifyUser(opts: NotifyPayload & { userId: string }): Promise<void> {
   const { userId, ...payload } = opts;
@@ -180,22 +267,29 @@ export async function notifyUser(opts: NotifyPayload & { userId: string }): Prom
       .where(and(eq(usersTable.id, userId), isNull(usersTable.deletedAt)));
     if (!user) return;
 
+    // In-app row always written
     await insertInAppRows([userId], payload);
 
-    const messages = await buildMessagesForRecipients(
+    // Push respects preferences
+    const category = entityTypeToCategory(payload.relatedEntityType);
+    const prefsMap = await loadPreferences([userId]);
+    const pushRecipients = filterForPush(
       [{ userId, preferredLanguage: user.preferredLanguage }],
-      payload,
+      prefsMap,
+      category,
     );
-    // Fire-and-forget the push; never block or throw into the caller.
-    void sendExpoPush(messages);
+    if (pushRecipients.length > 0) {
+      const messages = await buildMessagesForRecipients(pushRecipients, payload);
+      void sendExpoPush(messages);
+    }
   } catch (err) {
     logger.error({ err, userId }, "notifyUser failed");
   }
 }
 
 /**
- * Notify a specific set of users. Records in-app rows and pushes to their
- * devices using each user's preferred language.
+ * Notify a specific set of users. Records in-app rows for ALL, but only
+ * pushes to users who have enabled push for the relevant category.
  */
 export async function notifyManyUsers(userIds: Array<string>, payload: NotifyPayload): Promise<number> {
   try {
@@ -213,9 +307,17 @@ export async function notifyManyUsers(userIds: Array<string>, payload: NotifyPay
     }
     if (recipients.length === 0) return 0;
 
+    // In-app rows for ALL
     await insertInAppRows(recipients.map((r) => r.userId), payload);
-    const messages = await buildMessagesForRecipients(recipients, payload);
-    void sendExpoPush(messages);
+
+    // Push only for opted-in users
+    const category = entityTypeToCategory(payload.relatedEntityType);
+    const prefsMap = await loadPreferences(recipients.map((r) => r.userId));
+    const pushRecipients = filterForPush(recipients, prefsMap, category);
+    if (pushRecipients.length > 0) {
+      const messages = await buildMessagesForRecipients(pushRecipients, payload);
+      void sendExpoPush(messages);
+    }
     return recipients.length;
   } catch (err) {
     logger.error({ err }, "notifyManyUsers failed");
@@ -224,8 +326,8 @@ export async function notifyManyUsers(userIds: Array<string>, payload: NotifyPay
 }
 
 /**
- * Notify every active, non-deleted user (broadcast). Records in-app rows and
- * pushes to all their devices, chunked, in each user's preferred language.
+ * Notify every active, non-deleted user (broadcast). Records in-app rows for
+ * ALL, but only pushes to users who have opted in for the category.
  */
 export async function notifyAllActiveUsers(payload: NotifyPayload): Promise<number> {
   try {
@@ -235,9 +337,17 @@ export async function notifyAllActiveUsers(payload: NotifyPayload): Promise<numb
       .where(and(eq(usersTable.isActive, true), isNull(usersTable.deletedAt)));
     if (recipients.length === 0) return 0;
 
+    // In-app rows for ALL
     await insertInAppRows(recipients.map((r) => r.userId), payload);
-    const messages = await buildMessagesForRecipients(recipients, payload);
-    void sendExpoPush(messages);
+
+    // Push only for opted-in users
+    const category = entityTypeToCategory(payload.relatedEntityType);
+    const prefsMap = await loadPreferences(recipients.map((r) => r.userId));
+    const pushRecipients = filterForPush(recipients, prefsMap, category);
+    if (pushRecipients.length > 0) {
+      const messages = await buildMessagesForRecipients(pushRecipients, payload);
+      void sendExpoPush(messages);
+    }
     return recipients.length;
   } catch (err) {
     logger.error({ err }, "notifyAllActiveUsers failed");

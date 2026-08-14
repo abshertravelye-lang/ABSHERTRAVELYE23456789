@@ -247,9 +247,9 @@ export default function AuthScreen() {
               style={styles.heroLogoImg}
               contentFit="contain"
             />
-            <Text style={[styles.heroTitle, { fontFamily: 'Cairo_700Bold' }]}>رحلتك تبدأ هنا</Text>
+            <Text style={[styles.heroTitle, { fontFamily: 'Cairo_700Bold' }]}>{t('auth.heroTitle')}</Text>
             <Text style={[styles.heroSubtitle, { fontFamily: 'Cairo_400Regular' }]}>
-              خدمات سفر متكاملة بلمسة واحدة
+              {t('auth.heroSubtitle')}
             </Text>
           </View>
         </View>
@@ -269,7 +269,7 @@ export default function AuthScreen() {
                   { fontFamily: 'Cairo_700Bold', color: tab === 'login' ? NAVY : '#94A3B8' },
                 ]}
               >
-                تسجيل الدخول
+                {t('auth.tabLogin')}
               </Text>
               {tab === 'login' && <View style={styles.tabUnderline} />}
             </Pressable>
@@ -283,7 +283,7 @@ export default function AuthScreen() {
                   { fontFamily: 'Cairo_700Bold', color: tab === 'register' ? NAVY : '#94A3B8' },
                 ]}
               >
-                إنشاء حساب جديد
+                {t('auth.tabRegister')}
               </Text>
               {tab === 'register' && <View style={styles.tabUnderline} />}
             </Pressable>
@@ -296,14 +296,14 @@ export default function AuthScreen() {
                 icon="person-outline"
                 value={identifier}
                 onChangeText={setIdentifier}
-                placeholder="البريد الإلكتروني أو رقم الجوال"
+                placeholder={t('auth.identifier')}
                 keyboardType="email-address"
               />
               <Field
                 icon="lock-closed-outline"
                 value={password}
                 onChangeText={setPassword}
-                placeholder="كلمة المرور"
+                placeholder={t('login.password')}
                 secure
                 showSecure={showPass}
                 onToggleSecure={() => setShowPass(!showPass)}
@@ -316,7 +316,7 @@ export default function AuthScreen() {
                   hitSlop={8}
                 >
                   <Text style={[styles.forgotLink, { fontFamily: 'Cairo_600SemiBold', color: NAVY }]}>
-                    نسيت كلمة المرور؟
+                    {t('login.forgot')}
                   </Text>
                 </Pressable>
                 <Pressable
@@ -324,7 +324,7 @@ export default function AuthScreen() {
                   onPress={() => setRememberMe((v) => !v)}
                 >
                   <Text style={[styles.rememberLabel, { fontFamily: 'Cairo_400Regular', color: colors.foreground }]}>
-                    تذكرني
+                    {t('auth.rememberMe')}
                   </Text>
                   <View style={[styles.checkbox, rememberMe && { backgroundColor: NAVY, borderColor: NAVY }]}>
                     {rememberMe && <Ionicons name="checkmark" size={14} color="#fff" />}
@@ -347,7 +347,7 @@ export default function AuthScreen() {
                   style={styles.primaryBtn}
                 >
                   <Text style={[styles.primaryBtnText, { fontFamily: 'Cairo_700Bold' }]}>
-                    {loginMutation.isPending ? 'جاري الدخول...' : 'تسجيل الدخول'}
+                    {loginMutation.isPending ? t('login.submitting') : t('login.submit')}
                   </Text>
                   <Ionicons name="arrow-back" size={20} color="#fff" />
                 </LinearGradient>
@@ -357,7 +357,7 @@ export default function AuthScreen() {
               <View style={styles.dividerRow}>
                 <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
                 <Text style={[styles.dividerText, { color: '#94A3B8', fontFamily: 'Cairo_400Regular' }]}>
-                  أو سجل الدخول باستخدام
+                  {t('auth.orSignIn')}
                 </Text>
                 <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
               </View>
@@ -383,17 +383,17 @@ export default function AuthScreen() {
                   onPress={() => handleSocialLogin('phone')}
                 >
                   <Ionicons name="call-outline" size={18} color={colors.foreground} />
-                  <Text style={[styles.socialText, { color: colors.foreground, fontFamily: 'Cairo_600SemiBold' }]}>رقم الجوال</Text>
+                  <Text style={[styles.socialText, { color: colors.foreground, fontFamily: 'Cairo_600SemiBold' }]}>{t('auth.phoneNumber')}</Text>
                 </Pressable>
               </View>
             </View>
           ) : (
             /* ── REGISTER FORM ── */
             <View style={styles.form}>
-              <Field icon="person-outline" value={form.firstName} onChangeText={(v) => set('firstName', v)} placeholder="الاسم الأول" />
-              <Field icon="person-outline" value={form.lastName} onChangeText={(v) => set('lastName', v)} placeholder="الاسم الأخير" />
+              <Field icon="person-outline" value={form.firstName} onChangeText={(v) => set('firstName', v)} placeholder={t('register.firstName')} />
+              <Field icon="person-outline" value={form.lastName} onChangeText={(v) => set('lastName', v)} placeholder={t('register.lastName')} />
 
-              <Field icon="mail-outline" value={form.email} onChangeText={(v) => set('email', v)} placeholder="البريد الإلكتروني" keyboardType="email-address" ltr />
+              <Field icon="mail-outline" value={form.email} onChangeText={(v) => set('email', v)} placeholder={t('register.email')} keyboardType="email-address" ltr />
 
               {/* Phone with dial code */}
               <View style={[styles.field, { borderColor: colors.border, backgroundColor: colors.background }]}>
@@ -401,7 +401,7 @@ export default function AuthScreen() {
                 <TextInput
                   value={form.phone}
                   onChangeText={(v) => set('phone', v)}
-                  placeholder="رقم الجوال"
+                  placeholder={t('register.phone')}
                   placeholderTextColor="#94A3B8"
                   keyboardType="phone-pad"
                   style={[styles.fieldInput, { color: colors.foreground, fontFamily: 'Cairo_400Regular', textAlign: 'left', writingDirection: 'ltr' }]}
@@ -411,8 +411,8 @@ export default function AuthScreen() {
                 </View>
               </View>
 
-              <Field icon="lock-closed-outline" value={form.password} onChangeText={(v) => set('password', v)} placeholder="كلمة المرور" secure showSecure={showRegPass} onToggleSecure={() => setShowRegPass(!showRegPass)} />
-              <Field icon="lock-closed-outline" value={form.confirmPassword} onChangeText={(v) => set('confirmPassword', v)} placeholder="تأكيد كلمة المرور" secure showSecure={showRegPass} onToggleSecure={() => setShowRegPass(!showRegPass)} />
+              <Field icon="lock-closed-outline" value={form.password} onChangeText={(v) => set('password', v)} placeholder={t('register.password')} secure showSecure={showRegPass} onToggleSecure={() => setShowRegPass(!showRegPass)} />
+              <Field icon="lock-closed-outline" value={form.confirmPassword} onChangeText={(v) => set('confirmPassword', v)} placeholder={t('register.confirmPassword')} secure showSecure={showRegPass} onToggleSecure={() => setShowRegPass(!showRegPass)} />
 
               <ErrorBanner />
 
@@ -428,7 +428,7 @@ export default function AuthScreen() {
                   style={styles.primaryBtn}
                 >
                   <Text style={[styles.primaryBtnText, { fontFamily: 'Cairo_700Bold' }]}>
-                    {registerMutation.isPending ? 'جاري التسجيل...' : 'إنشاء الحساب'}
+                    {registerMutation.isPending ? t('register.submitting') : t('register.submit')}
                   </Text>
                   <Ionicons name="arrow-back" size={20} color="#fff" />
                 </LinearGradient>
@@ -442,16 +442,16 @@ export default function AuthScreen() {
           <View style={styles.footerItem}>
             <Ionicons name="shield-checkmark-outline" size={22} color={NAVY} />
             <View>
-              <Text style={[styles.footerTitle, { fontFamily: 'Cairo_700Bold', color: NAVY }]}>أمان تام</Text>
-              <Text style={[styles.footerCaption, { fontFamily: 'Cairo_400Regular', color: '#64748B' }]}>بياناتك محمية</Text>
+              <Text style={[styles.footerTitle, { fontFamily: 'Cairo_700Bold', color: NAVY }]}>{t('auth.trust.secure.title')}</Text>
+              <Text style={[styles.footerCaption, { fontFamily: 'Cairo_400Regular', color: '#64748B' }]}>{t('auth.trust.secure.caption')}</Text>
             </View>
           </View>
           <View style={styles.footerDivider} />
           <Pressable style={styles.footerItem} onPress={() => router.push('/support-chat')}>
             <Ionicons name="headset-outline" size={22} color={NAVY} />
             <View>
-              <Text style={[styles.footerTitle, { fontFamily: 'Cairo_700Bold', color: NAVY }]}>تحتاج مساعدة؟</Text>
-              <Text style={[styles.footerCaption, { fontFamily: 'Cairo_400Regular', color: '#64748B' }]}>تواصل مع الدعم</Text>
+              <Text style={[styles.footerTitle, { fontFamily: 'Cairo_700Bold', color: NAVY }]}>{t('auth.trust.help.title')}</Text>
+              <Text style={[styles.footerCaption, { fontFamily: 'Cairo_400Regular', color: '#64748B' }]}>{t('auth.trust.help.caption')}</Text>
             </View>
           </Pressable>
         </View>
