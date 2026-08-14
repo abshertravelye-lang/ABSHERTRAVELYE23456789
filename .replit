@@ -4,36 +4,11 @@ modules = ["nodejs-24", "python-3.11", "postgresql-16"]
 router = "application"
 deploymentTarget = "autoscale"
 
-[deployment.build]
-args = ["sh", "-c", "rm -rf absher_travel/build absher_travel/.dart_tool"]
-
 [deployment.postBuild]
 args = ["pnpm", "store", "prune"]
 env = { "CI" = "true" }
 
 [workflows]
-runButton = "Project"
-
-[[workflows.workflow]]
-name = "Project"
-mode = "parallel"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Flutter - أبشر أعمال"
-
-[[workflows.workflow]]
-name = "Flutter - أبشر أعمال"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "cd /home/runner/workspace/absher_travel && flutter run -d web-server --web-port=3000 --web-hostname=0.0.0.0 --dart-define=BASE_URL=/api"
-waitForPort = 3000
-
-[workflows.workflow.metadata]
-outputType = "webview"
 
 [agent]
 stack = "PNPM_WORKSPACE"
