@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 24, color: '#FFFFFF' },
   subtitle: { fontSize: 14, color: 'rgba(255,255,255,0.8)', textAlign: 'center', lineHeight: 24 },
   form: { padding: 24, gap: 32, flex: 1, paddingTop: 40 },
-  otpContainer: { flexDirection: 'row', justifyContent: 'space-between', direction: 'ltr' },
+  otpContainer: { flexDirection: 'row', justifyContent: 'space-between', writingDirection: 'ltr' },
   otpInput: {
     width: 50,
     height: 60,
