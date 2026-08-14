@@ -1,0 +1,570 @@
+IMPORTANT — REDESIGN AND FIX THE CUSTOMER PROFILE PAGE
+
+I reviewed the current Profile page and it is NOT implemented correctly.
+
+The current page shows many passport fields manually before the customer uploads the passport, and the passport OCR is failing.
+
+I want the profile flow redesigned to be simple, automatic and user-friendly.
+
+DO NOT keep the current workflow.
+
+==================================================
+1. PROFILE MUST BE SIMPLE
+==================================================
+
+The customer should NOT be asked to manually enter all passport information.
+
+The profile page should only ask for information that cannot reliably be extracted automatically.
+
+The customer should NOT see a large list of empty passport fields before uploading the passport.
+
+The correct order is:
+
+Personal Photo
+↓
+Passport Upload
+↓
+Passport OCR / MRZ Scan
+↓
+Automatically Extract Passport Data
+↓
+Display Extracted Data for Review
+↓
+Customer Completes Remaining Information
+↓
+GCC Residency Question
+↓
+Europe / Schengen Question
+↓
+Save Profile
+↓
+Profile 100% Complete
+
+==================================================
+2. PERSONAL PHOTO — MUST ACTUALLY WORK
+==================================================
+
+The current personal photo upload button does not work.
+
+FIX IT COMPLETELY.
+
+Add a clear section:
+
+"Personal Photo"
+
+with:
+
+"Upload Personal Photo"
+
+The customer must be able to:
+
+- Select an image from device
+- Upload it successfully
+- See a preview
+- Replace the image
+- Remove the image if necessary
+
+The uploaded image must actually be saved to the customer's profile.
+
+Do NOT show a fake upload button.
+
+Do NOT mark the photo as uploaded unless the file was successfully uploaded and saved.
+
+==================================================
+3. PERSONAL PHOTO VALIDATION
+==================================================
+
+After the customer uploads the photo, validate it.
+
+Check where technically possible:
+
+- Face detected
+- One face only
+- Face clearly visible
+- Image quality
+- Blur
+- Lighting
+- Framing
+
+If the photo does not meet the requirements:
+
+Show:
+
+"Please upload a clearer personal photo."
+
+Do not accept the image as valid.
+
+If accepted:
+
+Show:
+
+✓ Personal Photo Accepted
+
+and a green success indicator.
+
+The Personal Photo must become part of the customer's saved profile.
+
+==================================================
+4. PASSPORT — UPLOAD FIRST
+==================================================
+
+This is VERY IMPORTANT.
+
+Do NOT display all passport information fields before the passport is uploaded.
+
+Instead, show a simple section:
+
+"Passport"
+
+and a large upload area:
+
+"Upload Passport"
+
+The customer uploads the passport identity page.
+
+After the image is uploaded successfully:
+
+Start passport OCR / MRZ processing automatically.
+
+==================================================
+5. PASSPORT OCR / MRZ MUST ACTUALLY WORK
+==================================================
+
+The current system shows:
+
+"Upload passport"
+
+but when I upload a passport it says:
+
+"Failed"
+
+and does not scan or extract anything.
+
+FIX THIS.
+
+Do NOT simply catch the error and show a generic failure.
+
+Find and fix the actual reason why passport OCR/MRZ processing is failing.
+
+The implementation must use REAL OCR/MRZ processing.
+
+Do NOT create fake OCR data.
+
+Do NOT hardcode passport information.
+
+Do NOT pretend that OCR succeeded.
+
+If an OCR/MRZ service or library is already present in the project, correctly connect it and fix its API/backend flow.
+
+If the current implementation is incomplete, implement a proper OCR/MRZ solution.
+
+==================================================
+6. PASSPORT PROCESSING FLOW
+==================================================
+
+The exact flow must be:
+
+Customer clicks:
+
+"Upload Passport"
+
+↓
+Selects passport image
+
+↓
+Image uploads successfully
+
+↓
+Show:
+
+"Reading passport information..."
+
+with a loading/progress state
+
+↓
+OCR/MRZ processes the passport
+
+↓
+Extract available passport information
+
+↓
+Populate the corresponding fields automatically
+
+↓
+Show the extracted information to the customer
+
+↓
+Customer reviews the information
+
+↓
+Customer can correct an OCR mistake if necessary
+
+↓
+Save profile
+
+==================================================
+7. EXTRACT PASSPORT DATA AUTOMATICALLY
+==================================================
+
+Where available, extract:
+
+- Full name
+- Given name(s)
+- Surname
+- Passport number
+- Nationality
+- Date of birth
+- Gender
+- Date of issue
+- Date of expiry
+- MRZ information
+
+The customer should NOT manually type these fields if they were successfully extracted.
+
+The extracted information should appear naturally after the passport is scanned.
+
+==================================================
+8. DO NOT SHOW EMPTY PASSPORT FIELDS FIRST
+==================================================
+
+This is specifically what is wrong in the current screenshot.
+
+Do NOT show:
+
+Passport Number
+Issuing Country
+Place of Issue
+Issue Date
+Expiry Date
+etc.
+
+as empty fields before the customer uploads the passport.
+
+Instead:
+
+STEP 1:
+Upload passport.
+
+STEP 2:
+Scan passport.
+
+STEP 3:
+Show the extracted passport information.
+
+This makes the profile much easier and faster for the customer.
+
+==================================================
+9. OCR FAILURE HANDLING
+==================================================
+
+If OCR/MRZ fails:
+
+Do NOT simply show:
+
+"Failed"
+
+Instead show a useful message:
+
+"We couldn't read the passport. Please upload a clear image of the passport information page."
+
+Provide:
+
+"Try Again"
+
+The customer must be able to upload another image.
+
+Also log the real technical error on the backend so the developer can diagnose why the OCR failed.
+
+Do NOT expose technical error details to the customer.
+
+==================================================
+10. PASSPORT IMAGE QUALITY
+==================================================
+
+Before sending the image to OCR where possible, validate:
+
+- Correct passport page
+- Image is not excessively blurry
+- Passport page is visible
+- MRZ is visible
+- Image is not severely cropped
+- Image is readable
+
+If the image is poor:
+
+Ask the customer to upload a clearer image before attempting OCR.
+
+==================================================
+11. REMAINING PROFILE INFORMATION
+==================================================
+
+After passport OCR, ask only for information that is not already available from the passport.
+
+For example:
+
+- Phone number
+- WhatsApp number if required
+- Address if required
+- Other information genuinely required by the business
+
+Do not duplicate passport information.
+
+==================================================
+12. GCC RESIDENCY QUESTION
+==================================================
+
+After the passport information is successfully extracted, ask:
+
+"Are you a resident of a GCC country?"
+
+YES / NO
+
+If YES:
+
+Show the six GCC countries:
+
+- Saudi Arabia
+- United Arab Emirates
+- Kuwait
+- Qatar
+- Bahrain
+- Oman
+
+Customer selects their country.
+
+Then show:
+
+"Upload GCC Residence Permit"
+
+The residence document must be uploaded and saved.
+
+If NO:
+
+Continue without requesting a GCC residence document.
+
+==================================================
+13. EUROPE / SCHENGEN QUESTION
+==================================================
+
+Then ask:
+
+"Are you a resident of a European country or do you have a valid Schengen visa?"
+
+YES / NO
+
+If YES:
+
+Show:
+
+"Upload European Residence Permit or Schengen Visa"
+
+The customer uploads the relevant document.
+
+Save it to the profile.
+
+If NO:
+
+Continue.
+
+==================================================
+14. PROFILE SAVE
+==================================================
+
+At the bottom show:
+
+"SAVE PROFILE"
+
+When clicked:
+
+Validate all required profile information.
+
+Save:
+
+- Personal photo
+- Passport image
+- OCR/MRZ passport data
+- Phone number
+- Nationality
+- GCC information
+- GCC residence document if applicable
+- European residence / Schengen information if applicable
+- Relevant uploaded documents
+
+Then show:
+
+"Profile Completed Successfully"
+
+Arabic:
+
+"تم إكمال بيانات الملف الشخصي بنجاح"
+
+Show:
+
+✓ Profile 100% Complete
+
+with a green indicator.
+
+==================================================
+15. PROFILE COMPLETION
+==================================================
+
+The profile should become 100% complete only when all mandatory profile information has been successfully completed.
+
+Do not show 100% if:
+
+- Personal photo is missing
+- Passport is missing
+- Passport OCR/MRZ data is missing or not confirmed
+- Required phone number is missing
+- Required residency information is incomplete
+- A required residency document is missing
+
+==================================================
+16. IMPORTANT — VISA APPLICATION
+==================================================
+
+Once the profile is 100% complete:
+
+The customer must NOT have to enter the same passport and personal information again when applying for a visa.
+
+When the customer selects a visa and passes the Admin-configured eligibility rules:
+
+Automatically load the saved profile information into the visa application.
+
+The customer only completes information that is specific to that particular visa.
+
+==================================================
+17. DO NOT CONFUSE PROFILE WITH VISA ELIGIBILITY
+==================================================
+
+A 100% complete profile does NOT automatically mean the customer can apply for every visa.
+
+After profile completion:
+
+Visa Eligibility is checked separately.
+
+Eligibility is controlled by the Admin Dashboard.
+
+The system must check:
+
+- Allowed nationality
+- Prohibited nationality
+- GCC requirements
+- European residency requirements
+- Schengen requirements
+- Required documents
+- Other visa-specific rules
+
+If the customer is not eligible:
+
+BLOCK the application.
+
+==================================================
+18. WEB + MOBILE
+==================================================
+
+This exact profile system must work on:
+
+- ABSHER TRAVEL Web Platform
+- ABSHER TRAVEL Mobile App iOS
+- ABSHER TRAVEL Mobile App Android
+
+Use the same backend, API, database and customer profile.
+
+If the customer uploads their passport on Mobile:
+
+The same passport, OCR data and profile must immediately be available on Web.
+
+If the customer uploads on Web:
+
+The same information must be available on Mobile.
+
+Do NOT create separate profile systems.
+
+==================================================
+19. IMPORTANT — FIX THE CURRENT IMPLEMENTATION
+==================================================
+
+The current screenshot shows:
+
+- Too many empty passport fields displayed before upload
+- Personal photo upload does not work
+- Passport upload fails
+- OCR does not extract passport information
+
+These are NOT acceptable.
+
+Do not simply redesign the appearance.
+
+Fix the actual functionality.
+
+Verify:
+
+1. Personal photo upload works.
+2. Personal photo is saved.
+3. Personal photo validation works.
+4. Passport upload works.
+5. Passport image is saved.
+6. OCR/MRZ processing actually runs.
+7. Passport data is actually extracted.
+8. Extracted data appears in the profile.
+9. Customer can review/correct extracted data.
+10. Profile can be saved.
+11. Profile reaches 100% when complete.
+12. Same profile works on Web and Mobile.
+13. Visa applications automatically use the saved profile.
+
+==================================================
+20. FINAL TEST REQUIRED
+==================================================
+
+Before saying this task is complete, perform a real end-to-end test:
+
+Create/login customer
+↓
+Open Profile
+↓
+Upload personal photo
+↓
+Confirm photo uploads and saves
+↓
+Upload passport
+↓
+Confirm passport uploads successfully
+↓
+Confirm OCR/MRZ starts
+↓
+Confirm passport data is extracted
+↓
+Confirm extracted data appears in the correct fields
+↓
+Confirm customer can review the data
+↓
+Answer GCC question
+↓
+Upload GCC residence if YES
+↓
+Answer Europe/Schengen question
+↓
+Upload relevant document if YES
+↓
+Save Profile
+↓
+Confirm "Profile Completed Successfully"
+↓
+Confirm Profile = 100%
+↓
+Open Visa
+↓
+Check Admin eligibility
+↓
+Apply
+↓
+Confirm profile data is automatically loaded
+↓
+Confirm customer does not have to re-enter passport information.
+
+Do not mark this task as complete until the actual uploads, OCR/MRZ, profile saving and data extraction have been tested successfully.
+
+IMPORTANT:
+I want FUNCTIONAL implementation, not just UI changes.

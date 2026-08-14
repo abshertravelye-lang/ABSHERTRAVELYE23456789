@@ -1,0 +1,322 @@
+IMPORTANT: Please implement the following changes directly in the existing project. Do not rebuild the project from scratch and do not remove or break any existing functionality.
+
+## 1. Replace the Logo Everywhere
+
+I have provided the new ABSHER TRAVEL logo in this conversation.
+
+Use the provided logo as the official new logo for the entire system.
+
+Replace the old logo everywhere, including:
+
+- Main website
+- Mobile application
+- Admin Dashboard
+- Navbar / Header
+- Login page
+- Registration page
+- User profile
+- Booking pages
+- Visa pages
+- Hotels pages
+- Flights pages
+- Tourism programs pages
+- Footer
+- Splash screen
+- Loading screen
+- Favicon
+- App icon
+- Any static assets
+- Any email templates if they contain the old logo
+- Any other location where the old logo is currently used
+
+IMPORTANT:
+Do a complete project-wide search for the old logo and replace every occurrence with the new logo.
+
+Do not only change the homepage.
+
+## 2. Replace the Company Name
+
+Remove the old company name completely from the entire system.
+
+The old name is:
+
+"أبشر أعمال للسفريات والسياحة"
+
+It must NOT appear anywhere in the website, application, or admin dashboard.
+
+The only official name that should be displayed is:
+
+ABSHER TRAVEL
+
+Use exactly:
+
+ABSHER TRAVEL
+
+Do not display the Arabic company name.
+Do not display "Absher Business".
+Do not display "Absher Business for Travel and Tourism".
+Do not add any Arabic subtitle under the name.
+
+The official displayed brand name is ONLY:
+
+ABSHER TRAVEL
+
+## 3. Update the Website
+
+Update the new logo and brand name throughout the entire website.
+
+Check and update:
+
+- Navbar
+- Header
+- Footer
+- Login
+- Register
+- Homepage
+- Booking pages
+- Visa pages
+- Hotel pages
+- Flight pages
+- Tourism programs
+- User account
+- Settings
+- Contact pages
+- Error pages
+- Loading states
+- SEO metadata
+- Page titles
+- Open Graph metadata
+- Favicon
+- Any other branding references
+
+Make sure the old logo and old company name no longer appear anywhere.
+
+## 4. Update the Mobile App
+
+Apply the same new branding to the mobile application.
+
+Update:
+
+- App logo
+- Splash screen
+- App icon
+- Header
+- Login
+- Registration
+- Home
+- Flights
+- Hotels
+- Visas
+- Tourism programs
+- Bookings
+- Profile
+- Notifications
+- Settings
+- Any other screen
+
+The app must display:
+
+ABSHER TRAVEL
+
+and the new provided logo.
+
+## 5. Update the Admin Dashboard
+
+Apply the new branding to the entire Admin Dashboard.
+
+Update:
+
+- Admin login
+- Sidebar
+- Header
+- Dashboard
+- Visa management
+- Booking management
+- User management
+- Hotel management
+- Flight management
+- Tourism program management
+- Settings
+- Notifications
+- All other admin pages
+
+Use:
+
+ABSHER TRAVEL
+
+and the new provided logo.
+
+## 6. NEW FEATURE: Notify Users When a New Visa Type Is Added
+
+I also want a notification system connected to the existing visa management system.
+
+When an admin creates and successfully saves a NEW visa type from the Admin Dashboard, automatically create a notification for users.
+
+Example:
+
+Admin adds:
+
+"Turkey Tourist Visa"
+
+The system should automatically generate a notification such as:
+
+"New Visa Type Added"
+"Turkey Tourist Visa is now available."
+
+The notification should link directly to the newly created visa page.
+
+## 7. Website Notifications
+
+On the website, add/use a notification bell in the user interface if the notification system does not already have one.
+
+The notification should appear in the user's notification center.
+
+Example:
+
+🔔 1
+
+Notification:
+
+New Visa Type Added
+
+A new Turkey Tourist Visa is now available.
+
+View Details
+
+When the user clicks the notification, open the new visa details page.
+
+The notification should then be marked as read.
+
+## 8. Mobile App Notifications
+
+The same new visa notification must also be available in the mobile application.
+
+If the current application supports push notifications, send a push notification to the appropriate users.
+
+Example:
+
+Title:
+New Visa Type Added ✈️
+
+Message:
+A new Turkey Tourist Visa is now available. Tap to view details.
+
+When the user taps the notification, open the corresponding visa details page.
+
+If push notifications are not currently configured, implement the notification in the existing in-app notification system without breaking the current architecture.
+
+## 9. Database Integration
+
+The notification must be connected to the database.
+
+When a new visa type is successfully created:
+
+1. Save the visa to the database.
+2. Generate a notification event.
+3. Create the user notification.
+4. Store the notification in the database.
+5. Link the notification to the newly created visa.
+6. Display it on the website.
+7. Display it in the mobile app.
+8. Mark it as read when the user opens it.
+9. Make sure the notification does not get duplicated.
+
+IMPORTANT:
+
+Only trigger this notification when a NEW visa type is created.
+
+Do NOT trigger the "new visa" notification when an existing visa is edited.
+
+## 10. Admin Notification Management
+
+If the project already has a notification system, use and extend the existing system instead of creating a duplicate notification architecture.
+
+The Admin Dashboard should allow administrators to see notification activity where appropriate.
+
+At minimum, store:
+
+- Notification title
+- Notification message
+- Notification type
+- Related visa ID
+- Creation date
+- Read/unread status
+- User ID or target users
+
+## 11. Do Not Break Existing Features
+
+This is extremely important.
+
+Do NOT rebuild the application.
+
+Do NOT remove existing features.
+
+Do NOT delete existing database records.
+
+Do NOT change existing business logic unnecessarily.
+
+Preserve:
+
+- Existing users
+- Existing bookings
+- Existing visas
+- Existing flights
+- Existing hotels
+- Existing tourism programs
+- Existing authentication
+- Existing permissions
+- Existing APIs
+- Existing database structure
+- Existing Admin Dashboard functionality
+
+Make the changes within the existing architecture.
+
+## 12. Project-Wide Branding Cleanup
+
+Before finishing, search the entire project for:
+
+- "أبشر أعمال"
+- "أبشر أعمال للسفريات والسياحة"
+- "Absher Business"
+- Old logo filenames
+- Old logo imports
+- Old favicon
+- Old app icon
+- Old brand metadata
+- Old page titles
+
+Remove or replace all old branding references.
+
+The only official brand name should be:
+
+ABSHER TRAVEL
+
+## 13. Final Testing
+
+After implementing everything, test the complete flow:
+
+1. Open the website.
+2. Confirm the new logo appears.
+3. Confirm "ABSHER TRAVEL" appears.
+4. Confirm the old Arabic company name is completely removed.
+5. Open the mobile app and verify the same branding.
+6. Open the Admin Dashboard and verify the same branding.
+7. Create a NEW visa type from the Admin Dashboard.
+8. Confirm the visa is saved successfully.
+9. Confirm a notification is automatically created.
+10. Confirm the notification appears to users.
+11. Confirm the notification links to the new visa.
+12. Confirm the notification becomes read after opening.
+13. Confirm no duplicate notifications are created.
+14. Confirm editing an existing visa does NOT create a new-visa notification.
+15. Test both desktop and mobile layouts.
+
+IMPORTANT FINAL REQUIREMENT:
+
+Do not consider the task complete until you have searched the entire project and confirmed that the old logo and the old company name are no longer being used anywhere.
+
+The final brand must be:
+
+ABSHER TRAVEL
+
+Use the new logo I provided in this conversation everywhere.

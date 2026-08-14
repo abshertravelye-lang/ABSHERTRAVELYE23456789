@@ -1,0 +1,458 @@
+ABSHER TRAVEL – COMPLETE MOBILE APP REDESIGN & PREMIUM UI/UX UPGRADE
+OBJECTIVE
+Transform the entire ABSHER TRAVEL mobile application into a premium, production-ready travel and visa platform comparable to the best travel apps in the Middle East.
+
+The redesign must focus on:
+
+Professional UI/UX
+Modern Design System
+Perfect Light Mode & Dark Mode
+High Performance
+Android App Bundle (AAB) Ready
+Google Play Production Ready
+Future Scalability
+Premium User Experience
+The final result must feel closer to Almosafer, Booking.com, Wego and Expedia than a traditional visa application.
+
+BRAND IDENTITY
+Application Name:
+
+ABSHER TRAVEL
+
+DO NOT display:
+
+اهلا بك في ABSHER TRAVEL
+
+Replace with:
+
+Welcome to ABSHER TRAVEL
+
+Subtitle:
+
+Your Gateway to Visas, Umrah & Travel Services
+
+Arabic Alternative:
+
+مرحباً بك في ABSHER TRAVEL
+
+منصة التأشيرات والعمرة والسفر الذكية
+
+COMPLETE COLOR SYSTEM
+Keep logo colors and build a premium system around them.
+
+Primary Navy:
+
+#062B5B
+
+Secondary Blue:
+
+#0D4A8C
+
+Premium Gold:
+
+#D4A017
+
+Premium Gold Hover:
+
+#F4C542
+
+Light Background:
+
+#F7F9FC
+
+Dark Background:
+
+#031B3A
+
+Success:
+
+#16A34A
+
+Warning:
+
+#F59E0B
+
+Error:
+
+#DC2626
+
+LIGHT MODE
+Background:
+
+#F7F9FC
+
+Cards:
+
+#FFFFFF
+
+Text:
+
+#0F172A
+
+Borders:
+
+#E2E8F0
+
+Buttons:
+
+#062B5B
+
+Primary Actions:
+
+Gold Accent
+
+Shadows:
+
+Soft Premium Shadows
+
+DARK MODE
+Background:
+
+#031B3A
+
+Cards:
+
+#062B5B
+
+Text:
+
+#FFFFFF
+
+Secondary Text:
+
+#CBD5E1
+
+Buttons:
+
+#D4A017
+
+Accent:
+
+#F4C542
+
+NO black overlays.
+
+NO gray unreadable text.
+
+All components must be optimized for dark mode.
+
+HOME SCREEN REDESIGN
+Remove current layout completely.
+
+Create a premium dashboard.
+
+Top Area:
+
+ABSHER TRAVEL Logo
+Notifications
+User Profile Picture
+Welcome Message
+Add:
+
+Quick Statistics Cards
+
+Examples:
+
+Active Applications
+Approved Visas
+Current Trips
+Pending Requests
+MAIN SERVICES SECTION
+Display as premium cards.
+
+Electronic Visa
+Icon: Passport
+
+Umrah Visa
+Icon: Kaaba
+
+Separate section
+
+Different visual identity
+
+Priority placement
+
+Flight Booking
+Icon: Airplane
+
+Tourism Programs
+Icon: Globe
+
+Track Application
+Icon: Search
+
+My Requests
+Icon: Folder
+
+Customer Support
+Icon: Chat
+
+UMRAH VISA CENTER
+Create a completely independent service.
+
+Not inside normal visa services.
+
+Dedicated Module:
+
+Apply for Umrah Visa
+Upload Passport
+Upload Personal Photo
+Package Selection
+Application Tracking
+Download Visa
+Travel Instructions
+Status Timeline
+Theme:
+
+Dark Green + Gold
+
+Green:
+
+#0B5E3B
+
+Gold:
+
+#D4A017
+
+Premium Islamic Visual Design
+
+DESTINATIONS SECTION
+Current design is outdated.
+
+Replace with:
+
+Large Premium Destination Cards
+
+Include:
+
+Country Flag
+Country Image
+Visa Type
+Starting Price
+Processing Time
+Add horizontal animations.
+
+BOTTOM NAVIGATION
+Current navigation is crowded.
+
+Replace with:
+
+Home
+
+Visas
+
+Umrah
+
+Trips
+
+Profile
+
+Maximum 5 tabs only.
+
+PROFILE CENTER
+Completely redesign profile page.
+
+Include:
+
+Profile Picture
+
+Profile Completion Percentage
+
+Passport Information
+
+GCC Residency Information
+
+Uploaded Documents
+
+Downloaded Visas
+
+Downloaded Tickets
+
+Settings
+
+Biometric Login
+
+Dark Mode Toggle
+
+Terms & Conditions
+
+Refund Policy
+
+Logout
+
+VISA APPLICATION SYSTEM
+Modern Multi-Step Wizard
+
+Step 1
+
+Personal Information
+
+Step 2
+
+Passport Information
+
+Step 3
+
+Document Upload
+
+Step 4
+
+Visa Selection
+
+Step 5
+
+Review
+
+Step 6
+
+Payment
+
+Step 7
+
+Confirmation
+
+DOCUMENT UPLOAD
+Allow:
+
+Camera
+
+Gallery
+
+PDF Files
+
+Passport
+
+Personal Photo
+
+Residence Permit
+
+National ID
+
+Support Drag & Drop where possible.
+
+VISA CATEGORIES SECTION FIX (CRITICAL)
+The current visa categories selector is broken and must be completely rebuilt.
+
+Current Issues:
+
+Category labels are cut off.
+Arabic text is truncated.
+Icons overlap text.
+Fixed-width containers cause layout problems.
+RTL support is incomplete.
+Categories are partially hidden on many devices.
+Overflow and clipping issues exist.
+User cannot clearly identify the selected category.
+Required Solution:
+
+Rebuild the category selector from scratch.
+Use adaptive-width chips.
+Full Arabic RTL support.
+Dynamic sizing based on content length.
+Smooth horizontal scrolling.
+Material 3 Filter Chips or custom premium chips.
+Selected and unselected states.
+Proper spacing between icon and text.
+Minimum touch height of 48px.
+No clipping or overflow on any screen size.
+Fully responsive on phones and tablets.
+Required Categories:
+
+جميع التأشيرات
+سياحية
+أعمال
+عمرة
+علاجية
+دراسية
+عائلية
+ترانزيت
+Design Requirements:
+
+Premium rounded chips.
+Gold highlight for active category.
+Subtle animation on selection.
+Full compatibility with Light Mode and Dark Mode.
+Modern travel-app appearance similar to leading travel platforms.
+PERFORMANCE OPTIMIZATION
+Implement:
+
+Lazy Loading
+Image Compression
+Caching
+Skeleton Loading
+Code Splitting
+Optimized API Calls
+Offline Support
+Fast Navigation
+DESIGN SYSTEM
+Create reusable components:
+
+Buttons
+Inputs
+Cards
+Badges
+Dialogs
+Bottom Sheets
+Date Pickers
+Country Selectors
+Loading States
+Empty States
+Error States
+Success States
+All components must follow one design language.
+
+ADMIN PANEL COMPATIBILITY
+Application must remain connected to:
+
+Visa Requests
+Users
+Payments
+Bookings
+Notifications
+Documents
+Support Messages
+All data must sync correctly.
+
+No request should disappear from the admin dashboard.
+
+ANIMATIONS
+Add premium animations:
+
+Page Transitions
+Card Hover Effects
+Button Press Effects
+Smooth Navigation
+Loading Animations
+Success Animations
+All animations must remain lightweight.
+
+TECHNICAL REQUIREMENTS
+Production Ready
+
+TypeScript
+
+Modern Architecture
+
+Scalable Codebase
+
+Clean Folder Structure
+
+Responsive Design
+
+Google Play Ready
+
+Generate Android App Bundle (AAB)
+
+No Critical Warnings
+
+No Build Errors
+
+No Console Errors
+
+No Placeholder Data
+
+No Dummy Screens
+
+FINAL RESULT
+The application must feel like a premium international travel platform with a dedicated Umrah Center, modern visa services, professional branding, outstanding dark/light themes, and a polished user experience ready for real customers and future growth.
+

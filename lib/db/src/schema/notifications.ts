@@ -21,7 +21,13 @@ export const notificationsTable = pgTable("notifications", {
   channel: notificationChannelEnum("channel").notNull().default("in_app"),
   relatedEntityType: text("related_entity_type"),
   relatedEntityId: text("related_entity_id"),
+  // Optional deep-link / external URL carried with the notification (e.g. admin
+  // broadcasts). Persisted so clients can render a tap-through target.
+  url: text("url"),
   isRead: boolean("is_read").notNull().default(false),
+  // Set to the admin user id when this notification was created via an admin
+  // broadcast (/notifications/send). Null for system/automatic notifications.
+  sentBy: uuid("sent_by"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

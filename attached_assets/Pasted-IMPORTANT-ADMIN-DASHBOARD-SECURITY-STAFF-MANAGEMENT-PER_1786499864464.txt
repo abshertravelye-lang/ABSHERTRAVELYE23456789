@@ -1,0 +1,650 @@
+IMPORTANT — ADMIN DASHBOARD SECURITY, STAFF MANAGEMENT, PERMISSIONS AND APP LINKS
+
+I need you to implement the following features in the ABSHER TRAVEL Admin Dashboard.
+
+These are production-critical features and MUST be fully functional, secure, connected to the same backend/database, and tested before considering the task complete.
+
+==================================================
+1. ADMIN DASHBOARD MUST HAVE SECURE LOGIN
+==================================================
+
+The Admin Dashboard is currently accessible without proper authentication.
+
+THIS MUST BE FIXED IMMEDIATELY.
+
+The Admin Dashboard must NOT be accessible to unauthenticated users.
+
+Create a secure Admin Login page with:
+
+- Email / username
+- Password
+- Login button
+- Secure authentication
+- Session management
+- Logout
+- Protected admin routes
+
+If an unauthenticated user tries to access any Admin Dashboard URL directly, automatically redirect them to the Admin Login page.
+
+Do NOT rely only on frontend route protection.
+
+The backend/API must also verify authentication and authorization for every protected Admin action.
+
+Do NOT expose admin APIs publicly.
+
+Do NOT store passwords as plain text.
+
+Passwords must be securely hashed.
+
+Use secure sessions/tokens and appropriate expiration.
+
+==================================================
+2. SUPER ADMIN ACCOUNT
+==================================================
+
+Create a Super Admin role.
+
+The Super Admin has FULL access to the entire Admin Dashboard.
+
+The Super Admin can:
+
+- Manage visas
+- Add/edit/delete visas
+- Manage visa eligibility rules
+- Manage visa requirements
+- Manage visa applications
+- Manage customers
+- Manage customer messages
+- Manage flight requests
+- Manage hotel requests
+- Manage employees
+- Manage employee permissions
+- Manage application settings
+- Manage app links
+- Manage notifications
+- Manage system settings
+- View all dashboard sections
+- View all activity logs
+
+ONLY the Super Admin can create, edit, deactivate, delete, or manage employee accounts and permissions.
+
+Normal employees MUST NOT be able to give themselves additional permissions.
+
+==================================================
+3. EMPLOYEE MANAGEMENT
+==================================================
+
+Create a new Admin Dashboard section:
+
+"Employees"
+
+The Super Admin must be able to create employee accounts.
+
+Employee fields:
+
+- Full name
+- Email
+- Phone number
+- Username if needed
+- Password
+- Profile photo (optional)
+- Employee status:
+  - Active
+  - Inactive
+- Role / permissions
+
+The Super Admin must be able to:
+
+- Add employee
+- Edit employee
+- Activate employee
+- Deactivate employee
+- Reset employee password
+- Change permissions
+- View employee activity
+- Delete employee if appropriate
+
+Inactive employees MUST immediately lose access to the Admin Dashboard.
+
+==================================================
+4. IMPORTANT — EMPLOYEE ACCESS MUST BE LIMITED
+==================================================
+
+This is a critical requirement.
+
+DO NOT give every employee access to the entire Admin Dashboard.
+
+Each employee must ONLY have access to the sections and actions assigned to them by the Super Admin.
+
+For example:
+
+A Visa Employee should only be able to work with visa applications and the information necessary to process those applications.
+
+A Customer Support Employee should only be able to work with customer messages and the customer information necessary for support.
+
+A Flight Employee should only be able to work with flight requests.
+
+A Hotel Employee should only be able to work with hotel requests.
+
+Employees MUST NOT automatically have access to:
+
+- Employee Management
+- System Settings
+- Visa Configuration
+- Other employees' accounts
+- Permission Management
+- Sensitive administrative functions
+
+unless the Super Admin explicitly grants that permission.
+
+The employee dashboard should therefore be personalized according to the employee's permissions.
+
+IMPORTANT:
+
+Hiding menu items is NOT enough.
+
+The backend/API MUST enforce the same permissions.
+
+If an employee manually enters a restricted URL, the request MUST be rejected.
+
+If an employee directly calls a restricted API endpoint, the request MUST be rejected.
+
+Employees MUST NEVER be able to bypass permissions through the frontend.
+
+==================================================
+5. ROLE-BASED PERMISSIONS (RBAC)
+==================================================
+
+Implement a proper Role-Based Access Control system.
+
+Do NOT simply hide buttons or menu items.
+
+Permissions MUST be enforced on the backend/API.
+
+Create permissions such as:
+
+VISA MANAGEMENT:
+- View visas
+- Add visa
+- Edit visa
+- Delete/deactivate visa
+- Manage visa eligibility
+- Manage visa requirements
+
+VISA APPLICATIONS:
+- View visa applications
+- Review visa applications
+- Update application status
+- Request additional documents
+- Approve application
+- Reject application
+- View applicant documents
+
+CUSTOMER MESSAGES:
+- View customer messages
+- Reply to customers
+- Change message status
+
+FLIGHTS:
+- View flight requests
+- Manage flight requests
+- Update flight request status
+
+HOTELS:
+- View hotel requests
+- Manage hotel requests
+- Update hotel request status
+
+CUSTOMERS:
+- View customers
+- View customer profiles
+- Manage customer information where permitted
+
+NOTIFICATIONS:
+- Send notifications
+- Manage notifications
+
+SETTINGS:
+- View settings
+- Edit settings
+
+EMPLOYEES:
+- View employees
+- Add employees
+- Edit employees
+- Deactivate employees
+- Manage permissions
+
+==================================================
+6. PREDEFINED EMPLOYEE ROLES
+==================================================
+
+Create convenient predefined employee roles, while still allowing the Super Admin to customize permissions.
+
+A. VISA EMPLOYEE
+
+Can access:
+
+- Visa Applications
+- Applicant documents
+- Visa application details
+- Visa application status
+- Required document review
+
+Cannot access:
+
+- Employee Management
+- Permission Management
+- System Settings
+- Other restricted sections
+
+unless explicitly granted by Super Admin.
+
+B. CUSTOMER SUPPORT EMPLOYEE
+
+Can access:
+
+- Customer messages
+- Customer conversations
+- Customer information needed for support
+
+Cannot access:
+
+- Employee Management
+- Visa Configuration
+- System Settings
+
+unless explicitly granted.
+
+C. FLIGHT EMPLOYEE
+
+Can access:
+
+- Flight requests
+- Flight-related customer requests
+- Flight request status
+
+Cannot access:
+
+- Visa management
+- Employee management
+- System settings
+
+unless explicitly granted.
+
+D. HOTEL EMPLOYEE
+
+Can access:
+
+- Hotel requests
+- Hotel-related customer requests
+- Hotel request status
+
+E. CUSTOM EMPLOYEE
+
+Super Admin can manually select exactly which permissions the employee receives.
+
+==================================================
+7. EMPLOYEE DASHBOARD
+==================================================
+
+After login, employees should only see dashboard sections they have permission to access.
+
+For example:
+
+A Visa Employee should NOT see or access:
+
+- Employee Management
+- System Settings
+- Financial settings
+- Permission Management
+- Other restricted areas
+
+A Customer Support Employee should NOT see or access Visa Configuration unless permission is explicitly granted.
+
+A Flight Employee should NOT see or access Visa Applications unless permission is explicitly granted.
+
+However:
+
+Hiding the menu is NOT enough.
+
+The backend must enforce the permissions.
+
+==================================================
+8. AUDIT LOG
+==================================================
+
+Add an Admin/Employee Activity Log.
+
+Record important actions such as:
+
+- Login
+- Logout
+- Failed login
+- Visa created
+- Visa edited
+- Visa disabled
+- Visa eligibility changed
+- Application status changed
+- Employee created
+- Employee permissions changed
+- Employee deactivated
+- Settings changed
+- App links changed
+- Customer message handled
+
+Each activity should record:
+
+- Employee/Admin
+- Action
+- Date/time
+- Relevant record/entity
+- IP/device information if appropriate and legally permitted
+
+Super Admin can view the activity log.
+
+==================================================
+9. SETTINGS — MOBILE APP LINKS
+==================================================
+
+Add a new section inside:
+
+Admin Dashboard → Settings
+
+Call it:
+
+"Application & Download Links"
+
+The Super Admin must be able to enter and save:
+
+1. Android App Link
+   Google Play Store URL
+
+2. iOS App Link
+   Apple App Store URL
+
+3. Optional mobile application landing page URL
+
+4. Optional support/contact URL
+
+These links MUST be stored in the database/settings system.
+
+Do NOT hard-code them inside the website.
+
+The Super Admin must be able to change the links later without changing the code.
+
+==================================================
+10. DISPLAY APP DOWNLOAD LINKS ON THE WEB PLATFORM
+==================================================
+
+The Web Platform should automatically use the links saved in:
+
+Admin Dashboard → Settings → Application & Download Links
+
+Add a section/button such as:
+
+"Download the App"
+
+or:
+
+"حمّل تطبيق ABSHER TRAVEL"
+
+The section should contain:
+
+- Download on Google Play
+- Download on the App Store
+
+Only show a store button when its URL has been configured.
+
+Do NOT display broken buttons.
+
+If only Android is configured, show Google Play.
+
+If only iOS is configured, show App Store.
+
+If both are configured, show both.
+
+The same configuration should be reusable in:
+
+- Website header
+- Website footer
+- Website mobile menu
+- Website homepage
+- Relevant promotional sections
+
+Do NOT duplicate hard-coded URLs.
+
+==================================================
+11. APP LINKS MUST BE CENTRALIZED
+==================================================
+
+The application download links must come from one central settings source.
+
+Example:
+
+settings:
+  android_app_url
+  ios_app_url
+
+The Web Platform retrieves these settings through the backend/API.
+
+This allows the Super Admin to change the Google Play or App Store link at any time without changing the code or redeploying the website.
+
+==================================================
+12. SECURITY REQUIREMENTS
+==================================================
+
+This is extremely important.
+
+Do NOT expose:
+
+- Admin credentials
+- Employee passwords
+- Password hashes
+- Private API keys
+- Database credentials
+- Sensitive configuration
+
+to the frontend.
+
+Use server-side authorization.
+
+Use secure password hashing.
+
+Use proper authentication middleware.
+
+Use permission middleware for protected API endpoints.
+
+Prevent unauthorized access through direct API requests.
+
+Prevent an employee from modifying their own permissions.
+
+Only Super Admin can manage employee permissions.
+
+==================================================
+13. DATABASE
+==================================================
+
+Use the existing production database.
+
+Do NOT create a separate database for employees.
+
+Create proper database structures for:
+
+- Admin users
+- Employees
+- Roles
+- Permissions
+- Employee-role assignments
+- Audit logs
+- Application settings
+
+The system must be persistent.
+
+Employee accounts, permissions, audit logs and settings MUST survive deployment/restart.
+
+==================================================
+14. DO NOT BREAK THE EXISTING SYSTEM
+==================================================
+
+Implement this without breaking:
+
+- ABSHER TRAVEL Web Platform
+- ABSHER TRAVEL Mobile Application
+- Visa system
+- Visa applications
+- Customer accounts
+- Customer profiles
+- Admin Dashboard
+- Existing database
+- Existing APIs
+
+The same backend/database must continue to serve:
+
+Web Platform + Mobile App + Admin Dashboard.
+
+==================================================
+15. FINAL TESTING — MANDATORY
+==================================================
+
+Before saying this task is complete, TEST all of the following.
+
+TEST 1:
+Open Admin Dashboard while logged out.
+
+Expected:
+Redirect to Admin Login.
+
+TEST 2:
+Login as Super Admin.
+
+Expected:
+Full access to all authorized sections.
+
+TEST 3:
+Create a Visa Employee.
+
+Give only Visa Application permissions.
+
+Expected:
+Employee can access Visa Applications.
+
+Expected:
+Employee CANNOT access Employee Management.
+
+Expected:
+Employee CANNOT access restricted Settings.
+
+TEST 4:
+Try accessing a restricted URL manually as the Visa Employee.
+
+Expected:
+Access is rejected.
+
+TEST 5:
+Try calling a restricted API endpoint directly as the Visa Employee.
+
+Expected:
+Backend rejects the request.
+
+TEST 6:
+Deactivate the employee.
+
+Expected:
+Employee can no longer access the Admin Dashboard.
+
+TEST 7:
+Create Customer Support Employee.
+
+Expected:
+Can access customer messages.
+
+Expected:
+Cannot access Visa Configuration unless explicitly granted.
+
+TEST 8:
+Create Flight Employee.
+
+Expected:
+Can access Flight Requests.
+
+Expected:
+Cannot access Visa Applications unless explicitly granted.
+
+TEST 9:
+Create Hotel Employee.
+
+Expected:
+Can access Hotel Requests.
+
+Expected:
+Cannot access restricted sections unless explicitly granted.
+
+TEST 10:
+Go to:
+
+Admin Dashboard → Settings → Application & Download Links
+
+Enter Google Play URL and iOS App Store URL.
+
+Save.
+
+Expected:
+The Web Platform automatically displays the configured download buttons.
+
+TEST 11:
+Change the Google Play URL.
+
+Expected:
+The website uses the new URL without requiring a code change.
+
+TEST 12:
+Restart/redeploy the application.
+
+Expected:
+Employees, permissions, settings and audit logs remain saved.
+
+==================================================
+FINAL ACCEPTANCE CRITERIA
+==================================================
+
+DO NOT tell me this task is complete just because the UI has been created.
+
+The following MUST actually work:
+
+- Admin authentication
+- Secure login
+- Secure logout
+- Protected admin routes
+- Backend authorization
+- Role-Based Access Control
+- Employee accounts
+- Employee permissions
+- Super Admin permissions
+- Employee deactivation
+- Audit logs
+- Settings storage
+- Google Play link
+- iOS App Store link
+- Website app download buttons
+- Database persistence
+
+MOST IMPORTANT:
+
+Every employee must ONLY see and access the sections assigned to them.
+
+A Visa Employee must not automatically have access to customer messages, flight management, hotel management, employee management, or system settings.
+
+A Customer Support Employee must not automatically have access to visa configuration or employee management.
+
+A Flight Employee must not automatically have access to visa applications or system settings.
+
+A Hotel Employee must not automatically have access to visa applications or employee management.
+
+ONLY the Super Admin has full access by default.
+
+The permission system must be enforced on BOTH the frontend AND backend.
+
+The Admin Dashboard MUST be properly protected before ABSHER TRAVEL is launched publicly.
+
+Do not consider the task complete until all of the above has been implemented, connected to the existing database, and tested successfully.

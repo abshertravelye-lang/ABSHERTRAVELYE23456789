@@ -11,6 +11,8 @@ import {
   DeleteProgramParams,
 } from "@workspace/api-zod";
 
+import { requireAuth, requirePermission } from "../middleware/auth";
+
 const router = Router();
 
 const toResponse = (r: typeof programsTable.$inferSelect) => ({
@@ -45,7 +47,7 @@ router.get("/programs", async (req, res) => {
   }
 });
 
-router.post("/programs", async (req, res) => {
+router.post("/programs", requireAuth, requirePermission("visa_config"), async (req, res) => {
   try {
     const body = CreateProgramBody.parse(req.body);
     const data: Record<string, unknown> = { ...body };
@@ -73,7 +75,7 @@ router.get("/programs/:id", async (req, res) => {
   }
 });
 
-router.patch("/programs/:id", async (req, res) => {
+router.patch("/programs/:id", requireAuth, requirePermission("visa_config"), async (req, res) => {
   try {
     const { id } = UpdateProgramParams.parse({ id: Number(req.params.id) });
     const body = UpdateProgramBody.parse(req.body);
@@ -92,7 +94,7 @@ router.patch("/programs/:id", async (req, res) => {
   }
 });
 
-router.delete("/programs/:id", async (req, res) => {
+router.delete("/programs/:id", requireAuth, requirePermission("visa_config"), async (req, res) => {
   try {
     const { id } = DeleteProgramParams.parse({ id: Number(req.params.id) });
     await db

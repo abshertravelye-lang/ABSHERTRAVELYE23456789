@@ -1,0 +1,475 @@
+IMPORTANT — UMRAH VISA APPLICATION FLOW MUST BE IMPLEMENTED EXACTLY AS DESCRIBED BELOW
+
+Add a dedicated and separate application flow for the UMRAH VISA.
+
+This flow MUST work identically on:
+
+1. ABSHER TRAVEL Web Platform
+2. ABSHER TRAVEL Mobile Application (iOS + Android)
+
+Both platforms MUST use the same backend, API, PostgreSQL database, user accounts, applications, documents, payment records, and Admin Dashboard.
+
+DO NOT create separate logic for Web and Mobile.
+
+==================================================
+1. LOGIN AND ACCOUNT REQUIREMENT
+==================================================
+
+The customer MUST already have:
+
+- A registered ABSHER TRAVEL account
+- A successful login
+- A completed user profile
+
+The customer cannot submit an Umrah visa application as a guest.
+
+==================================================
+2. START UMRAH VISA APPLICATION
+==================================================
+
+When the customer clicks:
+
+"Apply for Umrah Visa"
+
+the system must immediately show the first question:
+
+"Do you have a sponsor/host in the Kingdom of Saudi Arabia?"
+
+Options:
+
+YES
+NO
+
+==================================================
+3. IF CUSTOMER SELECTS YES
+==================================================
+
+Immediately display:
+
+"Upload Sponsor Residence ID"
+
+The sponsor's Saudi residence ID image must be uploaded.
+
+The upload must be a REAL file upload, not a URL.
+
+After the residence image is successfully uploaded, the system should validate/process the document.
+
+Only after successful upload should the next field appear:
+
+"Sponsor Mobile Number"
+
+The mobile number must start with:
+
++966
+
+and the customer completes the remaining digits.
+
+Example:
+
++966 5XXXXXXXX
+
+The sponsor information must be stored with the Umrah application.
+
+==================================================
+4. UMRAH PILGRIM INFORMATION
+==================================================
+
+After the sponsor information is completed, continue directly to:
+
+"Pilgrim Information"
+
+The pilgrim information should be as simple and automated as possible.
+
+The customer should NOT be asked to manually enter information that can be extracted automatically from the passport.
+
+Required:
+
+1. Passport Image
+2. Personal Photo
+3. Pilgrim Contact Information
+4. Pilgrim Mobile Number
+5. Emergency Contact
+
+For Emergency Contact, require:
+
+- Name
+- Relationship
+- Mobile Number
+
+The passport image must be processed using Passport OCR / MRZ scanning.
+
+The system should automatically extract the available passport information, such as:
+
+- Full name
+- Passport number
+- Nationality
+- Date of birth
+- Gender
+- Passport issue date
+- Passport expiry date
+- Other available MRZ/passport information
+
+The extracted information must automatically populate the appropriate fields.
+
+The customer should only manually enter information that cannot reliably be extracted from the passport.
+
+==================================================
+5. PERSONAL PHOTO VALIDATION
+==================================================
+
+The personal photo must be uploaded as a real image file.
+
+The system must validate the photo according to the configured application requirements.
+
+If the photo does not meet the requirements:
+
+DO NOT accept it.
+
+Show a clear error explaining that the photo is not acceptable and allow the customer to replace it.
+
+If the photo passes validation:
+
+Show a clear success indicator:
+
+"Personal photo accepted"
+
+Do not display a broken image or accept an upload while the image is not actually available.
+
+==================================================
+6. PASSPORT VALIDATION
+==================================================
+
+The passport image must also be a real file upload.
+
+After upload:
+
+→ Process passport
+→ Run OCR/MRZ extraction
+→ Extract passport information
+→ Populate the application fields
+→ Display the extracted information for customer review
+
+If OCR/MRZ processing fails:
+
+Do not silently continue.
+
+Show a clear message:
+
+"Unable to read the passport. Please upload a clearer passport image."
+
+Allow the customer to replace the passport image.
+
+==================================================
+7. UMRAH DECLARATION
+==================================================
+
+Before payment, the customer must read and accept the Umrah Visa declaration and terms.
+
+The declaration must clearly explain that the applicant and sponsor are responsible for complying with the applicable Umrah and Saudi regulations.
+
+Include the configured warning regarding penalties for violations, including the stated possibility of a fine of up to SAR 50,000 and imprisonment for the applicant and sponsor.
+
+IMPORTANT:
+
+The exact legal wording and penalties should be configurable from the Admin Dashboard so they can be updated if the applicable Saudi regulations change.
+
+The customer must actively check:
+
+"I have read and agree to the Umrah Visa declaration and terms."
+
+The customer cannot continue without accepting the declaration.
+
+==================================================
+8. PAYMENT — UMRAH VISA
+==================================================
+
+Umrah Visa requires upfront payment.
+
+Therefore, the customer must NOT be allowed to submit the final application without successfully completing the required payment.
+
+The Umrah visa fee must be configurable based on nationality.
+
+Different nationalities may have different Umrah visa prices.
+
+The Admin Dashboard must allow the Super Admin to configure:
+
+- Nationality
+- Umrah visa price
+- Currency
+- Payment status
+- Active/inactive status
+
+The system must automatically determine the correct price based on the customer's nationality.
+
+Do NOT hard-code one Umrah price for every nationality.
+
+The customer must see before payment:
+
+- Umrah Visa
+- Applicant name
+- Nationality
+- Sponsor information
+- Total amount
+- Currency
+- Amount currently due
+- Payment status
+
+Then:
+
+Review Application
+→ Accept Declaration
+→ Pay
+→ Payment Provider
+→ Backend Verification
+→ Payment Successful
+→ Submit Application
+
+The application must NOT be marked as paid based only on a frontend response.
+
+The backend must verify the transaction through the payment provider.
+
+==================================================
+9. FINAL APPLICATION REVIEW
+==================================================
+
+Before payment/final submission, show a complete review page containing:
+
+SPONSOR INFORMATION
+- Sponsor residence information
+- Sponsor mobile number
+
+PILGRIM INFORMATION
+- Full name
+- Nationality
+- Passport number
+- Date of birth
+- Gender
+- Passport expiry
+- Contact information
+- Emergency contact
+
+DOCUMENTS
+- Passport image
+- Personal photo
+- Sponsor residence image
+
+PAYMENT
+- Umrah Visa fee
+- Currency
+- Payment status
+
+DECLARATION
+- Acceptance status
+
+The customer must be able to review the information before confirming.
+
+==================================================
+10. FINAL SUBMISSION
+==================================================
+
+After successful payment and confirmation:
+
+Create the application.
+
+Generate a unique:
+
+"Application Number"
+
+The final screen must display:
+
+"Your Umrah Visa application has been submitted successfully."
+
+Show:
+
+- Application Number
+- Applicant name
+- Umrah Visa
+- Payment status
+- Application status
+- Submission date/time
+
+The application must immediately appear in the Admin Dashboard.
+
+==================================================
+11. IMPORTANT — NO BACK BUTTON AFTER FINAL SUBMISSION
+==================================================
+
+After the customer reaches the final application confirmation screen:
+
+DO NOT allow the customer to return to previous application steps using the application flow's Back button.
+
+The customer may only:
+
+"Return to Home"
+
+The purpose is to prevent accidental modification or duplicate submission after the application has been finalized.
+
+IMPORTANT:
+
+This restriction applies to the finalized submission stage.
+
+Do not disable the normal back navigation before final submission if the customer needs to correct information during the application process.
+
+==================================================
+12. ADMIN DASHBOARD
+==================================================
+
+Create a dedicated Umrah Visa section in the Admin Dashboard.
+
+The Admin must be able to view:
+
+- Application Number
+- Applicant
+- Nationality
+- Sponsor
+- Sponsor mobile number
+- Passport information
+- Application status
+- Payment status
+- Payment amount
+- Payment transaction/reference
+- Submission date
+- Uploaded documents
+
+The Admin must be able to configure Umrah visa pricing by nationality.
+
+Example:
+
+Nationality A → USD XXX
+Nationality B → USD XXX
+Nationality C → USD XXX
+
+Do NOT use a single hard-coded price.
+
+==================================================
+13. DATABASE
+==================================================
+
+Store all Umrah applications permanently in the existing PostgreSQL database.
+
+Do NOT create a separate temporary database.
+
+Each Umrah application must be linked to:
+
+- Customer/User ID
+- Application Number
+- Sponsor information
+- Pilgrim information
+- Passport data
+- Passport document
+- Personal photo
+- Sponsor residence document
+- Emergency contact
+- Declaration acceptance
+- Payment record
+- Application status
+- Payment status
+- Created date
+- Updated date
+
+The same records must be accessible from:
+
+Web
+Mobile
+Admin Dashboard
+
+==================================================
+14. WEB + MOBILE REQUIREMENT
+==================================================
+
+THIS IS CRITICAL.
+
+The Umrah Visa flow must work on BOTH:
+
+ABSher TRAVEL WEB PLATFORM
+AND
+ABSher TRAVEL MOBILE APP
+
+The flow must be identical:
+
+Login
+→ Apply for Umrah Visa
+→ Sponsor Question
+→ Sponsor Residence Upload
+→ Sponsor Mobile
+→ Passport Upload
+→ Passport OCR/MRZ
+→ Pilgrim Information
+→ Personal Photo
+→ Contact Information
+→ Emergency Contact
+→ Declaration
+→ Application Review
+→ Payment
+→ Backend Payment Verification
+→ Application Submission
+→ Application Number
+→ Application Tracking
+
+If the customer starts on Web, the application must be available on Mobile.
+
+If the customer starts on Mobile, the application must be available on Web.
+
+The Admin Dashboard must immediately receive the same application.
+
+==================================================
+15. IMPORTANT — PREVENT DUPLICATE SUBMISSIONS
+==================================================
+
+The system must prevent accidental duplicate Umrah applications caused by:
+
+- Double clicking the submit button
+- Refreshing the page
+- Network retry
+- Returning from payment
+- App restart
+- Browser refresh
+
+Use a proper backend-controlled submission process and unique application number.
+
+==================================================
+16. TEST BEFORE COMPLETION
+==================================================
+
+Test the complete Umrah application flow on:
+
+1. Web Platform
+2. Mobile Application
+3. Admin Dashboard
+
+Test:
+
+- Customer registration/login
+- Completed profile
+- Sponsor = YES
+- Sponsor residence upload
+- Sponsor mobile number
+- Passport upload
+- Passport OCR/MRZ
+- Personal photo upload
+- Photo validation
+- Pilgrim information
+- Emergency contact
+- Declaration
+- Nationality-based pricing
+- Payment
+- Backend payment verification
+- Final submission
+- Application number
+- Admin Dashboard visibility
+- Application tracking
+
+Do NOT consider this feature complete if:
+
+- Passport OCR does not work
+- Images upload but do not display
+- Payment is fake
+- Payment is confirmed only by frontend
+- Application does not appear in Admin Dashboard
+- Web and Mobile use different application data
+- Nationality-based pricing does not work
+- Customer can submit without payment
+- Duplicate applications can be created
+- Finalized applications can be modified through the previous-step flow
+
+The Umrah Visa must be implemented as a complete production-ready workflow using the existing ABSHER TRAVEL backend and PostgreSQL database.

@@ -1,3 +1,4 @@
+import { randomUUID } from "crypto";
 import jwt from "jsonwebtoken";
 
 const ACCESS_SECRET = process.env.JWT_ACCESS_SECRET ?? "absher-access-dev-secret-change-in-prod";
@@ -18,7 +19,10 @@ export function signAccessToken(payload: Omit<JwtPayload, "iat" | "exp">): strin
 }
 
 export function signRefreshToken(payload: Omit<JwtPayload, "iat" | "exp">): string {
-  return jwt.sign(payload, REFRESH_SECRET, { expiresIn: REFRESH_EXPIRES });
+  // jwtid makes every refresh token unique even when two are issued in the
+  // same second for the same user (JWT iat has 1-second resolution) —
+  // otherwise the token-hash unique constraint in user_sessions collides.
+  return jwt.sign(payload, REFRESH_SECRET, { expiresIn: REFRESH_EXPIRES, jwtid: randomUUID() });
 }
 
 export function verifyAccessToken(token: string): JwtPayload {

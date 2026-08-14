@@ -1,0 +1,126 @@
+import React, { useEffect, useRef } from 'react';
+import { Animated, Modal, Pressable, StyleSheet, View, Dimensions, PanResponder } from 'react-native';
+import { useColors } from '@/hooks/useColors';
+
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+
+export interface BottomSheetProps {
+  visible: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
+}
+
+export function BottomSheet({ visible, onClose, children }: BottomSheetProps) {
+  const c = useColors();
+  const panY = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (visible) {
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.spring(panY, {
+          toValue: 0,
+          bounciness: 6,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else {
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 0,
+          duration: 250,
+          useNativeDriver: true,
+        }),
+        Animated.timing(panY, {
+          toValue: SCREEN_HEIGHT,
+          duration: 250,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  }, [visible, panY, fadeAnim]);
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onPanResponderMove: (e, gestureState) => {
+        if (gestureState.dy > 0) {
+          panY.setValue(gestureState.dy);
+        }
+      },
+      onPanResponderRelease: (e, gestureState) => {
+        if (gestureState.dy > 100 || gestureState.vy > 1.5) {
+          onClose();
+        } else {
+          Animated.spring(panY, {
+            toValue: 0,
+            bounciness: 6,
+            useNativeDriver: true,
+          }).start();
+        }
+      },
+    })
+  ).current;
+
+  if (!visible) return null;
+
+  return (
+    <Modal visible transparent animationType="none" onRequestClose={onClose} statusBarTranslucent>
+      <Animated.View style={[styles.backdrop, { opacity: fadeAnim }]}>
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
+      </Animated.View>
+
+      <Animated.View
+        style={[
+          styles.sheet,
+          {
+            backgroundColor: c.card,
+            transform: [{ translateY: panY }],
+            paddingBottom: 40, // safe area padding
+          },
+        ]}
+        {...panResponder.panHandlers}
+      >
+        <View style={styles.handleContainer}>
+          <View style={[styles.handle, { backgroundColor: c.border }]} />
+        </View>
+        <View style={styles.content}>{children}</View>
+      </Animated.View>
+    </Modal>
+  );
+}
+
+const styles = StyleSheet.create({
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(3, 27, 58, 0.4)', // Deep navy transparent
+  },
+  sheet: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    boxShadow: '0px -4px 12px rgba(0,0,0,0.1)',
+    elevation: 20,
+    maxHeight: SCREEN_HEIGHT * 0.85,
+  },
+  handleContainer: {
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  handle: {
+    width: 40,
+    height: 5,
+    borderRadius: 3,
+  },
+  content: {
+    paddingHorizontal: 20,
+  },
+});

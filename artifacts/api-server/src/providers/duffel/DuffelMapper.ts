@@ -40,12 +40,19 @@ interface DuffelSlice {
   segments: DuffelSegment[];
 }
 
+export interface DuffelOfferPassenger {
+  id: string;
+  type?: "adult" | "child" | "infant_without_seat";
+  age?: number;
+}
+
 export interface DuffelOffer {
   id: string;
   total_amount: string;
   total_currency: string;
   base_amount: string | null;
   tax_amount: string | null;
+  passengers?: DuffelOfferPassenger[];
   slices: DuffelSlice[];
   owner: DuffelCarrier;
   conditions?: {

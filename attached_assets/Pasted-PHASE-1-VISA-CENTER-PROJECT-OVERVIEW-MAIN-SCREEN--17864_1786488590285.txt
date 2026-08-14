@@ -1,0 +1,2350 @@
+PHASE 1
+VISA CENTER - PROJECT OVERVIEW & MAIN SCREEN
+======================================================================
+
+Project Goal
+
+Build a world-class Visa Center that provides the fastest, easiest, and most professional visa application experience in the Middle East.
+
+The Visa Center must have a premium UI/UX, modern architecture, intelligent automation, and a smooth user journey that minimizes user effort.
+
+The system should be significantly more advanced than traditional visa platforms by reducing manual input, increasing automation, and simplifying every application step.
+
+======================================================================
+GENERAL CONCEPT
+======================================================================
+
+The visa system should rely on the customer's Profile.
+
+The customer creates and completes their profile only once after registration.
+
+The profile stores all personal information, passport information, residency information, contact information, and any required permanent data.
+
+Whenever the customer applies for any visa, the system automatically retrieves all profile information without requiring the customer to enter the same information again.
+
+The visa application process should only require uploading the required documents, reviewing the application, selecting the payment method, and submitting the application.
+
+======================================================================
+MAIN VISA PAGE
+======================================================================
+
+The Visa Center home page must be modern, elegant, responsive, and premium.
+
+The interface should support Arabic (RTL) and English (LTR).
+
+Page Layout
+
+Top Navigation
+
+• Company Logo
+• Search Bar
+• Notifications
+• Customer Profile
+• Language Switch
+• Currency Switch
+
+======================================================================
+SMART SEARCH
+======================================================================
+
+A powerful intelligent search bar should allow searching by:
+
+• Country Name
+• Visa Type
+• Keywords
+
+The search should display instant suggestions while typing.
+
+======================================================================
+SMART FILTERS
+======================================================================
+
+The filter section should be beautifully designed.
+
+Available Filters
+
+• Destination Country
+
+• Visa Type
+
+- Tourist
+- Business
+- Visit
+- Medical
+- Study
+- Work
+- Investment
+- Transit
+- Other
+
+• Processing Time
+
+• Stay Duration
+
+• Entry Type
+
+- Single Entry
+- Multiple Entry
+
+• Price Range
+
+• Sort By
+
+- Recommended
+- Most Popular
+- Lowest Price
+- Fastest Processing
+- Newest
+
+======================================================================
+AUTOMATIC ELIGIBILITY SYSTEM
+======================================================================
+
+The customer should NEVER be asked to select nationality or residency every time.
+
+Instead,
+
+The system automatically reads:
+
+• Nationality
+• Current Residency
+• Passport Type
+
+directly from the user's profile.
+
+The system then automatically:
+
+• Shows visas available for this customer.
+
+• Hides unavailable visas.
+
+• Prevents applications for unsupported nationalities.
+
+• Displays friendly guidance when no visas are available.
+
+No manual selection is required.
+
+======================================================================
+VISA CARDS
+======================================================================
+
+Every visa should be displayed inside a premium card.
+
+Each card contains:
+
+• High-quality country image
+
+• Country flag
+
+• Country name
+
+• Visa type
+
+• Processing time
+
+• Stay duration
+
+• Starting price
+
+• Entry type
+
+• Electronic Visa badge (if available)
+
+• Popular badge
+
+• Special Offer badge
+
+Buttons
+
+• View Details
+
+• Apply Now
+
+Cards should include smooth animations when scrolling or touching.
+
+======================================================================
+RECOMMENDED VISAS
+======================================================================
+
+The home page should include sections such as:
+
+Recommended For You
+
+Popular Destinations
+
+Fast Approval
+
+Lowest Price
+
+Recently Added
+
+Special Offers
+
+These sections should automatically update based on the Admin Dashboard.
+
+======================================================================
+PROMOTIONAL BANNERS
+======================================================================
+
+The Admin Dashboard should allow adding promotional banners.
+
+Examples:
+
+Visa Discounts
+
+Seasonal Offers
+
+Travel Campaigns
+
+New Countries
+
+Limited-Time Promotions
+
+Banner slider should support:
+
+Images
+
+Videos
+
+Buttons
+
+Automatic Sliding
+
+Manual Sliding
+
+======================================================================
+COUNTRY PAGE
+======================================================================
+
+When selecting a country, users should see:
+
+Country Cover Image
+
+Country Flag
+
+Country Name
+
+Short Introduction
+
+Available Visa Types
+
+Average Processing Time
+
+Average Stay Duration
+
+Starting Price
+
+Apply Button
+
+======================================================================
+PERFORMANCE
+======================================================================
+
+The Visa Center should load extremely fast.
+
+Support lazy loading.
+
+Cache frequently accessed data.
+
+Optimize all images.
+
+Ensure smooth scrolling.
+
+No lag or freezing.
+
+======================================================================
+UI / UX REQUIREMENTS
+======================================================================
+
+Premium luxury design.
+
+Modern cards.
+
+Rounded corners.
+
+Beautiful shadows.
+
+Professional icons.
+
+Smooth animations.
+
+Dark Mode.
+
+Light Mode.
+
+Fully Responsive.
+
+Android
+
+iOS
+
+Tablet
+
+Desktop
+
+Web
+
+The design should compete with the world's leading travel and visa platforms............................======================================================================
+PHASE 2
+VISA DETAILS PAGE & SMART APPLICATION SYSTEM
+======================================================================
+
+PROJECT GOAL
+
+The Visa Details page must provide all information the customer needs before applying, with a premium user experience that minimizes unnecessary steps.
+
+The application process should be simple, intelligent, and rely on the customer's completed profile instead of asking for personal information repeatedly.
+
+======================================================================
+VISA DETAILS PAGE
+======================================================================
+
+When the customer clicks on "View Details" or "Apply Now", a premium Visa Details page should open.
+
+The page must have a luxury design with smooth animations and modern UI.
+
+======================================================================
+HEADER SECTION
+======================================================================
+
+Display a full-width high-quality cover image of the destination country.
+
+Show:
+
+• Country Flag
+
+• Country Name
+
+• Visa Type
+
+• Short Description
+
+• Visa Availability Status
+
+Example:
+
+Available Now
+
+Limited Availability
+
+Coming Soon
+
+======================================================================
+QUICK INFORMATION CARD
+======================================================================
+
+A premium information card displaying:
+
+• Visa Price
+
+• Processing Time
+
+• Stay Duration
+
+• Visa Validity
+
+• Number of Entries
+
+(Single Entry / Multiple Entry)
+
+• Visa Extension
+
+(Allowed / Not Allowed)
+
+• Electronic Visa Availability
+
+• Refund Policy
+
+======================================================================
+REQUIRED DOCUMENTS
+======================================================================
+
+Display all required documents using beautiful cards.
+
+Each document includes:
+
+• Icon
+
+• Document Name
+
+• Description
+
+• Accepted File Types
+
+• Maximum File Size
+
+The Admin Dashboard should allow adding or removing required documents without modifying the application.
+
+======================================================================
+VISA CONDITIONS
+======================================================================
+
+Display:
+
+Eligibility Requirements
+
+Terms and Conditions
+
+Important Notes
+
+Travel Restrictions
+
+Embassy Requirements
+
+Additional Information
+
+Everything should be manageable from the Admin Dashboard.
+
+======================================================================
+FREQUENTLY ASKED QUESTIONS
+======================================================================
+
+Show expandable FAQ cards.
+
+Example:
+
+How long does approval take?
+
+Can I extend the visa?
+
+Can I cancel my application?
+
+Is the fee refundable?
+
+Can I apply again?
+
+The Admin can edit all questions and answers.
+
+======================================================================
+APPLY BUTTON
+======================================================================
+
+At the bottom of the page display a large premium button.
+
+Apply Now
+
+======================================================================
+SMART APPLICATION SYSTEM
+======================================================================
+
+When the customer presses Apply Now...
+
+The application MUST NOT ask the customer to enter personal information again.
+
+Instead...
+
+The system automatically retrieves all information from the customer's completed profile.
+
+Including:
+
+Full Name
+
+Passport Information
+
+Nationality
+
+Date of Birth
+
+Gender
+
+Current Residency
+
+Occupation
+
+Phone Number
+
+Email Address
+
+Address
+
+Passport Expiry
+
+Passport Issue Date
+
+Passport Number
+
+Residence Information
+
+Any additional profile information
+
+No manual entry should be required.
+
+======================================================================
+PROFILE VALIDATION
+======================================================================
+
+Before starting the application...
+
+The system verifies whether the customer's profile is complete.
+
+If any required information is missing...
+
+Display a friendly message:
+
+Please complete your profile before applying for this visa.
+
+Provide a button:
+
+Complete Profile
+
+The customer cannot continue until all mandatory information is completed.
+
+======================================================================
+APPLICATION STEP 1
+UPLOAD DOCUMENTS
+======================================================================
+
+This is the first application step.
+
+The page should contain premium upload cards.
+
+------------------------------------------------
+
+CARD 1
+
+Passport Copy
+
+Upload Passport
+
+Preview Image
+
+Replace Image
+
+Delete Image
+
+Supported:
+
+JPG
+
+PNG
+
+PDF
+
+------------------------------------------------
+
+CARD 2
+
+Residence Card
+
+Front Side
+
+Back Side
+
+Preview Images
+
+Replace Images
+
+Delete Images
+
+------------------------------------------------
+
+CARD 3
+
+Additional Documents
+
+Upload one or multiple files.
+
+Examples:
+
+Invitation Letter
+
+Hotel Booking
+
+Flight Reservation
+
+Bank Statement
+
+Medical Report
+
+Employment Letter
+
+Any document defined by the Admin Dashboard.
+
+======================================================================
+SMART FILE VALIDATION
+======================================================================
+
+Immediately after upload...
+
+The system automatically verifies:
+
+Image Quality
+
+File Size
+
+Supported Format
+
+Corrupted Files
+
+Unreadable Images
+
+Duplicate Files
+
+If an issue exists...
+
+Display an instant validation message before continuing.
+
+======================================================================
+APPLICATION STEP 2
+APPLICATION REVIEW
+======================================================================
+
+After all required documents are uploaded...
+
+The customer proceeds to the Review page.
+
+The Review page displays:
+
+Customer Information
+(Read-only from Profile)
+
+Passport Information
+
+Residence Information
+
+Uploaded Documents
+
+Country
+
+Visa Type
+
+Visa Fee
+
+Additional Services
+
+Estimated Processing Time
+
+Stay Duration
+
+Entry Type
+
+Application Summary
+
+Total Amount
+
+The customer cannot edit personal information from this page.
+
+If changes are needed...
+
+A button should redirect the customer to:
+
+My Profile
+
+After updating the profile...
+
+The application automatically refreshes the information.
+
+======================================================================
+APPLICATION SECURITY
+======================================================================
+
+The application should automatically save progress.
+
+If the customer closes the application...
+
+They can continue later from where they stopped.
+
+Prevent duplicate applications.
+
+Prevent submitting incomplete applications.
+
+Prevent uploading unsupported files.
+
+Prevent missing required documents.
+
+Ensure maximum security and data validation throughout the application process...............................======================================================================
+PHASE 3
+PAYMENT SYSTEM, APPLICATION TRACKING & ADMIN DASHBOARD
+======================================================================
+
+PROJECT GOAL
+
+Build a flexible, secure, intelligent, and scalable payment system that supports multiple payment methods depending on the visa requirements.
+
+The Admin Dashboard must have full control over payment methods, visa workflow, application status, fees, countries, required documents, and customer notifications.
+
+======================================================================
+APPLICATION STEP 3
+PAYMENT METHOD
+======================================================================
+
+After the customer reviews the application...
+
+The customer proceeds to the Payment page.
+
+The payment page should have a premium design.
+
+Display:
+
+Application Summary
+
+Country
+
+Visa Type
+
+Reference Number
+
+Customer Name
+
+Application Fee
+
+Additional Services
+
+Discount
+
+Tax
+
+Total Amount
+
+======================================================================
+PAYMENT OPTIONS
+======================================================================
+
+The Admin Dashboard should determine which payment options are available for each visa individually.
+
+The system supports the following payment methods:
+
+------------------------------------------------
+
+OPTION 1
+
+Pay After Initial Approval
+
+The customer submits the application without paying.
+
+The application status becomes:
+
+Waiting for Initial Review
+
+After the admin performs the first review...
+
+If approved...
+
+The customer automatically receives:
+
+Push Notification
+
+Email
+
+SMS (Optional)
+
+In-App Notification
+
+The notification contains:
+
+Your application has received initial approval.
+
+Please complete the payment to continue processing your visa.
+
+A payment button appears inside the application details.
+
+------------------------------------------------
+
+OPTION 2
+
+Partial Payment
+
+The admin defines:
+
+Deposit Amount
+
+Remaining Amount
+
+Example
+
+Visa Price
+
+100 USD
+
+Deposit
+
+30 USD
+
+Remaining
+
+70 USD
+
+The customer pays only the deposit first.
+
+After final approval...
+
+The customer is notified to pay the remaining balance.
+
+------------------------------------------------
+
+OPTION 3
+
+Full Payment
+
+The customer pays the full visa amount immediately.
+
+The application enters processing after payment confirmation.
+
+------------------------------------------------
+
+OPTION 4
+
+Wallet Payment
+
+The application includes a built-in Digital Wallet.
+
+Customers can pay directly using their wallet balance.
+
+The wallet page displays:
+
+Current Balance
+
+Recent Transactions
+
+Recharge Wallet
+
+Withdraw (Optional)
+
+Wallet History
+
+If balance is insufficient...
+
+Display:
+
+Insufficient Balance
+
+Recharge Wallet
+
+======================================================================
+SUPPORTED PAYMENT GATEWAYS
+======================================================================
+
+The system should support integration with:
+
+Visa
+
+MasterCard
+
+Apple Pay
+
+Google Pay
+
+Qi Card
+
+Zain Cash
+
+Asia Hawala
+
+Bank Transfer
+
+Digital Wallet
+
+Future payment gateways can be added without changing the application.
+
+======================================================================
+PAYMENT SECURITY
+======================================================================
+
+All payments must support:
+
+Encrypted Transactions
+
+Secure Payment Gateway
+
+Fraud Detection
+
+Duplicate Payment Prevention
+
+Automatic Receipt Generation
+
+Automatic Invoice Generation
+
+Transaction Logs
+
+Refund Management
+
+======================================================================
+PAYMENT SUCCESS PAGE
+======================================================================
+
+After successful payment...
+
+Display a premium confirmation page.
+
+Include:
+
+Success Animation
+
+Application Number
+
+Reference Number
+
+Visa Name
+
+Country
+
+Payment Amount
+
+Payment Method
+
+Transaction Number
+
+Date
+
+Estimated Processing Time
+
+Buttons
+
+Download Invoice PDF
+
+Track Application
+
+Return Home
+
+======================================================================
+APPLICATION TRACKING
+======================================================================
+
+Customers can track every application in real time.
+
+Application Timeline
+
+Application Received
+
+Profile Verified
+
+Waiting for Documents
+
+Documents Received
+
+Initial Review
+
+Initial Approval
+
+Waiting for Payment
+
+Payment Received
+
+Embassy Submission
+
+Under Processing
+
+Additional Documents Required
+
+Visa Approved
+
+Visa Issued
+
+Completed
+
+Rejected
+
+Cancelled
+
+Every stage should display:
+
+Status
+
+Date
+
+Time
+
+Admin Notes
+
+Estimated Remaining Time
+
+======================================================================
+APPLICATION DETAILS
+======================================================================
+
+Inside each application...
+
+Display
+
+Application Number
+
+Reference Number
+
+Customer Information
+
+Visa Information
+
+Uploaded Documents
+
+Payment Details
+
+Status Timeline
+
+Invoice
+
+Admin Notes
+
+Notifications
+
+======================================================================
+SMART NOTIFICATIONS
+======================================================================
+
+Automatically send notifications when:
+
+Application Submitted
+
+Documents Missing
+
+Initial Approval
+
+Payment Required
+
+Payment Received
+
+Embassy Submission
+
+Additional Documents Requested
+
+Visa Approved
+
+Visa Issued
+
+Application Rejected
+
+Application Cancelled
+
+Notifications should support:
+
+Push Notification
+
+Email
+
+SMS (Optional)
+
+In-App Notification
+
+======================================================================
+ADMIN DASHBOARD
+======================================================================
+
+The Admin Dashboard should provide complete control over the visa system.
+
+======================================================================
+COUNTRY MANAGEMENT
+======================================================================
+
+The admin can:
+
+Add Country
+
+Edit Country
+
+Delete/Disable Country
+
+Upload Country Cover Image
+
+Upload Flag
+
+Enable or Disable Country
+
+Arrange Display Order
+
+======================================================================
+VISA MANAGEMENT
+======================================================================
+
+The admin can:
+
+Create Unlimited Visa Types
+
+Tourist
+
+Business
+
+Medical
+
+Study
+
+Visit
+
+Investment
+
+Transit
+
+Work
+
+Other
+
+Each visa contains:
+
+Country
+
+Visa Name
+
+Description
+
+Price
+
+Currency
+
+Processing Time
+
+Stay Duration
+
+Visa Validity
+
+Entry Type
+
+Refund Policy
+
+Visa Extension
+
+Required Documents
+
+Terms
+
+Conditions
+
+Notes
+
+FAQs
+
+Display Status
+
+Featured Badge
+
+Popular Badge
+
+Special Offer Badge
+
+======================================================================
+ELIGIBILITY RULES
+======================================================================
+
+The Admin should define:
+
+Allowed Nationalities
+
+Blocked Nationalities
+
+Allowed Residency Countries
+
+Passport Requirements
+
+Age Restrictions
+
+Special Conditions
+
+The system automatically checks eligibility before allowing an application.
+
+======================================================================
+DOCUMENT MANAGEMENT
+======================================================================
+
+The Admin can:
+
+Add Required Documents
+
+Remove Documents
+
+Change Required Documents
+
+Make Documents Optional or Mandatory
+
+Set Accepted File Types
+
+Set Maximum File Size
+
+======================================================================
+PAYMENT MANAGEMENT
+======================================================================
+
+The Admin can configure:
+
+Pay After Approval
+
+Deposit Payment
+
+Full Payment
+
+Wallet Payment
+
+Payment Deadlines
+
+Automatic Payment Reminders
+
+======================================================================
+REPORTS
+======================================================================
+
+Dashboard statistics include:
+
+Total Applications
+
+Applications Today
+
+Pending Applications
+
+Approved Applications
+
+Rejected Applications
+
+Completed Applications
+
+Revenue
+
+Pending Payments
+
+Most Requested Countries
+
+Most Requested Visa Types
+
+Top Customers
+
+Average Processing Time
+
+======================================================================
+PERMISSIONS
+======================================================================
+
+Support unlimited employee roles.
+
+Examples:
+
+Super Admin
+
+Visa Manager
+
+Visa Officer
+
+Finance Officer
+
+Customer Support
+
+Marketing
+
+Each role should have custom permissions.
+
+======================================================================
+FINAL GOAL
+======================================================================
+
+The final system should become one of the most advanced visa application platforms in the Middle East, offering a luxurious user experience, intelligent automation, flexible payment options, powerful management tools, and a seamless application journey for both customers and administrators.....................======================================================================
+PHASE 4
+PROFESSIONAL VISA ADMIN DASHBOARD
+======================================================================
+
+PROJECT GOAL
+
+Build a modern, premium, enterprise-level Admin Dashboard that gives administrators complete control over every aspect of the Visa Management System.
+
+The dashboard must be fast, secure, responsive, and easy to use while providing powerful management tools and real-time statistics.
+
+======================================================================
+ADMIN DASHBOARD HOME
+======================================================================
+
+The dashboard home page should display real-time statistics using modern cards and interactive charts.
+
+Dashboard Cards
+
+• Total Visa Applications
+
+• New Applications Today
+
+• Applications Under Review
+
+• Waiting for Customer Documents
+
+• Waiting for Initial Approval
+
+• Waiting for Payment
+
+• Paid Applications
+
+• Applications Submitted to Embassy
+
+• Approved Applications
+
+• Rejected Applications
+
+• Completed Applications
+
+• Cancelled Applications
+
+• Total Revenue
+
+• Pending Revenue
+
+• Wallet Balance
+
+• Most Requested Country
+
+• Most Requested Visa Type
+
+• Average Processing Time
+
+• Active Customers
+
+• New Customers
+
+======================================================================
+REAL-TIME ACTIVITY
+======================================================================
+
+Display a live activity feed.
+
+Examples
+
+New Application Received
+
+Payment Completed
+
+Customer Uploaded Documents
+
+Visa Approved
+
+Application Rejected
+
+Customer Registered
+
+Employee Updated Application
+
+======================================================================
+APPLICATION MANAGEMENT
+======================================================================
+
+Display all applications inside a professional data table.
+
+Columns
+
+Application Number
+
+Reference Number
+
+Customer Name
+
+Nationality
+
+Residence Country
+
+Destination Country
+
+Visa Type
+
+Application Date
+
+Current Status
+
+Assigned Employee
+
+Payment Status
+
+Processing Time
+
+Actions
+
+Search
+
+Advanced Filters
+
+Sort
+
+Export
+
+Print
+
+======================================================================
+APPLICATION DETAILS
+======================================================================
+
+When opening an application display:
+
+Customer Profile
+
+Passport Information
+
+Residence Information
+
+Uploaded Documents
+
+Application Timeline
+
+Internal Notes
+
+Payment Details
+
+Invoice
+
+Customer Messages
+
+Employee Notes
+
+Admin Logs
+
+======================================================================
+APPLICATION STATUS MANAGEMENT
+======================================================================
+
+The Admin can change application status.
+
+Available Status
+
+Application Received
+
+Profile Verified
+
+Waiting for Documents
+
+Documents Received
+
+Initial Review
+
+Initial Approval
+
+Waiting for Payment
+
+Payment Received
+
+Embassy Submission
+
+Under Processing
+
+Additional Documents Required
+
+Visa Approved
+
+Visa Issued
+
+Completed
+
+Rejected
+
+Cancelled
+
+Every status update automatically:
+
+Updates timeline
+
+Sends notification
+
+Records employee name
+
+Records date and time
+
+Stores change history
+
+======================================================================
+ASSIGN EMPLOYEES
+======================================================================
+
+Applications can be assigned to employees.
+
+Example
+
+Visa Officer A
+
+Visa Officer B
+
+Supervisor
+
+Manager
+
+Support Team
+
+Each employee sees only assigned applications.
+
+======================================================================
+CUSTOMER COMMUNICATION
+======================================================================
+
+The admin can communicate directly with customers.
+
+Available methods
+
+Internal Chat
+
+Push Notification
+
+Email
+
+SMS
+
+Message Templates
+
+Examples
+
+Upload Missing Documents
+
+Payment Reminder
+
+Application Approved
+
+Application Rejected
+
+Visa Issued
+
+======================================================================
+DOCUMENT REVIEW
+======================================================================
+
+Each uploaded file can be:
+
+Viewed
+
+Zoomed
+
+Downloaded
+
+Approved
+
+Rejected
+
+Request Replacement
+
+Admin can leave comments on every document.
+
+Example
+
+Passport image is blurry.
+
+Please upload a clearer copy.
+
+======================================================================
+REQUEST ADDITIONAL DOCUMENTS
+======================================================================
+
+The admin can request additional files.
+
+Example
+
+Bank Statement
+
+Invitation Letter
+
+Employment Certificate
+
+Hotel Reservation
+
+Travel Insurance
+
+The customer immediately receives a notification.
+
+The application status changes to:
+
+Waiting for Additional Documents
+
+======================================================================
+PAYMENT MANAGEMENT
+======================================================================
+
+View all payments.
+
+Pending
+
+Paid
+
+Failed
+
+Refunded
+
+Partially Paid
+
+Generate invoices.
+
+Generate receipts.
+
+Export reports.
+
+======================================================================
+CUSTOMER PROFILE
+======================================================================
+
+View complete customer profile.
+
+Personal Information
+
+Passport
+
+Residence
+
+Travel History
+
+Previous Applications
+
+Wallet
+
+Invoices
+
+Payments
+
+Documents
+
+Activity Log
+
+======================================================================
+EMPLOYEE MANAGEMENT
+======================================================================
+
+Create unlimited employees.
+
+Each employee has:
+
+Photo
+
+Name
+
+Email
+
+Phone
+
+Department
+
+Role
+
+Permissions
+
+Status
+
+Last Login
+
+======================================================================
+PERMISSIONS SYSTEM
+======================================================================
+
+Permissions should be fully customizable.
+
+Examples
+
+View Applications
+
+Edit Applications
+
+Approve Applications
+
+Reject Applications
+
+Delete Documents
+
+Manage Countries
+
+Manage Visas
+
+Manage Customers
+
+Manage Employees
+
+Manage Payments
+
+Manage Reports
+
+Manage Wallet
+
+Manage Settings
+
+Export Reports
+
+Print Reports
+
+Every permission can be enabled or disabled separately.
+
+======================================================================
+COUNTRY MANAGEMENT
+======================================================================
+
+The Admin can:
+
+Create Country
+
+Edit Country
+
+Disable Country
+
+Delete Country
+
+Upload Cover Image
+
+Upload Flag
+
+Choose Display Order
+
+Enable Featured Country
+
+======================================================================
+VISA MANAGEMENT
+======================================================================
+
+Unlimited visa creation.
+
+Each visa includes:
+
+Country
+
+Visa Name
+
+Description
+
+Price
+
+Currency
+
+Processing Time
+
+Stay Duration
+
+Validity
+
+Entries
+
+Refund Policy
+
+Extension
+
+Required Documents
+
+Terms
+
+Conditions
+
+Notes
+
+FAQs
+
+Featured
+
+Popular
+
+Special Offer
+
+Visibility
+
+======================================================================
+ELIGIBILITY RULES
+======================================================================
+
+Admin defines:
+
+Allowed Nationalities
+
+Blocked Nationalities
+
+Allowed Residence Countries
+
+Age Limits
+
+Passport Rules
+
+Special Conditions
+
+The system automatically validates every application before submission.
+
+======================================================================
+REPORTS
+======================================================================
+
+Generate reports for:
+
+Applications
+
+Revenue
+
+Employees
+
+Countries
+
+Visa Types
+
+Payments
+
+Wallet Transactions
+
+Daily Report
+
+Weekly Report
+
+Monthly Report
+
+Yearly Report
+
+Export:
+
+PDF
+
+Excel
+
+CSV
+
+Print
+
+======================================================================
+AUDIT LOG
+======================================================================
+
+Record every action.
+
+Login
+
+Logout
+
+Application Update
+
+Payment Update
+
+Status Change
+
+Document Approval
+
+Employee Activity
+
+Settings Changes
+
+Nothing should be deleted permanently.
+
+======================================================================
+BACKUP
+======================================================================
+
+Automatic Backup
+
+Manual Backup
+
+Cloud Backup
+
+Restore Backup
+
+Database Export
+
+Database Import
+
+Scheduled Backup
+
+======================================================================
+SYSTEM SECURITY
+======================================================================
+
+Two-Factor Authentication (2FA)
+
+Encrypted Database
+
+Encrypted File Storage
+
+Role-Based Access Control (RBAC)
+
+Automatic Session Timeout
+
+IP Activity Log
+
+Device Login History
+
+Failed Login Detection
+
+Suspicious Activity Alerts
+
+======================================================================
+FINAL GOAL
+======================================================================
+
+The Admin Dashboard should provide enterprise-level management tools comparable to the world's leading visa and travel platforms, with maximum flexibility, security, automation, reporting capabilities, and an exceptional user experience..........................======================================================================
+PHASE 5
+DIGITAL WALLET, CUSTOMER PROFILE, NOTIFICATIONS &
+LOYALTY REWARDS SYSTEM
+======================================================================
+
+PROJECT GOAL
+
+Build a complete customer ecosystem inside the application.
+
+The customer should not only apply for visas, but also have a professional personal account, digital wallet, rewards program, notifications center, coupons, referral system, and complete transaction history.
+
+The experience should compete with premium fintech and travel applications.
+
+======================================================================
+CUSTOMER PROFILE
+======================================================================
+
+The Profile is the customer's permanent identity.
+
+The customer should complete it only once.
+
+Every visa application automatically retrieves data from this profile.
+
+The profile contains:
+
+Personal Information
+
+Full Name
+
+Nationality
+
+Gender
+
+Date of Birth
+
+Place of Birth
+
+Passport Information
+
+Passport Number
+
+Passport Type
+
+Issue Date
+
+Expiry Date
+
+Issuing Country
+
+Residence Information
+
+Residence Country
+
+Residence Card Number
+
+Residence Expiry Date
+
+Occupation
+
+Employer (Optional)
+
+Contact Information
+
+Phone Number
+
+Email Address
+
+Emergency Contact (Optional)
+
+Preferred Language
+
+Preferred Currency
+
+Preferred Payment Method
+
+Profile Photo
+
+Passport Photo
+
+Residence Images
+
+Account Verification Status
+
+Verified
+
+Pending
+
+Rejected
+
+The customer can update profile information anytime.
+
+======================================================================
+PROFILE VERIFICATION
+======================================================================
+
+The system should verify profile completion.
+
+Profile Completion Example
+
+30%
+
+60%
+
+90%
+
+100%
+
+Missing information should be highlighted.
+
+The customer cannot apply for a visa until all mandatory information is completed.
+
+======================================================================
+DIGITAL WALLET
+======================================================================
+
+The application must include a secure Digital Wallet.
+
+Wallet Features
+
+Current Balance
+
+Available Balance
+
+Pending Balance
+
+Wallet Currency
+
+Wallet Transactions
+
+Wallet History
+
+======================================================================
+RECHARGE WALLET
+======================================================================
+
+The customer can recharge wallet using:
+
+Visa
+
+MasterCard
+
+Apple Pay
+
+Google Pay
+
+Qi Card
+
+Zain Cash
+
+Asia Hawala
+
+Bank Transfer
+
+Future payment gateways
+
+The Admin can enable or disable any payment method.
+
+======================================================================
+WALLET PAYMENT
+======================================================================
+
+The wallet can be used to pay for:
+
+Visa Applications
+
+Additional Services
+
+Travel Packages
+
+Flight Tickets
+
+Hotel Reservations
+
+Future Services
+
+======================================================================
+TRANSACTION HISTORY
+======================================================================
+
+Display every wallet transaction.
+
+Transaction Number
+
+Date
+
+Time
+
+Amount
+
+Payment Method
+
+Status
+
+Description
+
+Reference Number
+
+Export PDF
+
+Print
+
+======================================================================
+REFUNDS
+======================================================================
+
+If a refund is approved...
+
+The amount can be returned to:
+
+Customer Wallet
+
+Original Payment Method
+
+Admin chooses refund destination.
+
+======================================================================
+NOTIFICATION CENTER
+======================================================================
+
+The application should contain a professional Notification Center.
+
+Notifications include:
+
+Visa Approved
+
+Visa Rejected
+
+Payment Required
+
+Payment Successful
+
+Application Submitted
+
+Documents Required
+
+Documents Approved
+
+Visa Issued
+
+Promotional Offers
+
+Coupons
+
+Travel Packages
+
+Flight Offers
+
+System Announcements
+
+======================================================================
+NOTIFICATION TYPES
+======================================================================
+
+Support:
+
+Push Notification
+
+In-App Notification
+
+Email
+
+SMS (Optional)
+
+WhatsApp (Future)
+
+======================================================================
+SMART NOTIFICATIONS
+======================================================================
+
+Every notification contains:
+
+Title
+
+Description
+
+Time
+
+Application Number
+
+Reference Number
+
+Action Button
+
+Example
+
+Complete Payment
+
+Upload Documents
+
+Track Application
+
+======================================================================
+MESSAGE CENTER
+======================================================================
+
+Customers can communicate with customer support.
+
+Features
+
+Live Chat
+
+Send Images
+
+Send Documents
+
+Voice Messages (Future)
+
+Conversation History
+
+Read Status
+
+Typing Indicator
+
+======================================================================
+LOYALTY PROGRAM
+======================================================================
+
+Build a complete loyalty system.
+
+Customers earn reward points after:
+
+Visa Application
+
+Successful Payment
+
+Travel Booking
+
+Hotel Booking
+
+Package Booking
+
+Referral
+
+Special Promotions
+
+======================================================================
+REWARD POINTS
+======================================================================
+
+Points can be redeemed for:
+
+Visa Discounts
+
+Wallet Balance
+
+Travel Discounts
+
+Coupon Codes
+
+Exclusive Services
+
+======================================================================
+COUPON SYSTEM
+======================================================================
+
+Support promotional coupons.
+
+Admin can create:
+
+Percentage Discount
+
+Fixed Amount Discount
+
+Free Service
+
+Special Campaign Coupon
+
+Coupon Settings
+
+Expiry Date
+
+Maximum Usage
+
+Minimum Order
+
+Country Restrictions
+
+Visa Restrictions
+
+Customer Restrictions
+
+======================================================================
+REFERRAL PROGRAM
+======================================================================
+
+Each customer has a unique referral code.
+
+When a new customer registers using the referral code:
+
+The new customer receives a reward.
+
+The referrer receives reward points or wallet credit.
+
+Admin controls:
+
+Reward Amount
+
+Reward Type
+
+Campaign Duration
+
+======================================================================
+OFFERS PAGE
+======================================================================
+
+Dedicated Offers Page.
+
+Display:
+
+Visa Promotions
+
+Flight Discounts
+
+Hotel Offers
+
+Travel Packages
+
+Limited-Time Campaigns
+
+Coupons
+
+Seasonal Promotions
+
+======================================================================
+FAVORITES
+======================================================================
+
+Customers can save:
+
+Favorite Countries
+
+Favorite Visa Types
+
+Favorite Travel Packages
+
+Favorite Hotels
+
+Favorite Flights
+
+======================================================================
+DOWNLOAD CENTER
+======================================================================
+
+Customers can download:
+
+Visa PDF
+
+Invoices
+
+Receipts
+
+Payment Confirmations
+
+Application Summary
+
+Travel Documents
+
+======================================================================
+ACCOUNT SECURITY
+======================================================================
+
+Support:
+
+Two-Factor Authentication
+
+Biometric Login
+
+Fingerprint Login
+
+Face ID
+
+OTP Verification
+
+Trusted Devices
+
+Password Change
+
+Login History
+
+Active Sessions
+
+Logout From All Devices
+
+======================================================================
+SETTINGS
+======================================================================
+
+Customer Settings
+
+Language
+
+Currency
+
+Dark Mode
+
+Light Mode
+
+Notification Preferences
+
+Privacy Settings
+
+Security Settings
+
+Communication Preferences
+
+Delete Account Request
+
+======================================================================
+FINAL GOAL
+======================================================================
+
+The application should provide a complete digital ecosystem where customers can manage their profile, wallet, visa applications, payments, rewards, notifications, and future travel services from one premium application with a world-class user experience

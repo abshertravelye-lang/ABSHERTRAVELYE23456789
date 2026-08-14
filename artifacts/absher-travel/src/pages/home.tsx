@@ -1,71 +1,171 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "@/hooks/use-translation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plane, Building, FileText, Map, Star, Car, Shield, MapPin, Briefcase, Users, ArrowRight, ArrowLeft, Calendar } from "lucide-react";
+import { Plane, Building, FileText, Map, Star, ArrowRight, ArrowLeft, Calendar } from "lucide-react";
 import { useListOffers, useListDestinations } from "@workspace/api-client-react";
-import { Link, useLocation } from "wouter";
-import { AirportSearch } from "@/components/airport-search";
-import { FlightDatePicker } from "@/components/flight-date-picker";
-import { PassengerSelector, type PassengerConfig } from "@/components/passenger-selector";
-import type { Airport } from "@/data/airports";
+import { Link } from "wouter";
+import { AppDownloadLinks } from "@/components/app-download-links";
+
+/**
+ * Offer `duration` is a single free-text DB field (usually Arabic, e.g.
+ * "5 أيام / 4 ليالي"). Localize the common day/night words for display so the
+ * English UI doesn't show Arabic remnants (and vice versa).
+ */
+function localizeDuration(duration: string | null | undefined, ar: boolean): string {
+  if (!duration) return "";
+  if (ar) {
+    return duration
+      .replace(/\bdays?\b/gi, "أيام")
+      .replace(/\bnights?\b/gi, "ليالي");
+  }
+  return duration
+    .replace(/يوم(اً|ان|ين)?|أيام/g, "days")
+    .replace(/ليلة|ليلتان|ليلتين|ليالي?/g, "nights");
+}
 
 export default function Home() {
   const { t, language } = useTranslation();
-  const [, navigate] = useLocation();
 
-  const [heroOrigin, setHeroOrigin] = useState<Airport | null>(null);
-  const [heroDestination, setHeroDestination] = useState<Airport | null>(null);
-  const [heroDates, setHeroDates] = useState<{ departure: Date | null; returnDate: Date | null }>({ departure: null, returnDate: null });
-  const [heroPassengers, setHeroPassengers] = useState<PassengerConfig>({ adults: 1, children: 0, infants: 0, cabinClass: "economy" });
-  
   const { data: offers, isLoading: offersLoading } = useListOffers({ featured: true });
   const { data: destinations, isLoading: destLoading } = useListDestinations();
 
-  const handleHeroSearch = () => {
-    navigate("/flights");
-  };
+  const ar = language === "ar";
 
+  // Hero carousel: brand slide + featured offers (like the mobile app home).
+  const heroSlides = useMemo(() => {
+    const base = [{
+      image: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=2074&auto=format&fit=crop",
+      title: t("heroTitle"),
+      subtitle: t("heroSub"),
+      badge: null as string | null,
+      cta: t("bookNow"),
+      href: "/book",
+    }];
+    for (const o of offers ?? []) {
+      base.push({
+        image: o.imageUrl || "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=1600&auto=format&fit=crop",
+        title: ar ? o.titleAr : o.titleEn,
+        subtitle: ar ? o.descriptionAr : o.descriptionEn,
+        badge: o.discountLabel ?? (ar ? "عرض مميز" : "Featured offer"),
+        cta: ar ? "اكتشف العرض" : "View offer",
+        href: "/offers",
+      });
+    }
+    return base;
+  }, [offers, ar, t]);
+
+  const [heroIndex, setHeroIndex] = useState(0);
+  useEffect(() => {
+    if (heroSlides.length <= 1) return;
+    const id = setInterval(() => setHeroIndex((i) => (i + 1) % heroSlides.length), 6000);
+    return () => clearInterval(id);
+  }, [heroSlides.length]);
+  useEffect(() => {
+    // Keep index valid if offers load/change.
+    if (heroIndex >= heroSlides.length) setHeroIndex(0);
+  }, [heroSlides.length, heroIndex]);
+
+  // Primary services — each links to a REAL page in the system.
+  // Umrah is a dedicated standalone service at /umrah.
   const services = [
-    { icon: Plane, label: t("flightTicketBooking"), color: "bg-blue-50 text-blue-600" },
-    { icon: Building, label: t("hotelBooking"), color: "bg-indigo-50 text-indigo-600" },
-    { icon: FileText, label: t("visaServices"), color: "bg-sky-50 text-sky-600" },
-    { icon: Map, label: t("tourismPrograms"), color: "bg-emerald-50 text-emerald-600" },
-    { icon: Star, label: t("umrahPackages"), color: "bg-amber-50 text-amber-600" },
-    { icon: Car, label: t("carRental"), color: "bg-slate-100 text-slate-600" },
-    { icon: Shield, label: t("travelInsurance"), color: "bg-teal-50 text-teal-600" },
-    { icon: MapPin, label: t("airportTransfer"), color: "bg-orange-50 text-orange-600" },
-    { icon: Briefcase, label: t("corporateBookings"), color: "bg-violet-50 text-violet-600" },
-    { icon: Users, label: t("businessServices"), color: "bg-rose-50 text-rose-600" }
+    {
+      icon: Plane,
+      emoji: "✈️",
+      image: "https://images.unsplash.com/photo-1556388158-158ea5ccacbd?q=80&w=800&auto=format&fit=crop",
+      href: "/flights",
+      titleAr: "حجز الطيران",
+      titleEn: "Flight Booking",
+      descAr: "احجز رحلاتك الجوية بأفضل الأسعار",
+      descEn: "Book your flights at the best prices",
+      color: "bg-blue-50 text-blue-600",
+      ring: "group-hover:ring-blue-200",
+    },
+    {
+      icon: Building,
+      emoji: "🏨",
+      image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=800&auto=format&fit=crop",
+      href: "/hotels",
+      titleAr: "الفنادق",
+      titleEn: "Hotels",
+      descAr: "حجوزات الفنادق في مختلف الوجهات",
+      descEn: "Hotel bookings across destinations",
+      color: "bg-indigo-50 text-indigo-600",
+      ring: "group-hover:ring-indigo-200",
+    },
+    {
+      icon: FileText,
+      emoji: "🛂",
+      image: "https://images.unsplash.com/photo-1578574577315-3fbeb0cecdc2?q=80&w=800&auto=format&fit=crop",
+      href: "/visas",
+      titleAr: "التأشيرات",
+      titleEn: "Visas",
+      descAr: "استخراج تأشيرات السفر لأكثر من ١٥٠ وجهة",
+      descEn: "Travel visas for 150+ destinations",
+      color: "bg-sky-50 text-sky-600",
+      ring: "group-hover:ring-sky-200",
+    },
+    {
+      icon: Star,
+      emoji: "🕋",
+      image: "https://images.unsplash.com/photo-1591604129939-f1efa4d9f7fa?q=80&w=800&auto=format&fit=crop",
+      href: "/umrah",
+      titleAr: "تأشيرة العمرة",
+      titleEn: "Umrah Visa",
+      descAr: "تقديم طلب تأشيرة العمرة",
+      descEn: "Apply for an Umrah visa",
+      color: "bg-amber-50 text-amber-600",
+      ring: "group-hover:ring-amber-200",
+    },
+    {
+      icon: Map,
+      emoji: "🌍",
+      image: "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=800&auto=format&fit=crop",
+      href: "/programs",
+      titleAr: "البرامج السياحية",
+      titleEn: "Tourism Programs",
+      descAr: "تصفح البرامج السياحية المتاحة",
+      descEn: "Browse available tourism programs",
+      color: "bg-emerald-50 text-emerald-600",
+      ring: "group-hover:ring-emerald-200",
+    },
   ];
 
   return (
     <div className="w-full">
-      {/* Hero Section */}
+      {/* Hero Section — auto-rotating offers carousel (matches the mobile app home) */}
       <section className="relative h-[85vh] min-h-[600px] flex items-center justify-center overflow-hidden">
+        {/* Slide backgrounds (cross-fade) */}
         <div className="absolute inset-0 z-0">
+          {heroSlides.map((slide, i) => (
+            <img
+              key={i}
+              src={slide.image}
+              alt=""
+              className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${i === heroIndex ? "opacity-100 scale-105" : "opacity-0"}`}
+            />
+          ))}
           <div className="absolute inset-0 bg-primary/70 z-10" />
           <div className="absolute inset-0 bg-gradient-to-t from-primary via-primary/50 to-transparent z-10" />
-          <img 
-            src="https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=2074&auto=format&fit=crop" 
-            alt="Aviation Background" 
-            className="w-full h-full object-cover scale-105 animate-in fade-in zoom-in duration-1000"
-          />
         </div>
-        
-        <div className="container relative z-20 px-4 text-center mt-[-4rem]">
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold text-white mb-6 drop-shadow-sm tracking-tight">
-            {t("heroTitle")}
+
+        <div className="container relative z-20 px-4 text-center mt-[-4rem]" dir={ar ? "rtl" : "ltr"}>
+          {heroSlides[heroIndex]?.badge && (
+            <span className="inline-flex items-center gap-2 bg-accent text-primary font-bold px-4 py-1.5 rounded-full text-sm mb-5 shadow-lg animate-in fade-in slide-in-from-bottom-2 duration-500">
+              {heroSlides[heroIndex].badge}
+            </span>
+          )}
+          <h1 key={`t-${heroIndex}`} className="text-4xl md:text-6xl lg:text-7xl font-extrabold text-white mb-6 drop-shadow-sm tracking-tight animate-in fade-in slide-in-from-bottom-3 duration-700">
+            {heroSlides[heroIndex]?.title ?? t("heroTitle")}
           </h1>
-          <p className="text-lg md:text-2xl text-white/90 mb-10 max-w-3xl mx-auto drop-shadow-sm font-medium">
-            {t("heroSub")}
+          <p key={`s-${heroIndex}`} className="text-lg md:text-2xl text-white/90 mb-10 max-w-3xl mx-auto drop-shadow-sm font-medium animate-in fade-in slide-in-from-bottom-3 duration-700">
+            {heroSlides[heroIndex]?.subtitle ?? t("heroSub")}
           </p>
-          
+
           <div className="flex flex-wrap justify-center gap-4">
-            <Link href="/book">
+            <Link href={heroSlides[heroIndex]?.href ?? "/book"}>
               <Button size="lg" className="bg-accent text-primary hover:bg-accent/90 text-lg px-8 py-6 rounded-xl font-bold shadow-xl shadow-accent/20 transition-all hover:-translate-y-1">
-                {t("bookNow")}
+                {heroSlides[heroIndex]?.cta ?? t("bookNow")}
               </Button>
             </Link>
             <Link href="/offers">
@@ -74,68 +174,67 @@ export default function Home() {
               </Button>
             </Link>
           </div>
+
+          {/* Slide dots */}
+          {heroSlides.length > 1 && (
+            <div className="flex justify-center gap-2 mt-10">
+              {heroSlides.map((_, i) => (
+                <button
+                  key={i}
+                  aria-label={`slide ${i + 1}`}
+                  onClick={() => setHeroIndex(i)}
+                  className={`h-2 rounded-full transition-all duration-300 ${i === heroIndex ? "w-8 bg-accent" : "w-2 bg-white/40 hover:bg-white/70"}`}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
-      {/* Booking Engine / Search Widget */}
-      <section className="relative z-30 -mt-24 container px-4 mx-auto">
-        <Card className="shadow-2xl border border-slate-100 rounded-2xl overflow-hidden bg-white">
-          <CardContent className="p-0">
-            <Tabs defaultValue="flights" className="w-full">
-              <TabsList className="w-full grid grid-cols-4 h-auto rounded-none bg-slate-50/50 p-0 border-b border-slate-100">
-                <TabsTrigger value="flights" className="py-5 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-accent rounded-none text-base font-semibold transition-all"><Plane className="mr-2 h-5 w-5 rtl:ml-2 rtl:mr-0"/> <span className="hidden sm:inline">Flights</span></TabsTrigger>
-                <TabsTrigger value="hotels" className="py-5 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-accent rounded-none text-base font-semibold transition-all"><Building className="mr-2 h-5 w-5 rtl:ml-2 rtl:mr-0"/> <span className="hidden sm:inline">Hotels</span></TabsTrigger>
-                <TabsTrigger value="visas" className="py-5 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-accent rounded-none text-base font-semibold transition-all"><FileText className="mr-2 h-5 w-5 rtl:ml-2 rtl:mr-0"/> <span className="hidden sm:inline">Visas</span></TabsTrigger>
-                <TabsTrigger value="programs" className="py-5 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-accent rounded-none text-base font-semibold transition-all"><Map className="mr-2 h-5 w-5 rtl:ml-2 rtl:mr-0"/> <span className="hidden sm:inline">Programs</span></TabsTrigger>
-              </TabsList>
-              <div className="p-6 md:p-8 bg-white">
-                <TabsContent value="flights" className="m-0 animate-in fade-in duration-300 space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-3">
-                    <AirportSearch value={heroOrigin} onChange={setHeroOrigin} language={language} icon="takeoff" label="From" labelAr="من" />
-                    <AirportSearch value={heroDestination} onChange={setHeroDestination} language={language} icon="landing" label="To" labelAr="إلى" />
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-[1fr_240px] gap-3 items-start">
-                    <FlightDatePicker value={heroDates} onChange={setHeroDates} language={language} isRoundTrip={true} labelDepart="Departure" labelDepartAr="الذهاب" labelReturn="Return" labelReturnAr="العودة" />
-                    <PassengerSelector value={heroPassengers} onChange={setHeroPassengers} language={language} />
-                  </div>
-                  <Button onClick={handleHeroSearch} className="w-full h-12 bg-primary text-white hover:bg-primary/90 text-lg font-semibold rounded-xl gap-2">
-                    <Plane className="h-5 w-5" />{language === "ar" ? "بحث عن الرحلات" : "Search Flights"}
-                  </Button>
-                </TabsContent>
-                <TabsContent value="hotels" className="m-0"><div className="py-12 flex flex-col items-center justify-center text-slate-500"><Building className="h-12 w-12 mb-4 text-slate-300" /><p className="text-lg font-medium">{language === 'ar' ? 'البحث عن فنادق' : 'Search hotels'}</p></div></TabsContent>
-                <TabsContent value="visas" className="m-0"><div className="py-12 flex flex-col items-center justify-center text-slate-500"><FileText className="h-12 w-12 mb-4 text-slate-300" /><p className="text-lg font-medium">{language === 'ar' ? 'استعلام عن تأشيرة' : 'Search visas'}</p></div></TabsContent>
-                <TabsContent value="programs" className="m-0"><div className="py-12 flex flex-col items-center justify-center text-slate-500"><Map className="h-12 w-12 mb-4 text-slate-300" /><p className="text-lg font-medium">{language === 'ar' ? 'تصفح البرامج' : 'Explore programs'}</p></div></TabsContent>
-              </div>
-            </Tabs>
-          </CardContent>
-        </Card>
-      </section>
-
-      {/* Services Section */}
-      <section className="py-24 bg-slate-50">
-        <div className="container px-4 mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-extrabold text-primary mb-4 tracking-tight">{language === 'ar' ? 'خدماتنا المميزة' : 'Our Premium Services'}</h2>
-            <div className="w-24 h-1.5 bg-accent mx-auto rounded-full"></div>
-          </div>
-          
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
-            {services.map((service, index) => {
-              const Icon = service.icon;
-              return (
-                <Card key={index} className="border border-slate-100 shadow-sm hover:shadow-xl transition-all hover:-translate-y-1 cursor-pointer group bg-white">
-                  <CardContent className="p-6 md:p-8 flex flex-col items-center text-center space-y-4">
-                    <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${service.color} group-hover:scale-110 transition-transform duration-300`}>
-                      <Icon size={28} strokeWidth={2.5} />
+      {/* Services showcase — floating over the hero (replaces the old search widget) */}
+      <section className="relative z-30 -mt-28 container px-4 mx-auto" dir={ar ? "rtl" : "ltr"}>
+        <div className="text-center mb-8">
+          <span className="inline-flex items-center gap-2 bg-white/10 text-[#D4AF37] border border-[#D4AF37]/40 px-4 py-1.5 rounded-full text-sm font-bold tracking-wide backdrop-blur-md shadow-sm">
+            {ar ? "خدماتنا" : "Our Services"}
+          </span>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-5">
+          {services.map((service, index) => {
+            const Icon = service.icon;
+            const title = ar ? service.titleAr : service.titleEn;
+            const desc = ar ? service.descAr : service.descEn;
+            return (
+              <Link key={index} href={service.href} className="group block h-full" data-testid={`link-service-${index}`}>
+                <div className={`h-full bg-white rounded-2xl border border-slate-100 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 overflow-hidden ring-0 ring-transparent ${service.ring} group-hover:ring-4`}>
+                  {/* Card image */}
+                  <div className="relative h-28 md:h-32 overflow-hidden">
+                    <img
+                      src={service.image}
+                      alt={title}
+                      loading="lazy"
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#052B5B]/70 via-[#052B5B]/10 to-transparent" />
+                    <div className={`absolute bottom-0 ${ar ? "right-3" : "left-3"} translate-y-1/2 w-12 h-12 rounded-xl flex items-center justify-center shadow-md ${service.color} bg-white`}>
+                      <Icon size={22} strokeWidth={2.5} />
                     </div>
-                    <h3 className="font-bold text-slate-800 text-sm md:text-base">{service.label}</h3>
-                  </CardContent>
-                </Card>
-              )
-            })}
-          </div>
+                  </div>
+                  {/* Card body */}
+                  <div className={`px-4 pt-8 pb-4 ${ar ? "text-right" : "text-left"}`}>
+                    <h3 className="font-bold text-[#052B5B] text-sm md:text-base mb-1">{title}</h3>
+                    <p className="text-xs md:text-[13px] text-slate-500 leading-relaxed">{desc}</p>
+                    <span className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-[#D4AF37] opacity-0 group-hover:opacity-100 transition-opacity">
+                      {ar ? "اذهب للخدمة" : "Explore"}
+                      {ar ? <ArrowLeft className="h-3.5 w-3.5" /> : <ArrowRight className="h-3.5 w-3.5" />}
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
         </div>
       </section>
+
 
       {/* Featured Offers */}
       <section className="py-24 bg-white">
@@ -162,7 +261,7 @@ export default function Home() {
                   <div className="h-60 overflow-hidden relative">
                     <img src={offer.imageUrl || 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=1000&auto=format&fit=crop'} alt={language === 'ar' ? offer.titleAr : offer.titleEn} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                     <div className="absolute top-4 right-4 bg-accent text-primary font-bold px-4 py-1.5 rounded-full text-sm shadow-md tabular-nums">
-                      {offer.price} {offer.currency || 'USD'}
+                      {offer.price ?? '—'} {offer.currency || 'USD'}
                     </div>
                   </div>
                   <CardContent className="p-6 flex-1 flex flex-col">
@@ -170,7 +269,7 @@ export default function Home() {
                     <p className="text-slate-600 mb-6 line-clamp-2 text-sm leading-relaxed flex-1">{language === 'ar' ? offer.descriptionAr : offer.descriptionEn}</p>
                     <div className="flex items-center justify-between mb-6 pb-6 border-b border-slate-100">
                       <div className="flex items-center text-sm font-medium text-slate-500 bg-slate-50 px-3 py-1.5 rounded-lg tabular-nums">
-                        <Calendar className="mr-2 h-4 w-4 rtl:ml-2 rtl:mr-0 text-secondary" /> {offer.duration}
+                        <Calendar className="mr-2 h-4 w-4 rtl:ml-2 rtl:mr-0 text-secondary" /> {localizeDuration(offer.duration, language === 'ar')}
                       </div>
                     </div>
                     <Button className="w-full bg-primary hover:bg-primary/90 rounded-xl h-12 font-bold text-base">{t("bookNow")}</Button>
@@ -211,6 +310,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* App Download Promo — renders only when a store link is configured */}
+      <AppDownloadLinks variant="section" />
     </div>
   );
 }

@@ -61,7 +61,7 @@ export default function Offers() {
                 <CardContent className="p-6 flex-1 flex flex-col">
                   <div className="flex justify-between items-center mb-4 pb-4 border-b border-slate-100">
                     <div className="text-primary font-bold text-2xl">
-                      {offer.price} <span className="text-sm text-slate-500 font-normal">{offer.currency || 'USD'}</span>
+                      {offer.price ?? '—'} <span className="text-sm text-slate-500 font-normal">{offer.currency || 'USD'}</span>
                     </div>
                     <div className="flex items-center text-sm font-medium text-slate-500 bg-slate-100 px-3 py-1 rounded-full">
                       <Calendar className="mr-2 h-4 w-4 rtl:ml-2 rtl:mr-0 text-secondary" /> {offer.duration}

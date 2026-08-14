@@ -1,0 +1,473 @@
+📋 Copy Description
+
+ABSHER TRAVEL – COMPLETE APPLICATION & PLATFORM REDEVELOPMENT REQUIREMENT
+
+PROJECT OBJECTIVE
+
+Rename the entire application, platform, database references, branding elements, metadata, page titles, notifications, emails, and system identifiers to:
+
+ABSHER TRAVEL
+
+The application must be transformed into a premium international travel and visa platform comparable to leading travel applications such as Almosafer, Booking.com, Wego, Expedia, and Flyin.
+
+The final product must be professional, modern, responsive, secure, scalable, bilingual, and fully compatible with Hostinger hosting environments.
+
+==================================================
+1. COMPLETE REBRANDING
+==================================================
+
+Replace all old names with:
+
+ABSHER TRAVEL
+
+Update:
+
+• Application Name
+• Web Platform Name
+• Mobile App Name
+• Browser Titles
+• Email Templates
+• Notification Titles
+• PDF Documents
+• Admin Panel Branding
+• Login Screens
+• Splash Screen
+• App Store Metadata
+• Play Store Metadata
+
+==================================================
+2. LOGO PROCESSING
+==================================================
+
+A company logo image will be uploaded later.
+
+Requirements:
+
+• Remove logo background professionally.
+• Convert logo to transparent PNG.
+• Create high-resolution versions.
+• Create dark mode version.
+• Create light mode version.
+• Create favicon.
+• Create app icon.
+• Create admin panel logo.
+• Create loading screen logo.
+
+Apply branding professionally across the entire platform.
+
+==================================================
+3. COMPLETE UI/UX REDEVELOPMENT
+==================================================
+
+Redesign every screen.
+
+No old layouts may remain.
+
+Requirements:
+
+• Premium Design
+• Modern Components
+• Material Design 3
+• Luxury User Experience
+• Responsive Layout
+• Mobile First Design
+• Tablet Support
+• Desktop Support
+• Smooth Animations
+• Premium Typography
+• Professional Color System
+
+Brand Colors:
+
+Primary:
+Dark Blue
+
+Secondary:
+Gold
+
+Design must feel luxurious and modern.
+
+==================================================
+4. MULTI LANGUAGE SYSTEM
+==================================================
+
+The application must support:
+
+• Arabic
+• English
+
+Features:
+
+• Instant Language Switching
+• RTL Support
+• LTR Support
+• Full Translation Management
+• Language Persistence
+
+All pages, notifications, emails, PDFs, and admin sections must support both languages.
+
+==================================================
+5. DARK MODE & LIGHT MODE
+==================================================
+
+Create complete theme system.
+
+Dark Theme:
+
+• White Text
+• Gold Highlights
+• Dark Blue Backgrounds
+• High Contrast
+
+Light Theme:
+
+• Dark Text
+• White Backgrounds
+• Blue Titles
+• Gold Accent Elements
+
+No unreadable text.
+
+No color conflicts.
+
+==================================================
+6. TERMS & CONDITIONS
+==================================================
+
+Create a complete Terms & Conditions system.
+
+Before account creation:
+
+User must read and accept:
+
+• Terms & Conditions
+• Privacy Policy
+• Refund Policy
+• Travel Disclaimer
+• Visa Disclaimer
+
+Account creation is impossible without acceptance.
+
+Store acceptance date and IP logs.
+
+==================================================
+7. APPLICATION SUBMISSION SYSTEM
+==================================================
+
+All application forms must automatically submit to the Admin Panel.
+
+This includes:
+
+• Visa Applications
+• Umrah Visa Applications
+• Flight Bookings
+• Contact Requests
+• Support Requests
+
+Requirements:
+
+• Real-time synchronization
+• Instant Admin Notifications
+• Database Storage
+• Audit Logs
+• Status Tracking
+
+Nothing should be lost.
+
+==================================================
+8. UMRAH VISA MODULE
+==================================================
+
+Create a dedicated Umrah Visa service.
+
+Application Flow:
+
+Step 1:
+
+Question:
+
+Do you have a host in Saudi Arabia?
+
+Options:
+
+YES
+NO
+
+==================================================
+IF USER SELECTS YES
+==================================================
+
+Show:
+
+Upload Host Residence Permit
+
+Accepted:
+
+• JPG
+• JPEG
+• PNG
+• PDF
+
+After upload:
+
+Show:
+
+Host Absher Mobile Number
+
+Required field.
+
+==================================================
+PILGRIM INFORMATION
+==================================================
+
+Applicant uploads passport image.
+
+System automatically performs OCR scanning.
+
+Automatically extract:
+
+• First Name
+• Last Name
+• Full Name
+• Passport Number
+• Nationality
+• Gender
+• Date Of Birth
+• Passport Issue Date
+• Passport Expiry Date
+
+Auto-fill all fields.
+
+User can edit if necessary.
+
+==================================================
+PERSONAL PHOTO
+==================================================
+
+Optional upload.
+
+Accepted:
+
+• JPG
+• JPEG
+• PNG
+
+==================================================
+APPLICATION REVIEW
+==================================================
+
+Display complete application summary.
+
+Display:
+
+• Applicant Information
+• Passport Information
+• Host Information
+• Uploaded Documents
+
+==================================================
+PAYMENT PAGE
+==================================================
+
+Supported Payment Methods:
+
+• Visa
+• Mastercard
+• PayPal
+• ABSHER Wallet
+
+Architecture must support future gateway integration.
+
+Current phase may operate in demo mode.
+
+==================================================
+APPLICATION SUCCESS PAGE
+==================================================
+
+After successful submission:
+
+Display:
+
+Umrah Visa Application Submitted Successfully
+
+Show:
+
+• Reference Number
+• Submission Date
+• Applicant Name
+• Application Status
+
+Button:
+
+Return To Home Page
+
+IMPORTANT:
+
+After submission, the user must not return to the application form through browser back navigation.
+
+Redirect only to Home Page.
+
+==================================================
+9. CUSTOMER WALLET
+==================================================
+
+Create customer wallet system.
+
+Functions:
+
+• Deposit Balance
+• Transaction History
+• Refund Credit
+• Visa Payments
+• Flight Payments
+
+Display:
+
+• Available Balance
+• Pending Balance
+• Payment History
+
+==================================================
+10. CUSTOMER SUPPORT CENTER
+==================================================
+
+Add complete customer support chat.
+
+Features:
+
+• Live Chat
+• Real Time Messaging
+• Read Receipts
+• Delivery Receipts
+• Typing Indicator
+• Push Notifications
+• Voice Notification Sounds
+• Image Upload
+• PDF Upload
+• Passport Upload
+• Residence Upload
+
+Support Agents reply from Admin Panel.
+
+==================================================
+11. ADMIN PANEL
+==================================================
+
+Create enterprise-level Admin Panel.
+
+Modules:
+
+Dashboard
+
+Visa Management
+
+Umrah Applications
+
+Flight Bookings
+
+Customer Management
+
+Payments
+
+Wallet Management
+
+Support Center
+
+Notifications
+
+Reports
+
+Employees
+
+System Settings
+
+Audit Logs
+
+Security Center
+
+==================================================
+12. SECURITY REQUIREMENTS
+==================================================
+
+Implement enterprise security.
+
+Features:
+
+• HTTPS
+• CSRF Protection
+• XSS Protection
+• SQL Injection Protection
+• JWT Authentication
+• Password Encryption
+• Session Management
+• Login Activity Tracking
+• Device Tracking
+• Audit Logs
+• Role Permissions
+
+Admin Security:
+
+• Two-Factor Authentication
+• Login Alerts
+• Failed Login Detection
+• IP Monitoring
+
+==================================================
+13. HOSTINGER COMPATIBILITY
+==================================================
+
+System must be deployable on Hostinger.
+
+Requirements:
+
+• Production Ready
+• Optimized Database
+• Optimized Images
+• Fast Loading
+• SEO Ready
+• Caching Enabled
+• Error Logging
+• Backup System
+
+==================================================
+14. QUALITY ASSURANCE
+==================================================
+
+The entire platform must be reviewed and tested.
+
+Verify:
+
+• Every Screen
+• Every Form
+• Every Button
+• Every API
+• Every Notification
+• Every Email
+• Every Upload
+• Every User Flow
+
+Fix:
+
+• UI Bugs
+• UX Issues
+• Responsive Problems
+• Validation Errors
+• Navigation Errors
+
+==================================================
+FINAL REQUIREMENT
+==================================================
+
+The final result must be a luxury, premium, enterprise-grade travel and visa platform.
+
+The user experience must be smooth, modern, fast, secure, and comparable to world-class travel platforms.
+
+No unfinished pages.
+No broken forms.
+No outdated layouts.
+No missing validations.
+No inconsistent design.
+
+The entire platform must fully represent the ABSHER TRAVEL brand and be ready for future expansion into flights, visas, tourism services, hotels, cars, payment gateways, and airline integrations without requiring a full rebuild.
+
+ملاحظة مهمة للمبرمج: لا تقم بربط أي بوابات دفع حقيقية أو مزودي طيران فعليين في هذه المرحلة. قم ببناء النظام بالكامل بوضع Demo Mode مع بنية جاهزة للتكامل المستقبلي فقط، بحيث يمكن لاحقًا ربط Duffel أو Amadeus أو Sabre أو Stripe دون إعادة بناء النظام.

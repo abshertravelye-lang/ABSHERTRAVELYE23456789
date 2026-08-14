@@ -1,0 +1,27 @@
+kind = "web"
+previewPath = "/absher-admin/"
+title = "أبشر أعمال - لوحة التحكم"
+version = "1.0.0"
+id = "artifacts/absher-admin"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/absher-admin/" ]
+localPort = 26014
+
+[services.development]
+run = "pnpm --filter @workspace/absher-admin run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/absher-admin", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/absher-admin/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "26014"
+BASE_PATH = "/absher-admin/"

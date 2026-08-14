@@ -4,7 +4,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { MapPin, Phone, Mail, Clock, Send } from "lucide-react";
+import { MapPin, Phone, Mail, Clock, Send, MessageSquare } from "lucide-react";
+import { openSupportChat } from "@/components/support-chat";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -116,11 +117,12 @@ export default function Contact() {
 
                 <div className="mt-8 pt-8 border-t border-slate-100">
                   <Button 
-                    className="w-full bg-[#25D366] hover:bg-[#1ebd5a] text-white h-12"
-                    onClick={() => window.open(`https://wa.me/967779055511`, "_blank")}
+                    className="w-full bg-[#0A2342] hover:bg-[#0A2342]/90 text-white h-12 gap-2"
+                    onClick={() => openSupportChat()}
+                    data-testid="button-contact-open-chat"
                   >
-                    <svg xmlns="http://www.0000.com/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 rtl:ml-2 rtl:mr-0"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
-                    {language === 'ar' ? 'مراسلة عبر واتساب' : 'Message on WhatsApp'}
+                    <MessageSquare className="w-5 h-5" />
+                    {language === 'ar' ? 'الدردشة مع فريق الدعم' : 'Chat with Support'}
                   </Button>
                 </div>
               </CardContent>

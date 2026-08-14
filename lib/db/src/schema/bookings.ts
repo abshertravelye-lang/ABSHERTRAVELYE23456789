@@ -1,9 +1,11 @@
-import { pgTable, serial, text, integer, numeric, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, integer, numeric, timestamp, uuid } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import { usersTable } from "./users";
 
 export const bookingsTable = pgTable("bookings", {
   id: serial("id").primaryKey(),
+  userId: uuid("user_id").references(() => usersTable.id),
   type: text("type").notNull(),
   clientName: text("client_name").notNull(),
   clientPhone: text("client_phone").notNull(),
@@ -16,6 +18,8 @@ export const bookingsTable = pgTable("bookings", {
   notes: text("notes"),
   status: text("status").notNull().default("pending"),
   totalPrice: numeric("total_price", { precision: 10, scale: 2 }),
+  ticketUrl: text("ticket_url"),
+  duffelOrderId: text("duffel_order_id"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

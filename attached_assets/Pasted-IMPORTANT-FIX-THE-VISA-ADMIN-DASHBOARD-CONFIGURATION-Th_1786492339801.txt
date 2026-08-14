@@ -1,0 +1,562 @@
+IMPORTANT — FIX THE VISA ADMIN DASHBOARD CONFIGURATION
+
+The current "Add/Edit Visa" form is incomplete.
+
+I reviewed the current Admin Dashboard and several critical visa eligibility and document settings are missing.
+
+Do NOT just add visual fields. All of these settings must be connected to the real backend visa eligibility engine and must control who can actually apply.
+
+==================================================
+1. VISA IMAGE MUST BE AN UPLOAD — NOT A URL
+==================================================
+
+In the Add/Edit Visa form, add:
+
+"Visa Image"
+
+The Admin must be able to UPLOAD an image file directly from the computer/device.
+
+I do NOT want:
+
+- Image URL
+- Image link
+- Manual URL field
+
+I want:
+
+Upload Image
+→ Preview Image
+→ Save Image
+
+The uploaded image must be stored securely and linked to the visa record.
+
+When the visa is displayed on:
+
+- Web Platform
+- Mobile App iOS
+- Mobile App Android
+
+the uploaded visa image must automatically appear.
+
+When Admin edits the visa image, the new uploaded image must replace the old one everywhere.
+
+==================================================
+2. ELIGIBILITY — ALLOWED NATIONALITIES
+==================================================
+
+Add a complete section called:
+
+"Visa Eligibility"
+
+Admin must be able to select the NATIONALITIES that are allowed to apply for this specific visa.
+
+Add:
+
+"Allowed Nationalities"
+
+Use a searchable multi-select country list.
+
+Admin must be able to:
+
+- Search countries
+- Select multiple countries
+- Remove countries
+- Select all if needed
+
+The selected nationalities must be saved in the database.
+
+This must be a REAL eligibility rule.
+
+If a customer's nationality is not allowed for the selected visa, the customer must NOT be allowed to apply.
+
+==================================================
+3. PASSPORT + PERSONAL PHOTO REQUIREMENTS
+==================================================
+
+For each visa, Admin must be able to configure the required documents.
+
+Add:
+
+"Required Documents"
+
+Options must include at minimum:
+
+☑ Passport Image
+☑ Personal Photo
+☑ GCC Residence Permit
+☑ European Residence Permit
+☑ Schengen Visa
+☑ Other Visa Document
+
+Admin must be able to mark each document as:
+
+REQUIRED
+or
+OPTIONAL
+or
+NOT REQUIRED
+
+At minimum, Passport Image and Personal Photo must be configurable independently.
+
+Example:
+
+Passport Image = REQUIRED
+Personal Photo = REQUIRED
+
+The customer cannot continue without the required documents.
+
+==================================================
+4. ELIGIBILITY BASED ON GCC RESIDENCY
+==================================================
+
+Add a dedicated section:
+
+"GCC Residency Eligibility"
+
+Admin must be able to configure:
+
+GCC Residency Requirement:
+
+- Not Required
+- Required
+- Required for selected nationalities
+
+Also add:
+
+"Accepted GCC Countries"
+
+with selectable countries:
+
+- Saudi Arabia
+- United Arab Emirates
+- Kuwait
+- Qatar
+- Bahrain
+- Oman
+
+Admin must be able to select one or multiple GCC countries.
+
+Example:
+
+Visa requires GCC residency.
+
+Accepted GCC countries:
+Saudi Arabia
+UAE
+Kuwait
+
+If the customer is not a resident of one of the accepted GCC countries:
+
+BLOCK APPLICATION.
+
+==================================================
+5. EUROPEAN RESIDENCY ELIGIBILITY
+==================================================
+
+Add:
+
+"European Residency Requirement"
+
+Options:
+
+- Not Required
+- Required
+- Required for selected nationalities
+
+If Required:
+
+the customer must provide a valid European residence permit according to the visa rules.
+
+The customer must not be allowed to continue if the required condition is not satisfied.
+
+==================================================
+6. SCHENGEN VISA ELIGIBILITY
+==================================================
+
+Add:
+
+"Schengen Visa Requirement"
+
+Options:
+
+- Not Required
+- Required
+- Required for selected nationalities
+
+If Required:
+
+the customer must provide a valid Schengen visa.
+
+The system must verify that the customer has the required document before allowing the application to continue.
+
+==================================================
+7. EUROPE OR SCHENGEN LOGIC
+==================================================
+
+The Admin must also be able to configure the relationship between European residency and Schengen.
+
+Support:
+
+- Neither required
+- European residency required
+- Schengen visa required
+- European residency OR Schengen visa
+- Both required
+
+This must be a real backend rule.
+
+Example:
+
+If Admin selects:
+
+"European Residency OR Schengen Visa"
+
+then the customer can continue if either:
+
+European residence permit = valid
+
+OR
+
+Schengen visa = valid
+
+If neither exists:
+
+BLOCK APPLICATION.
+
+==================================================
+8. PROHIBITED NATIONALITIES
+==================================================
+
+Add another dedicated section:
+
+"Prohibited Nationalities"
+
+Admin must be able to select countries that are NOT allowed to apply for this visa.
+
+Use a searchable multi-select country list.
+
+Admin can add multiple prohibited nationalities.
+
+CRITICAL RULE:
+
+PROHIBITED NATIONALITY MUST ALWAYS BLOCK THE APPLICATION.
+
+Example:
+
+Allowed Nationalities:
+Country A
+Country B
+Country C
+
+Prohibited Nationalities:
+Country X
+Country Y
+
+If customer nationality = Country X:
+
+BLOCK APPLICATION.
+
+Even if:
+
+- Profile is 100% complete
+- Customer has GCC residence
+- Customer has European residence
+- Customer has a Schengen visa
+- All required documents are uploaded
+
+the customer MUST still be blocked.
+
+Show:
+
+"لا يمكنك التقديم على هذه التأشيرة"
+
+==================================================
+9. PROHIBITED NATIONALITY HAS PRIORITY
+==================================================
+
+The eligibility engine must follow this priority:
+
+1. Check whether nationality is prohibited.
+2. If prohibited → BLOCK immediately.
+3. If not prohibited → check whether nationality is allowed.
+4. Then check GCC requirements if configured.
+5. Then check European residency requirements if configured.
+6. Then check Schengen requirements if configured.
+7. Then check required documents.
+8. If all requirements pass → ELIGIBLE.
+
+Do NOT allow a supporting document to override a prohibited nationality.
+
+==================================================
+10. PROFILE COMPLETION VS VISA ELIGIBILITY
+==================================================
+
+Keep these as two separate concepts.
+
+PROFILE COMPLETION:
+
+The customer has:
+
+- Account
+- Login
+- Personal photo
+- Passport
+- Passport OCR/MRZ data
+- Phone number
+- GCC information if applicable
+- European/Schengen information if applicable
+
+VISA ELIGIBILITY:
+
+The customer satisfies the rules configured by Admin for the SPECIFIC visa.
+
+A customer can have:
+
+PROFILE = 100%
+
+but:
+
+VISA ELIGIBILITY = NOT ELIGIBLE
+
+In that case:
+
+BLOCK APPLICATION.
+
+==================================================
+11. CUSTOMER APPLICATION CHECK
+==================================================
+
+When customer clicks:
+
+"Apply Now"
+
+the backend must perform the following:
+
+Customer logged in?
+↓
+Profile 100% complete?
+↓
+Nationality prohibited?
+↓
+Nationality allowed?
+↓
+GCC requirement satisfied?
+↓
+European residency requirement satisfied?
+↓
+Schengen requirement satisfied?
+↓
+Required documents available?
+↓
+ELIGIBLE
+
+If any mandatory condition fails:
+
+DO NOT CREATE AN APPLICATION.
+
+Show the appropriate message.
+
+==================================================
+12. ADMIN DASHBOARD UI
+==================================================
+
+Organize the Add/Edit Visa form clearly.
+
+Recommended sections:
+
+A. Basic Visa Information
+- Country
+- Visa name
+- Visa type
+- Entry type
+- Category
+- Price
+- Currency
+- Processing time
+- Stay duration
+- Visa image upload
+- Arabic description
+- English description
+
+B. Eligibility
+- Allowed nationalities
+- Prohibited nationalities
+- GCC residency requirement
+- Accepted GCC countries
+- European residency requirement
+- Schengen visa requirement
+- European/Schengen relationship
+
+C. Required Documents
+- Passport
+- Personal photo
+- GCC residence
+- European residence
+- Schengen visa
+- Other documents
+
+D. Status
+- Active
+- Inactive
+
+==================================================
+13. IMAGE UPLOAD REQUIREMENT
+==================================================
+
+For Visa Image:
+
+Use a real file upload component.
+
+It must support:
+
+- Select file
+- Upload
+- Preview
+- Replace
+- Remove
+
+Do not ask Admin to paste an image URL.
+
+The same applies if the system needs a visa card image or visa thumbnail.
+
+==================================================
+14. DATABASE REQUIREMENT
+==================================================
+
+Do not store only the visual state of these settings.
+
+Create/store real fields associated with each visa, including conceptually:
+
+- allowedNationalities
+- prohibitedNationalities
+- gccResidencyRequirement
+- acceptedGccCountries
+- europeanResidencyRequirement
+- schengenVisaRequirement
+- europeanSchengenLogic
+- requiredDocuments
+- visaImage
+
+Use the existing database architecture where appropriate.
+
+Do not create duplicate or disconnected data structures.
+
+==================================================
+15. WEB + MOBILE
+==================================================
+
+These Admin settings MUST control both:
+
+ABS​​HER TRAVEL WEB PLATFORM
+AND
+ABS​​HER TRAVEL MOBILE APP
+
+There must be ONE backend eligibility engine.
+
+If Admin changes a visa rule:
+
+the new rule automatically applies to:
+
+- Web
+- iOS
+- Android
+
+Do NOT create separate eligibility logic for Web and Mobile.
+
+==================================================
+16. EXAMPLE TEST
+==================================================
+
+Create a test visa with:
+
+Allowed Nationalities:
+Country A
+Country B
+
+Prohibited Nationalities:
+Country X
+
+GCC Residency:
+Required
+
+Accepted GCC:
+Saudi Arabia
+UAE
+
+Personal Photo:
+Required
+
+Passport:
+Required
+
+European Residency:
+Not Required
+
+Schengen:
+Not Required
+
+Then test:
+
+Customer A:
+Country A
+Saudi resident
+Profile complete
+Required documents complete
+
+RESULT:
+ALLOWED
+
+Customer B:
+Country X
+Saudi resident
+Profile complete
+Required documents complete
+
+RESULT:
+BLOCKED
+
+Customer C:
+Country A
+Not a GCC resident
+Profile complete
+Required documents complete
+
+RESULT:
+BLOCKED
+
+This proves that the Admin settings are actually connected to the eligibility engine.
+
+==================================================
+17. DO NOT MARK COMPLETE UNTIL VERIFIED
+==================================================
+
+The current Admin Dashboard is missing these critical functions.
+
+Implement them fully.
+
+Then test:
+
+1. Create visa.
+2. Upload visa image from local device.
+3. Select allowed nationalities.
+4. Select prohibited nationalities.
+5. Configure GCC residency.
+6. Select accepted GCC countries.
+7. Configure European residency.
+8. Configure Schengen requirement.
+9. Configure European/Schengen relationship.
+10. Configure required passport.
+11. Configure required personal photo.
+12. Save visa.
+13. Verify all settings are saved in database.
+14. Verify visa appears correctly on Web.
+15. Verify visa appears correctly on Mobile.
+16. Test an eligible customer.
+17. Test a prohibited nationality.
+18. Test an allowed nationality without required GCC residency.
+19. Test missing required documents.
+20. Confirm that backend blocks all ineligible applications.
+
+Do not just make the fields visible.
+
+THE ADMIN SETTINGS MUST ACTUALLY CONTROL THE REAL VISA APPLICATION ELIGIBILITY SYSTEM.

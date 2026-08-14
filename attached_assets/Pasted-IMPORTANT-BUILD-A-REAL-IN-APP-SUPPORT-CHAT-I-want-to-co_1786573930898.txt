@@ -1,0 +1,173 @@
+IMPORTANT — BUILD A REAL IN-APP SUPPORT CHAT
+
+I want to completely change the “Contact Us” feature.
+
+DO NOT redirect the customer to WhatsApp or any external application.
+
+When the customer clicks “Contact Us”, it must open a real chat interface directly inside the ABSHER TRAVEL application.
+
+1. Logged-in Customer
+
+If the customer is logged in, the system must automatically identify the customer's name from their account.
+
+For example:
+
+Hello Ali 👋
+Welcome to ABSHER TRAVEL.
+How can our support team help you today?
+
+Then display the message input field so the customer can start chatting immediately.
+
+Do not ask the customer for their name again if their name already exists in their account.
+
+2. Guest / Not Logged In
+
+If the customer is not logged in, the chat should immediately ask:
+
+Welcome to ABSHER TRAVEL 👋
+Please provide your name to start the conversation.
+
+Show:
+
+Your Name
+
+and a:
+
+Continue
+
+button.
+
+After entering the name, the customer can immediately start chatting with the support team.
+
+3. REAL CHAT SYSTEM
+
+This must be a real functional support chat, not a visual/demo interface.
+
+It must be connected to:
+
+Existing Backend
+API
+PostgreSQL Database
+User Accounts
+Admin Dashboard
+
+The customer must be able to:
+
+Send messages
+Receive replies
+View previous messages
+Continue an existing conversation
+Close and reopen the app without losing the conversation
+
+The support team must be able to:
+
+Receive customer messages
+Reply to customers
+View the customer's name
+View the customer's account information if logged in
+View the complete conversation history
+Manage conversations from the Admin Dashboard
+4. Admin Dashboard
+
+Add a dedicated section:
+
+Admin Dashboard → Support Chat
+
+The support team should be able to see:
+
+Customer name
+Customer account
+Conversation
+Messages
+Message date/time
+Conversation status
+Unread messages
+
+The system should clearly indicate when a new customer message has arrived.
+
+5. Notifications
+
+When the support team replies to a customer:
+
+Show an in-app notification.
+Send a Push Notification to the customer's phone.
+The notification must appear even when the app is running in the background.
+The notification should be branded as ABSHER TRAVEL.
+Tapping the notification must open the specific support conversation.
+
+Example:
+
+ABSHER TRAVEL
+
+You have a new message from our Support Team.
+
+6. Logged-in Users Must Be Linked to Their Account
+
+For registered customers, the conversation must be linked to the actual user account:
+
+User → Support Conversation → Messages
+
+Do NOT create a separate customer record when the customer is already registered.
+
+For guests, the conversation can initially be associated with the name they provide. If they later create/login to an account, the system should be able to associate the conversation with their account where appropriate.
+
+7. Web + Mobile
+
+The support chat must work on:
+
+ABSHER TRAVEL Web Platform
+ABSHER TRAVEL Mobile Application
+
+Both platforms must use the same Backend, API, Database, Users, Conversations, and Messages.
+
+If a customer starts a conversation on Mobile, they must be able to continue it from Web.
+
+If they start on Web, they must be able to continue it from Mobile.
+
+8. Professional Design
+
+The chat interface must look:
+
+Modern
+Premium
+Professional
+Clean
+Simple
+Consistent with ABSHER TRAVEL branding
+
+Do not use excessive icons or unnecessary elements.
+
+The interface must be fully responsive and work properly on:
+
+Mobile
+Tablet
+Desktop
+9. Arabic / English
+
+The entire chat system must support Arabic and English.
+
+Arabic:
+
+مرحباً علي 👋
+أهلاً بك في ABSHER TRAVEL.
+كيف يمكن لفريق الدعم مساعدتك اليوم؟
+
+English:
+
+Hello Ali 👋
+Welcome to ABSHER TRAVEL.
+How can our support team help you today?
+
+When the application is in English, all chat interface text must be English.
+
+When the application is in Arabic, all chat interface text must be Arabic.
+
+MOST IMPORTANT
+
+I DO NOT WANT “CONTACT US” TO OPEN WHATSAPP.
+
+I want a REAL, FUNCTIONAL, IN-APP SUPPORT CHAT connected to the existing:
+
+Backend + API + PostgreSQL + User Accounts + Admin Dashboard + Notifications
+
+It must actually work, store conversations permanently, synchronize between Web and Mobile, and allow the support team to communicate with customers directly inside ABSHER TRAVEL.

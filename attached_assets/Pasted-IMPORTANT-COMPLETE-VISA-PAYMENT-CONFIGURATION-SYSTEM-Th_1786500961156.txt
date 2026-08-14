@@ -1,0 +1,778 @@
+IMPORTANT — COMPLETE VISA PAYMENT CONFIGURATION SYSTEM
+
+The ABSHER TRAVEL visa system is missing a critical production feature:
+A complete and flexible PAYMENT CONFIGURATION system.
+
+Different visa types may have completely different payment requirements.
+
+The payment configuration MUST be controlled from the Admin Dashboard and MUST automatically control the payment workflow on BOTH:
+
+1. ABSHER TRAVEL Web Platform
+2. ABSHER TRAVEL Mobile Application
+
+DO NOT hard-code one payment method for all visas.
+
+==================================================
+1. PAYMENT CONFIGURATION MUST BE PART OF EVERY VISA
+==================================================
+
+When the Super Admin creates or edits a visa:
+
+Admin Dashboard
+→ Visa Management
+→ Add Visa / Edit Visa
+→ Payment Configuration
+
+The Super Admin must be able to configure payment specifically for THAT visa.
+
+==================================================
+2. IS PAYMENT REQUIRED?
+==================================================
+
+Add the first payment setting:
+
+"Is Payment Required?"
+
+Options:
+
+YES
+NO
+
+If NO:
+
+Payment Model:
+"FREE / NO PAYMENT"
+
+The customer must NOT see a payment page.
+
+The customer must NOT be asked for payment.
+
+Payment Status:
+
+"No Payment Required"
+
+No payment transaction should be created.
+
+The application continues through the normal visa workflow.
+
+This is important because some future visas or services may be completely free.
+
+==================================================
+3. FOUR PAYMENT MODELS
+==================================================
+
+The system must support exactly these four payment configurations:
+
+1. FREE / NO PAYMENT
+
+2. FULL PAYMENT
+
+3. PARTIAL PAYMENT
+
+4. PAYMENT AFTER INITIAL APPROVAL
+
+The payment model is selected individually for each visa.
+
+Do NOT apply one global payment rule to all visas.
+
+==================================================
+4. FULL PAYMENT
+==================================================
+
+If the Admin selects:
+
+Payment Model:
+"FULL PAYMENT"
+
+The Admin configures:
+
+Total Visa Fee
+Currency
+
+Example:
+
+Total Visa Fee: $200
+Currency: USD
+
+The customer must pay the complete amount according to the configured workflow before the application can proceed to processing.
+
+Customer flow:
+
+Visa Details
+→ Apply
+→ Complete Application
+→ Review Application
+→ Declaration
+→ Payment
+→ Successful Payment
+→ Application Submitted
+→ Application Number
+→ Application Tracking
+
+After successful payment:
+
+Payment Status:
+"Fully Paid"
+
+Show:
+
+"Payment Successful"
+
+and:
+
+"Your visa application has been submitted successfully."
+
+The application must NOT be considered ready for processing until the required payment has been successfully verified.
+
+==================================================
+5. PARTIAL PAYMENT
+==================================================
+
+If the Admin selects:
+
+Payment Model:
+"PARTIAL PAYMENT"
+
+The Admin must configure:
+
+Total Visa Fee
+Initial Payment
+Remaining Payment
+Currency
+
+Example:
+
+Total Visa Fee: $200
+Initial Payment: $100
+Remaining Payment: $100
+
+The system must automatically validate:
+
+Initial Payment + Remaining Payment = Total Visa Fee
+
+Do NOT allow an invalid configuration.
+
+The payment stages must be tracked separately.
+
+Example:
+
+Initial Payment:
+$100
+
+Remaining Payment:
+$100
+
+The system records the first payment separately.
+
+After the configured approval stage:
+
+The customer is notified that the remaining payment is required.
+
+Show:
+
+"Remaining payment required: $100"
+
+After the remaining payment is successfully verified:
+
+Payment Status:
+"Fully Paid"
+
+==================================================
+6. PAYMENT AFTER INITIAL APPROVAL
+==================================================
+
+If the Admin selects:
+
+Payment Model:
+"PAY AFTER INITIAL APPROVAL"
+
+The customer submits the visa application WITHOUT paying.
+
+Customer flow:
+
+Visa Details
+→ Apply
+→ Complete Application
+→ Review Application
+→ Declaration
+→ Submit Application
+
+Payment is NOT required at submission.
+
+Application Status:
+
+"Under Review"
+
+Admin reviews the application.
+
+If the application receives initial approval:
+
+Application Status:
+
+"Initial Approval"
+
+Payment Status:
+
+"Payment Required"
+
+The customer receives an in-app notification and, if configured, push notification:
+
+"Your visa application has received initial approval. Payment is now required to continue processing your application."
+
+Customer opens the application:
+
+→ View Payment Required
+→ Pay
+→ Payment Provider
+→ Payment Verified
+→ Payment Status Updated
+→ Application Continues Processing
+
+==================================================
+7. PAYMENT CONFIGURATION FIELDS
+==================================================
+
+For every visa, the Admin should see:
+
+Payment Required:
+YES / NO
+
+If NO:
+
+Payment Model:
+FREE / NO PAYMENT
+
+If YES:
+
+Payment Model:
+
+- FULL PAYMENT
+- PARTIAL PAYMENT
+- PAYMENT AFTER INITIAL APPROVAL
+
+Currency:
+
+Examples:
+
+USD
+SAR
+AED
+EUR
+
+Total Visa Fee:
+
+[Amount]
+
+If PARTIAL PAYMENT is selected:
+
+Initial Payment:
+
+[Amount]
+
+Remaining Payment:
+
+[Amount]
+
+The system must automatically validate:
+
+Initial Payment + Remaining Payment = Total Visa Fee
+
+Do not allow invalid payment configurations.
+
+==================================================
+8. PAYMENT STATUS
+==================================================
+
+Every visa application must have a separate Payment Status.
+
+Possible statuses include:
+
+- No Payment Required
+- Payment Pending
+- Payment Required
+- Initial Payment Required
+- Initial Payment Paid
+- Remaining Payment Required
+- Remaining Payment Paid
+- Fully Paid
+- Payment Failed
+- Payment Cancelled
+- Refund Pending
+- Refunded
+
+The exact implementation may use equivalent statuses, but the financial state MUST always be clear.
+
+==================================================
+9. APPLICATION STATUS AND PAYMENT STATUS MUST BE SEPARATE
+==================================================
+
+IMPORTANT:
+
+Do NOT combine Application Status and Payment Status.
+
+Example:
+
+Application Status:
+"Initial Approval"
+
+Payment Status:
+"Remaining Payment Required"
+
+These are two separate fields.
+
+The Admin Dashboard must clearly display both.
+
+==================================================
+10. PAYMENT PAGE
+==================================================
+
+Create a proper payment page.
+
+Before payment, clearly display:
+
+- ABSHER TRAVEL
+- Visa name
+- Application number
+- Total visa fee
+- Amount currently due
+- Amount already paid
+- Remaining amount
+- Currency
+- Payment stage
+- Payment status
+
+Example:
+
+Total Fee: $200
+Paid: $100
+Current Payment: $100
+Remaining: $100
+
+The customer must clearly understand exactly what they are paying before confirming payment.
+
+==================================================
+11. PAYMENT HISTORY
+==================================================
+
+Every application must have a permanent payment history.
+
+Store:
+
+- Payment ID
+- Application ID
+- Customer ID
+- Visa ID
+- Amount
+- Currency
+- Payment type/stage
+- Payment status
+- Payment date/time
+- Payment provider
+- Payment provider transaction/reference ID
+- Failure reason if applicable
+- Refund information if applicable
+
+The customer can view their payment history.
+
+Authorized Admin employees can view payment history according to their permissions.
+
+==================================================
+12. REAL PAYMENT GATEWAY
+==================================================
+
+DO NOT create a fake payment system.
+
+The architecture must support integration with a real payment gateway.
+
+The payment provider integration must be modular and secure.
+
+Do NOT store:
+
+- Card numbers
+- CVV
+- Sensitive card credentials
+
+in our database.
+
+Use the payment provider's secure checkout/tokenization system.
+
+Payment provider secret keys/API keys MUST remain server-side.
+
+==================================================
+13. PAYMENT VERIFICATION
+==================================================
+
+Payment status MUST NOT depend only on the frontend saying:
+
+"Payment Successful."
+
+The backend must verify the payment through the payment provider.
+
+Implement secure server-side payment confirmation and webhook handling.
+
+Correct flow:
+
+Customer pays
+→ Payment Provider processes payment
+→ Payment Provider confirms transaction
+→ Backend receives/validates confirmation
+→ Backend verifies transaction
+→ Database updates payment status
+→ Application payment state updates
+→ Customer receives confirmation
+
+Never mark an application as paid based only on a client-side response.
+
+==================================================
+14. ADMIN APPLICATION VIEW
+==================================================
+
+Inside each visa application in Admin Dashboard, display:
+
+- Application Number
+- Customer
+- Visa Type
+- Application Status
+- Payment Status
+- Total Fee
+- Amount Paid
+- Amount Remaining
+- Payment History
+
+Only authorized employees can view financial/payment information.
+
+Only authorized employees can perform payment-related actions.
+
+==================================================
+15. PAYMENT PERMISSIONS
+==================================================
+
+Integrate payment permissions with the existing Employee RBAC system.
+
+Add permissions such as:
+
+- View Payment Information
+- View Payment History
+- Verify Payment
+- Manage Payment Status
+- Process Refunds if supported
+
+A normal Visa Employee MUST NOT automatically receive permission to modify financial/payment information.
+
+Only employees explicitly authorized by the Super Admin can access payment management.
+
+==================================================
+16. PAYMENT RECEIPT
+==================================================
+
+After successful payment, generate a payment receipt/confirmation containing:
+
+- ABSHER TRAVEL
+- Customer name
+- Application number
+- Visa type
+- Payment amount
+- Currency
+- Payment stage
+- Transaction/reference number
+- Payment date
+- Payment status
+
+The customer can access the receipt from their application/payment history.
+
+==================================================
+17. WEB + MOBILE MUST USE THE SAME PAYMENT SYSTEM
+==================================================
+
+This payment system MUST work identically on:
+
+1. ABSHER TRAVEL Web Platform
+2. ABSHER TRAVEL Mobile Application
+
+Both MUST use the same:
+
+- Backend
+- API
+- PostgreSQL database
+- Visa configuration
+- Payment configuration
+- Applications
+- Payment records
+- Payment statuses
+- Payment provider integration
+
+If a customer pays through Mobile:
+
+The payment must immediately appear in:
+
+- Web Platform
+- Mobile Application
+- Admin Dashboard
+
+If a customer pays through Web:
+
+The payment must immediately appear in:
+
+- Mobile Application
+- Admin Dashboard
+
+DO NOT build separate payment logic for Web and Mobile.
+
+==================================================
+18. VISA CONFIGURATION
+==================================================
+
+When the Super Admin creates a new visa, the configuration should include:
+
+Visa Information
++
+Eligibility
++
+Documents
++
+Payment
+
+For example:
+
+Visa Name
+Visa Image
+Visa Duration
+Processing Time
+Visa Price
+Allowed Nationalities
+Prohibited Nationalities
+GCC Eligibility
+European Residency Eligibility
+Schengen Eligibility
+Required Documents
+Payment Required
+Payment Model
+Total Fee
+Initial Payment
+Remaining Payment
+Currency
+
+The Web Platform and Mobile App must automatically use these settings.
+
+==================================================
+19. NO HARDCODED PAYMENT RULES
+==================================================
+
+DO NOT assume:
+
+"Every visa requires full payment."
+
+DO NOT assume:
+
+"Every visa is paid after approval."
+
+DO NOT assume:
+
+"Every visa requires a deposit."
+
+DO NOT assume:
+
+"Every visa requires payment."
+
+The payment model MUST come from the Admin Dashboard configuration for that specific visa.
+
+Each visa has its own payment configuration.
+
+==================================================
+20. DATABASE
+==================================================
+
+Create proper persistent database structures for:
+
+- Visa Payment Configuration
+- Payment Transactions
+- Application Payments
+- Payment History
+- Refunds if supported
+- Payment Provider References
+
+All payment records must survive:
+
+- Refresh
+- Logout/login
+- App restart
+- Deployment
+- Web/Mobile switching
+
+==================================================
+21. TESTING — FOUR PAYMENT MODELS
+==================================================
+
+Create test visas for ALL FOUR payment models.
+
+TEST A — FREE / NO PAYMENT
+
+Configure:
+
+Payment Required:
+NO
+
+Expected:
+
+Customer does not see a payment page.
+
+Payment Status:
+
+"No Payment Required"
+
+No payment transaction is created.
+
+Application continues normally.
+
+--------------------------------------------------
+
+TEST B — FULL PAYMENT
+
+Configure:
+
+Payment Required:
+YES
+
+Payment Model:
+FULL PAYMENT
+
+Total Fee:
+$200
+
+Expected:
+
+Customer must pay $200.
+
+After successful payment:
+
+Payment Status:
+"Fully Paid"
+
+Application can proceed.
+
+--------------------------------------------------
+
+TEST C — PARTIAL PAYMENT
+
+Configure:
+
+Payment Required:
+YES
+
+Payment Model:
+PARTIAL PAYMENT
+
+Total Fee:
+$200
+
+Initial Payment:
+$100
+
+Remaining Payment:
+$100
+
+Expected:
+
+Initial payment is tracked separately.
+
+After the configured approval stage:
+
+Remaining payment becomes due.
+
+Customer pays remaining $100.
+
+Payment Status becomes:
+
+"Fully Paid"
+
+--------------------------------------------------
+
+TEST D — PAY AFTER INITIAL APPROVAL
+
+Configure:
+
+Payment Required:
+YES
+
+Payment Model:
+PAY AFTER INITIAL APPROVAL
+
+Total Fee:
+$200
+
+Expected:
+
+Customer submits application without payment.
+
+Application goes under review.
+
+Admin grants initial approval.
+
+System changes:
+
+Payment Status:
+"Payment Required"
+
+Customer receives notification.
+
+Customer pays $200.
+
+Backend verifies payment.
+
+Payment Status:
+"Fully Paid"
+
+Application continues processing.
+
+==================================================
+22. FINAL ACCEPTANCE CRITERIA
+==================================================
+
+DO NOT consider the visa system complete until the payment configuration is fully integrated into:
+
+- Admin Dashboard
+- Web Platform
+- Mobile Application
+- Backend
+- PostgreSQL Database
+- Visa Configuration
+- Application Workflow
+- Notifications
+- Application Tracking
+- Employee Permissions
+- Payment History
+- Payment Verification
+
+The system MUST support exactly these four payment configurations:
+
+1. FREE / NO PAYMENT
+2. FULL PAYMENT
+3. PARTIAL PAYMENT
+4. PAYMENT AFTER INITIAL APPROVAL
+
+The system MUST correctly track:
+
+- Total Amount
+- Amount Paid
+- Amount Due
+- Payment Stage
+- Payment Status
+- Transaction Reference
+- Payment History
+- Refund Status if applicable
+
+NO fake payments.
+
+NO hardcoded payment rules.
+
+NO client-side-only payment confirmation.
+
+NO separate Web/Mobile payment logic.
+
+NO payment configuration stored only in frontend state.
+
+ALL payment configuration and transaction data must be persistent in PostgreSQL.
+
+The Admin Dashboard must control the payment configuration for each individual visa.
+
+The Web Platform and Mobile Application must automatically follow the payment configuration defined by the Admin Dashboard.

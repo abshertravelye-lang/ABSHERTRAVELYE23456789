@@ -13,8 +13,8 @@ export default function About() {
           <h1 className="text-5xl md:text-6xl font-extrabold mb-6 tracking-tight">{t("about")}</h1>
           <p className="text-xl text-white/80 max-w-3xl mx-auto leading-relaxed font-medium">
             {language === 'ar' 
-              ? 'أبشر أعمال للسفريات والسياحة.. بوابتك نحو تجربة سفر راقية وموثوقة.' 
-              : 'Absher Travel & Tourism.. Your gateway to a premium and reliable travel experience.'}
+              ? 'ABSHER TRAVEL.. بوابتك نحو تجربة سفر راقية وموثوقة.' 
+              : 'ABSHER TRAVEL.. Your gateway to a premium and reliable travel experience.'}
           </p>
         </div>
       </div>
@@ -29,7 +29,7 @@ export default function About() {
             <div className="prose prose-slate max-w-none text-slate-600 leading-loose text-lg font-medium">
               <p className="mb-6">
                 {language === 'ar'
-                  ? 'تأسست شركة أبشر أعمال للسفريات والسياحة في العاصمة اليمنية صنعاء، بهدف تقديم مفهوم جديد ومبتكر في عالم السفر والسياحة. لقد أدركنا الحاجة الماسة إلى خدمات سفر ترتقي للمستويات العالمية وتلبي تطلعات المسافر اليمني.'
+                  ? 'تأسست شركة ABSHER TRAVEL في العاصمة اليمنية صنعاء، بهدف تقديم مفهوم جديد ومبتكر في عالم السفر والسياحة. لقد أدركنا الحاجة الماسة إلى خدمات سفر ترتقي للمستويات العالمية وتلبي تطلعات المسافر اليمني.'
                   : 'Absher Travel & Tourism was established in the Yemeni capital, Sana\'a, with the goal of introducing a new and innovative concept in the world of travel and tourism. We recognized the urgent need for travel services that rise to global standards and meet the expectations of the Yemeni traveler.'}
               </p>
               <p>
@@ -88,7 +88,7 @@ export default function About() {
           <div className="absolute left-0 bottom-0 w-96 h-96 bg-accent/10 rounded-full blur-3xl translate-y-1/3 -translate-x-1/3"></div>
           
           <div className="relative z-10">
-            <h2 className="text-4xl font-extrabold mb-16 text-center tracking-tight">{language === 'ar' ? 'لماذا تختار أبشر أعمال؟' : 'Why Choose Absher Travel?'}</h2>
+            <h2 className="text-4xl font-extrabold mb-16 text-center tracking-tight">{language === 'ar' ? 'لماذا تختار ABSHER TRAVEL؟' : 'Why Choose ABSHER TRAVEL?'}</h2>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
               <div className="text-center">

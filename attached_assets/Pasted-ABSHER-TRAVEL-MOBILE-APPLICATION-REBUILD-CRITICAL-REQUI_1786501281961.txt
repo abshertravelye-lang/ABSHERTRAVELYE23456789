@@ -1,0 +1,213 @@
+ABSHER TRAVEL MOBILE APPLICATION REBUILD
+CRITICAL REQUIREMENT
+This project must be developed as a REAL MOBILE APPLICATION and not as a simple responsive website.
+
+The primary objective is to produce a production-ready Android App Bundle (.AAB) that can be uploaded directly to Google Play Console.
+
+The architecture, dependencies, permissions, build process and project structure must be fully compatible with Google Play requirements.
+
+TECHNOLOGY REQUIREMENTS
+Flutter (Latest Stable Version) Preferred OR
+React Native (Latest Stable Version)
+The final result MUST generate:
+
+Android App Bundle (.aab)
+Signed Release Build
+Production Build
+Play Store Ready
+No experimental packages.
+
+No deprecated libraries.
+
+No build warnings.
+
+No build errors.
+
+CURRENT BUSINESS FOCUS
+ABSHER TRAVEL is currently focused on:
+
+Electronic Visas
+Visa Applications
+Visa Tracking
+Travel Programs
+Customer Support
+Flight Booking and Hotels remain visible but marked:
+
+"Coming Soon"
+
+without affecting UX.
+
+COMPLETE MOBILE UI/UX REDESIGN
+The current design feels outdated and form-based.
+
+Redesign every screen from scratch.
+
+The application must feel like a premium modern travel company.
+
+Inspired by:
+
+Almosafer
+Wego
+Booking.com
+Expedia
+APP OPENING EXPERIENCE
+Splash Screen
+Professional animation.
+
+Small elegant logo.
+
+Premium dark navy background.
+
+Gold accents.
+
+Smooth transition.
+
+Welcome Screen
+Before Login.
+
+Show:
+
+ABSHER TRAVEL
+
+Trusted Visa & Travel Services
+
+Buttons:
+
+Login
+
+Create Account
+
+Explore Services
+
+Contact Us
+
+HOME SCREEN
+Modern mobile dashboard.
+
+Top Banner:
+
+Electronic Visa Services
+
+Main Actions:
+
+Apply For Visa
+
+Track Application
+
+My Applications
+
+Customer Support
+
+Available Countries
+
+Travel Programs
+
+Latest Updates
+
+VISA APPLICATION EXPERIENCE
+Professional multi-step wizard.
+
+Step 1: Personal Information
+
+Step 2: Passport Information
+
+Step 3: Upload Documents
+
+Step 4: Review
+
+Step 5: Submit
+
+DOCUMENT UPLOAD
+Allow:
+
+Gallery Upload
+Camera Capture
+PDF Upload
+Profile photo must support gallery selection.
+
+Passport must support gallery selection.
+
+Residence permit must support gallery selection.
+
+Do NOT force camera-only uploads.
+
+PROFILE PAGE
+Modern design.
+
+Profile Picture
+
+Profile Completion %
+
+Passport Information
+
+Saved Documents
+
+Language
+
+Notifications
+
+Dark Mode
+
+Support
+
+Terms & Conditions
+
+Privacy Policy
+
+Logout
+
+DESIGN SYSTEM
+Colors:
+
+Primary Navy: #052B5B
+
+Premium Gold: #D4AF37
+
+Background: #F8FAFC
+
+Modern Typography
+
+Premium Cards
+
+Consistent Spacing
+
+Modern Icons
+
+Smooth Animations
+
+PERFORMANCE REQUIREMENTS
+Fast startup
+Optimized images
+Lazy loading
+Secure storage
+Offline caching where appropriate
+No unnecessary API calls
+GOOGLE PLAY REQUIREMENTS
+Application must be fully prepared for:
+
+Google Play Store submission
+Android 12+
+Android 13+
+Android 14+
+Android 15+
+Required:
+
+App Icon
+Adaptive Icon
+Splash Screen
+Privacy Policy Page
+Terms & Conditions
+Permission Handling
+Release Signing Configuration
+Play Store Ready Manifest
+FINAL DELIVERABLE
+The project is considered complete only when:
+
+Android build succeeds.
+Release build succeeds.
+Signed AAB file is generated.
+No critical warnings.
+No runtime crashes.
+Ready for direct upload to Google Play Console.
+The final goal is a premium, production-grade ABSHER TRAVEL mobile application focused on Electronic Visa Services with future expansion for Flights and Hotels.
+

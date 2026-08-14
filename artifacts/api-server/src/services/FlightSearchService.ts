@@ -50,8 +50,11 @@ export async function searchFlights(params: FlightSearchParams): Promise<Compare
   // 3. Compare and rank
   const compared = compareOffers(allOffers);
 
-  // 4. Cache result
-  await cache.set(cacheKey, compared, TTL.FLIGHT_RESULTS);
+  // 4. Cache result — only cache when we have real results so a
+  //    transient provider outage doesn't poison the cache with empty data.
+  if (compared.allOffers.length > 0) {
+    await cache.set(cacheKey, compared, TTL.FLIGHT_RESULTS);
+  }
 
   return { ...compared, searchHash: hash };
 }

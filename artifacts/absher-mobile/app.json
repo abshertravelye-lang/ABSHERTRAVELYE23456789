@@ -1,0 +1,52 @@
+{
+  "expo": {
+    "name": "ABSHER TRAVEL",
+    "slug": "abshertravel",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "abshertravel",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0A2342"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.abshertravel.app"
+    },
+    "android": {
+      "package": "com.abshertravel.app"
+    },
+    "web": {
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-router",
+        {
+          "origin": "https://replit.com/"
+        }
+      ],
+      "expo-font",
+      "expo-web-browser",
+      [
+        "expo-notifications",
+        {
+          "color": "#0A2342",
+          "defaultChannel": "default"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    },
+    "notification": {
+      "color": "#0A2342",
+      "androidMode": "default"
+    }
+  }
+}

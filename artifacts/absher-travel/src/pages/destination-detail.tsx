@@ -9,7 +9,7 @@ export default function DestinationDetail() {
   const { id } = useParams();
   const { t, language } = useTranslation();
   const { data: destination, isLoading } = useGetDestination(Number(id), { 
-    query: { enabled: !!id } 
+    query: { enabled: !!id, queryKey: ["destination", id] } 
   });
 
   const handleWhatsAppBook = () => {

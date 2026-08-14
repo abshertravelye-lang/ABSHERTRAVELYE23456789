@@ -1,0 +1,208 @@
+IMPORTANT — REDESIGN THE MOBILE HOME SCREEN
+
+Please completely redesign the highlighted section of the ABSHER TRAVEL mobile app home screen to look premium, modern, elegant, and professional.
+
+Do not make it look like a prototype or a basic template.
+
+1. Premium Promotional Banner
+
+Replace the current large card with a professional animated promotional carousel/slider.
+
+The banner should:
+
+Automatically rotate between active offers.
+Support swipe gestures on mobile.
+Use high-quality travel images.
+Have a clean Navy + Gold + White ABSHER TRAVEL style.
+Include:
+Offer title
+Short description
+Discount/price when applicable
+Clear “Explore Offer” button
+Clicking the banner or button must open the actual offer/service page.
+
+The offers must NOT be hardcoded.
+
+They must come from the existing Backend / Database / Admin Dashboard.
+
+Admin should be able to manage:
+
+Offer image
+Arabic title
+English title
+Arabic description
+English description
+Start/end date
+Active/Inactive status
+Linked service/page
+
+If there are no active offers, do not show fake/demo offers.
+
+2. Services Section
+
+Under the promotional carousel, create a clean section titled:
+
+Our Services
+
+Display only these 4 main services:
+
+Flights
+
+Use a premium flight/travel image with a minimal airplane icon.
+
+Click → Flights page.
+
+If the flight booking service is not launched yet → show the professional Coming Soon page.
+
+Hotels
+
+Use a premium hotel image with a minimal hotel icon.
+
+Click → Hotels page.
+
+If the hotel booking service is not launched yet → show the professional Coming Soon page.
+
+E-Visas
+
+Use a professional visa/passport/travel image with a minimal document/visa icon.
+
+Click → the real E-Visas page.
+
+Visa data must come from the existing:
+
+Admin Dashboard → Visa Management
+
+Do NOT hardcode visa data in the frontend.
+
+Umrah Visa
+
+Use a premium Umrah/Makkah image with a minimal Umrah icon.
+
+This card should be visually distinctive because Umrah Visa has its own independent workflow.
+
+Click → directly open the dedicated Umrah Visa application flow.
+
+Do NOT send the user to the general E-Visa application page.
+
+3. Keep the Design Minimal
+
+Do NOT use too many icons.
+
+Each service card should have:
+
+One professional image
+One small/minimal icon
+Service name
+Very short description
+Simple arrow/action
+
+Avoid emoji-heavy designs and excessive visual elements.
+
+The overall appearance should feel like a premium official travel company, not a colorful demo application.
+
+4. Visual Style
+
+Use:
+
+Deep Navy
+Elegant Gold
+White
+Very subtle gradients
+Premium photography
+Soft shadows
+Rounded but professional cards
+Clean typography
+Excellent spacing
+Minimal animations
+
+The ABSHER TRAVEL logo and branding should remain consistent.
+
+5. Arabic / English
+
+The entire screen must support:
+
+Arabic → RTL
+
+English → LTR
+
+When the user changes the language, EVERYTHING must change:
+
+Promotional banners
+Titles
+Descriptions
+Buttons
+Service names
+Messages
+
+There must be NO Arabic text remaining anywhere in English mode.
+
+Use the existing centralized translation system instead of hardcoding text separately throughout the UI.
+
+6. Real Backend Integration
+
+This is extremely important.
+
+DO NOT JUST MAKE IT LOOK GOOD.
+
+Everything must remain connected to the existing system.
+
+Use the existing:
+
+Backend
+API
+PostgreSQL
+Users
+Admin Dashboard
+Existing authentication
+Existing services
+
+Do not create mock data.
+
+Do not create a separate database.
+
+Do not create a separate application logic for the mobile app.
+
+Any offer/service controlled by Admin must be reflected in the mobile application.
+
+7. Mobile UX
+
+The design must be tested specifically on mobile.
+
+The promotional carousel must:
+
+Fit the screen perfectly
+Support swipe
+Never crop important text
+Never overflow
+Have readable buttons
+Have smooth transitions
+
+The 4 service cards must be clean and easy to tap.
+
+Final Home Screen Structure
+
+Header
+
+↓
+
+Premium Animated Offers Carousel
+
+↓
+
+Our Services
+
+↓
+
+Flights | Hotels
+
+↓
+
+E-Visas | Umrah Visa
+
+↓
+
+Bottom Navigation
+
+The final result should make the user feel that ABSHER TRAVEL is a real, premium, trustworthy travel platform, not a prototype.
+
+Most important: preserve all existing functionality and backend connections. Improve the UI/UX without breaking any current features.

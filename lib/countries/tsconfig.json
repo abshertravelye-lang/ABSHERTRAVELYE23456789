@@ -6,7 +6,6 @@
     "emitDeclarationOnly": true,
     "outDir": "dist",
     "rootDir": "src",
-    "types": ["node"],
     "resolveJsonModule": true
   },
   "include": ["src"]

@@ -129,6 +129,7 @@ function Calendar({
           return (
             <div
               data-slot="calendar"
+              // @ts-ignore – Ref version mismatch between @types/react and react-day-picker
               ref={rootRef}
               className={cn(className)}
               {...props}
@@ -158,6 +159,7 @@ function Calendar({
         DayButton: CalendarDayButton,
         WeekNumber: ({ children, ...props }) => {
           return (
+            // @ts-ignore – CSSProperties version mismatch between @types/react and react-day-picker
             <td {...props}>
               <div className="flex size-[--cell-size] items-center justify-center text-center">
                 {children}
@@ -186,6 +188,7 @@ function CalendarDayButton({
   }, [modifiers.focused])
 
   return (
+    // @ts-ignore – Ref/ButtonProps version mismatch between @types/react versions
     <Button
       ref={ref}
       variant="ghost"

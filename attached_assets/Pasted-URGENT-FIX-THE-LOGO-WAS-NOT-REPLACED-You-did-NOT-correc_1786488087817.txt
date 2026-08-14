@@ -1,0 +1,269 @@
+URGENT FIX — THE LOGO WAS NOT REPLACED.
+
+You did NOT correctly replace the old "ABSHER BUSINESS / أبشر أعمال للسفريات والسياحة" logo.
+
+The old logo is STILL visible in the website/application/admin dashboard.
+
+I need you to FIX THIS PROPERLY NOW.
+
+I am attaching the NEW official logo file:
+ABSHER-TRAVEL-NEW-LOGO.png
+
+THIS EXACT IMAGE MUST REPLACE THE OLD LOGO.
+
+DO NOT CREATE A NEW LOGO.
+DO NOT REDESIGN THE LOGO.
+DO NOT MODIFY THE LOGO.
+DO NOT USE A TEXT-BASED LOGO.
+USE THE ATTACHED IMAGE FILE EXACTLY AS PROVIDED.
+
+==================================================
+1. FIND THE OLD LOGO
+==================================================
+
+Search the ENTIRE project for every reference to the old logo.
+
+Search for:
+
+- Old logo image files
+- Logo imports
+- Logo components
+- Header logo
+- Navbar logo
+- Footer logo
+- Admin logo
+- Login logo
+- Mobile app logo
+- Splash screen logo
+- Favicon
+- App icon
+- PWA icon
+- Static assets
+- Public assets
+- CSS background images
+- React components
+- HTML files
+- Configuration files
+- Metadata
+- Any old logo URL/path
+
+Do not assume the logo is used in only one location.
+
+Search the entire codebase.
+
+==================================================
+2. REPLACE THE ACTUAL LOGO ASSET
+==================================================
+
+Copy/use the attached file:
+
+ABSHER-TRAVEL-NEW-LOGO.png
+
+as the official logo asset.
+
+If the project has an existing logo file that is referenced throughout the application, replace that file with the new logo or update EVERY import/reference to point to the new logo.
+
+IMPORTANT:
+
+The old logo must no longer be loaded anywhere.
+
+Do not simply hide the old logo with CSS.
+
+Do not place the new logo on top of the old logo.
+
+Actually remove the old logo reference from the code.
+
+==================================================
+3. WEBSITE
+==================================================
+
+Replace the logo on ALL website pages:
+
+- Homepage
+- Header
+- Navbar
+- Footer
+- Login
+- Registration
+- User dashboard
+- Profile
+- Flights
+- Hotels
+- Visas
+- Tourism programs
+- Booking pages
+- Contact page
+- About page
+- Error pages
+- Loading screens
+- Any modal that contains the logo
+
+==================================================
+4. ADMIN DASHBOARD
+==================================================
+
+Replace the old logo in the ENTIRE Admin Dashboard.
+
+Check:
+
+- Admin login
+- Admin header
+- Admin sidebar
+- Dashboard
+- All management pages
+- Visa management
+- Booking management
+- User management
+- Settings
+- Notifications
+- Every admin screen
+
+The old logo must NOT appear anywhere.
+
+==================================================
+5. MOBILE APPLICATION
+==================================================
+
+Replace the old logo in the mobile application as well.
+
+Check:
+
+- App icon
+- Splash screen
+- Login
+- Header
+- Home
+- Profile
+- Flights
+- Hotels
+- Visas
+- Programs
+- Bookings
+- Notifications
+- Settings
+- Loading screens
+
+==================================================
+6. FAVICON AND APP ICON
+==================================================
+
+Replace the old favicon with the new ABSHER TRAVEL branding.
+
+Also check:
+
+- favicon.ico
+- favicon.png
+- apple-touch-icon
+- manifest.json
+- PWA icons
+- Android app icon
+- iOS app icon
+- Any generated app icon
+
+If the existing system requires different icon sizes, generate the required sizes from the NEW logo, but do not redesign the logo.
+
+==================================================
+7. REMOVE THE OLD BRAND NAME
+==================================================
+
+Search the ENTIRE project for:
+
+"أبشر أعمال"
+"أبشر أعمال للسفريات والسياحة"
+"Absher Business"
+"Absher Business for Travel and Tourism"
+
+Remove all occurrences.
+
+The ONLY official brand name displayed to users must be:
+
+ABSHER TRAVEL
+
+Do not add Arabic text under it.
+
+==================================================
+8. IMPORTANT — CHECK FOR CACHED OLD LOGO
+==================================================
+
+After replacing the logo, check whether the old logo is being served from:
+
+- Browser cache
+- Service worker
+- PWA cache
+- CDN
+- Static asset cache
+- Build cache
+
+If necessary, update the asset filename/version so the browser is forced to load the NEW logo.
+
+For example, use a new asset path/name instead of continuing to reference the old cached logo.
+
+Also update the service worker/cache version if the project uses one.
+
+==================================================
+9. DO NOT BREAK THE EXISTING SYSTEM
+==================================================
+
+Do NOT rebuild the application.
+
+Do NOT delete the database.
+
+Do NOT remove existing functionality.
+
+Do NOT change unrelated features.
+
+Only fix the branding/logo implementation and verify the existing system continues working.
+
+==================================================
+10. FINAL VERIFICATION — VERY IMPORTANT
+==================================================
+
+After making the changes, perform a FULL project-wide search again.
+
+There must be:
+
+NO active reference to the old logo.
+
+NO old logo visible on:
+
+- Website
+- Mobile app
+- Admin Dashboard
+- Login
+- Footer
+- Navbar
+- Sidebar
+- Favicon
+- Splash screen
+- App icon
+- Loading screen
+
+The new attached logo:
+
+ABSHER-TRAVEL-NEW-LOGO.png
+
+must be the logo actually being rendered.
+
+DO NOT tell me that the logo was replaced until you have actually verified the rendered website and admin dashboard.
+
+The final visible brand must be:
+
+ABSHER TRAVEL
+
+with the exact new logo I attached.
+
+==================================================
+FINAL INSTRUCTION
+==================================================
+
+FIRST inspect the project and identify exactly where the OLD logo is being loaded from.
+
+THEN replace those references with the NEW attached logo.
+
+THEN run/build the application.
+
+THEN inspect the actual rendered pages and confirm that the OLD logo is gone.
+
+DO NOT just change text.
+
+THE ACTUAL IMAGE LOGO MUST BE REPLACED.

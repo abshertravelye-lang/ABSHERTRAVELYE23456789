@@ -1,0 +1,378 @@
+import { Router } from "express";
+import { db } from "@workspace/db";
+import {
+  agenciesTable,
+  agencyVisaServicesTable,
+  visasTable,
+  visaApplicationSubmissionsTable,
+  usersTable,
+} from "@workspace/db";
+import { and, desc, eq, isNull, sql } from "drizzle-orm";
+import { z } from "zod";
+import { requireAuth, requireAgent } from "../middleware/auth";
+import { isSameCountry } from "@workspace/countries";
+import { canonicalCountryEn } from "@workspace/countries";
+import { findUnownedObjectPath } from "../lib/objectAccess";
+import { seedApplicationDocuments } from "./applicationDocuments";
+import { notifyManyUsers } from "../lib/notify";
+import { logAudit } from "../lib/audit";
+
+const router = Router();
+
+// ═════════════════════════════════════════════════════════════════════════════
+// B2B AGENT PORTAL — role "agent" WITH a non-null users.agency_id.
+// Every route enforces isolation server-side (section 12 of the spec):
+//   * agents only ever see their own agency, its enabled visas + AGENT price,
+//     and applications submitted under their agency.
+//   * agents can never change prices, enable services, or reach admin routes.
+// ═════════════════════════════════════════════════════════════════════════════
+
+/** Generate a unique agent application number: AG-YYYY-NNNNNN */
+function generateAgentApplicationNumber(): string {
+  const year = new Date().getFullYear();
+  const rand = Math.floor(100000 + Math.random() * 900000);
+  return `AG-${year}-${rand}`;
+}
+
+// ── GET /api/agent/me — agency info + status ────────────────────────────────
+// Uses allowInactiveAgency so a suspended/pending agent can still see WHY they
+// are blocked. All other agent routes require an ACTIVE agency.
+router.get("/agent/me", requireAuth, requireAgent({ allowInactiveAgency: true }), async (req, res) => {
+  const ctx = req.agent!;
+  const [user] = await db.select({
+    id: usersTable.id, email: usersTable.email, phone: usersTable.phone,
+    firstName: usersTable.firstName, lastName: usersTable.lastName,
+  }).from(usersTable).where(eq(usersTable.id, ctx.userId));
+  const [agency] = await db.select().from(agenciesTable).where(eq(agenciesTable.id, ctx.agencyId));
+  res.json({
+    agent: {
+      id: user?.id,
+      email: user?.email ?? null,
+      phone: user?.phone ?? null,
+      firstName: user?.firstName ?? null,
+      lastName: user?.lastName ?? null,
+    },
+    agency: {
+      id: agency.id,
+      name: agency.name,
+      status: agency.status,
+      contactEmail: agency.contactEmail,
+      contactPhone: agency.contactPhone,
+    },
+  });
+});
+
+// ── GET /api/agent/dashboard — stats scoped to the agent's agency ────────────
+router.get("/agent/dashboard", requireAuth, requireAgent(), async (req, res) => {
+  const ctx = req.agent!;
+  const rows = await db.select({
+    status: visaApplicationSubmissionsTable.status,
+    count: sql<number>`count(*)::int`,
+  })
+    .from(visaApplicationSubmissionsTable)
+    .where(eq(visaApplicationSubmissionsTable.agencyId, ctx.agencyId))
+    .groupBy(visaApplicationSubmissionsTable.status);
+
+  const byStatus: Record<string, number> = {};
+  let total = 0;
+  for (const r of rows) {
+    byStatus[r.status] = r.count;
+    total += r.count;
+  }
+
+  const approved = byStatus["issued"] ?? 0;
+  const completed = byStatus["completed"] ?? 0;
+  const rejected = byStatus["rejected"] ?? 0;
+  const cancelled = byStatus["cancelled"] ?? 0;
+  // "In progress" = anything not terminal.
+  const inProgress = total - approved - completed - rejected - cancelled;
+  // "Submitted" = received/under_review (freshly submitted, not yet processed).
+  const submitted = (byStatus["received"] ?? 0) + (byStatus["under_review"] ?? 0);
+
+  res.json({
+    agencyName: ctx.agencyName,
+    agencyStatus: ctx.agencyStatus,
+    stats: {
+      total,
+      submitted,
+      approved: approved + completed,
+      rejected,
+      inProgress,
+      byStatus,
+    },
+  });
+});
+
+// ── GET /api/agent/visa-services — only enabled visas + AGENT price ──────────
+// The customer price (visas.fee) is NEVER returned here.
+router.get("/agent/visa-services", requireAuth, requireAgent(), async (req, res) => {
+  const ctx = req.agent!;
+  const rows = await db.select({
+    serviceId: agencyVisaServicesTable.id,
+    visaId: visasTable.id,
+    agentPrice: agencyVisaServicesTable.agentPrice,
+    currency: agencyVisaServicesTable.currency,
+    countryAr: visasTable.countryAr,
+    countryEn: visasTable.countryEn,
+    countryCode: visasTable.countryCode,
+    visaType: visasTable.visaType,
+    category: visasTable.category,
+    descriptionAr: visasTable.descriptionAr,
+    descriptionEn: visasTable.descriptionEn,
+    processingDays: visasTable.processingDays,
+    stayDuration: visasTable.stayDuration,
+    validityDays: visasTable.validityDays,
+    entryType: visasTable.entryType,
+    allowedNationalities: visasTable.allowedNationalities,
+    blockedNationalities: visasTable.blockedNationalities,
+    imageUrl: visasTable.imageUrl,
+    requiresPassportImage: visasTable.requiresPassportImage,
+    requiresPersonalPhoto: visasTable.requiresPersonalPhoto,
+  })
+    .from(agencyVisaServicesTable)
+    .innerJoin(visasTable, eq(visasTable.id, agencyVisaServicesTable.visaId))
+    .where(and(
+      eq(agencyVisaServicesTable.agencyId, ctx.agencyId),
+      eq(agencyVisaServicesTable.enabled, true),
+      eq(visasTable.isActive, true),
+      eq(visasTable.status, "available"),
+      isNull(visasTable.deletedAt),
+    ));
+  res.json(rows);
+});
+
+// ── POST /api/agent/applications — submit a new application ──────────────────
+const submitSchema = z.object({
+  visaId: z.number().int().positive(),
+  applicantNationality: z.string().min(1),
+  fullName: z.string().min(1),
+  fullNameEn: z.string().optional(),
+  gender: z.enum(["male", "female"]),
+  dateOfBirth: z.string().min(1),
+  email: z.string().email(),
+  phone: z.string().min(1),
+  passportNumber: z.string().min(1),
+  passportIssueDate: z.string().min(1),
+  passportExpiryDate: z.string().min(1),
+  passportIssuingCountry: z.string().optional(),
+  countryOfResidence: z.string().optional(),
+  passportImageUrl: z.string().optional(),
+  personalPhotoUrl: z.string().optional(),
+  residencyImageUrl: z.string().optional(),
+  residencyBackImageUrl: z.string().optional(),
+  visaImageUrl: z.string().optional(),
+  customFieldResponses: z.record(z.string(), z.unknown()).optional(),
+  agreedToTerms: z.boolean().optional(),
+});
+
+router.post("/agent/applications", requireAuth, requireAgent(), async (req, res) => {
+  try {
+    const ctx = req.agent!;
+    const ar = req.headers["x-lang"] === "ar";
+    const body = submitSchema.parse(req.body);
+
+    // 1. Visa must be enabled for THIS agency → yields the authoritative price.
+    const [service] = await db.select({
+      agentPrice: agencyVisaServicesTable.agentPrice,
+      currency: agencyVisaServicesTable.currency,
+    })
+      .from(agencyVisaServicesTable)
+      .where(and(
+        eq(agencyVisaServicesTable.agencyId, ctx.agencyId),
+        eq(agencyVisaServicesTable.visaId, body.visaId),
+        eq(agencyVisaServicesTable.enabled, true),
+      ));
+    if (!service) {
+      return res.status(422).json({ error: ar ? "هذه التأشيرة غير متاحة لوكالتك." : "This visa is not available for your agency." });
+    }
+
+    // 2. Visa must exist & be available.
+    const [visa] = await db.select().from(visasTable)
+      .where(and(eq(visasTable.id, body.visaId), isNull(visasTable.deletedAt)));
+    if (!visa) return res.status(404).json({ error: "Visa not found" });
+    if (!visa.isActive || visa.status !== "available") {
+      return res.status(422).json({ error: ar ? "هذه التأشيرة غير متاحة حالياً." : "This visa is not currently available." });
+    }
+
+    // 3. Applicant nationality must satisfy the visa's existing rules
+    //    (blocked list always wins; allowed list, if non-empty, must contain it).
+    const nationality = canonicalCountryEn(body.applicantNationality) ?? body.applicantNationality;
+    const blocked = (visa.blockedNationalities ?? []).some((n) => isSameCountry(n, nationality));
+    if (blocked) {
+      return res.status(422).json({
+        error: ar
+          ? (visa.ineligibleMessageAr || "هذه الجنسية غير مؤهلة لهذه التأشيرة.")
+          : (visa.ineligibleMessageEn || "This nationality is not eligible for this visa."),
+      });
+    }
+    const allowed = visa.allowedNationalities ?? [];
+    if (allowed.length > 0 && !allowed.some((n) => isSameCountry(n, nationality))) {
+      return res.status(422).json({
+        error: ar
+          ? (visa.ineligibleMessageAr || "هذه الجنسية غير مؤهلة لهذه التأشيرة.")
+          : (visa.ineligibleMessageEn || "This nationality is not eligible for this visa."),
+      });
+    }
+
+    // 4. Required documents must be provided AND owned by the calling agent
+    //    (object_uploads ownership — prevents referencing another party's file).
+    const docPaths: Array<string | null | undefined> = [
+      body.passportImageUrl, body.personalPhotoUrl,
+      body.residencyImageUrl, body.residencyBackImageUrl, body.visaImageUrl,
+    ];
+    const customValues = body.customFieldResponses
+      ? Object.values(body.customFieldResponses).filter((v): v is string => typeof v === "string")
+      : [];
+
+    if (visa.requiresPassportImage && !body.passportImageUrl) {
+      return res.status(422).json({ error: ar ? "صورة جواز السفر مطلوبة." : "Passport image is required." });
+    }
+    if (visa.requiresPersonalPhoto && !body.personalPhotoUrl) {
+      return res.status(422).json({ error: ar ? "الصورة الشخصية مطلوبة." : "Personal photo is required." });
+    }
+
+    const unowned = await findUnownedObjectPath(ctx.userId, [...docPaths, ...customValues]);
+    if (unowned) {
+      return res.status(403).json({ error: ar ? "لا تملك أحد المستندات المشار إليها." : "You do not own one of the referenced documents." });
+    }
+
+    // 5. Generate a unique AG- tracking number.
+    let trackingNumber = generateAgentApplicationNumber();
+    for (let attempts = 0; attempts < 5; attempts++) {
+      const [existing] = await db.select({ id: visaApplicationSubmissionsTable.id })
+        .from(visaApplicationSubmissionsTable)
+        .where(eq(visaApplicationSubmissionsTable.trackingNumber, trackingNumber));
+      if (!existing) break;
+      trackingNumber = generateAgentApplicationNumber();
+    }
+
+    // 6. Insert into the SAME visa_application_submissions table.
+    //    Price is taken SERVER-SIDE from agency_visa_services — never the client.
+    const insertData = {
+      trackingNumber,
+      visaId: body.visaId,
+      userId: null, // agent applications belong to the agency, not a customer user
+      eligibilityPath: "direct",
+      fullName: body.fullName,
+      fullNameEn: body.fullNameEn ?? body.fullName,
+      nationality,
+      gender: body.gender,
+      dateOfBirth: body.dateOfBirth,
+      countryOfResidence: body.countryOfResidence ?? null,
+      email: body.email,
+      phone: body.phone,
+      passportNumber: body.passportNumber,
+      passportIssueDate: body.passportIssueDate,
+      passportExpiryDate: body.passportExpiryDate,
+      passportIssuingCountry: body.passportIssuingCountry ?? null,
+      passportImageUrl: body.passportImageUrl ?? null,
+      personalPhotoUrl: body.personalPhotoUrl ?? null,
+      residencyImageUrl: body.residencyImageUrl ?? null,
+      residencyBackImageUrl: body.residencyBackImageUrl ?? null,
+      visaImageUrl: body.visaImageUrl ?? null,
+      customFieldResponses: body.customFieldResponses ?? {},
+      agreedToTerms: body.agreedToTerms ?? true,
+      status: "received",
+      // ── Agent-portal fields ──
+      agencyId: ctx.agencyId,
+      submittedByAgentId: ctx.userId,
+      agentPrice: String(service.agentPrice) as any,
+    };
+
+    const [row] = await db.insert(visaApplicationSubmissionsTable).values(insertData as never).returning();
+
+    // Seed application document slots (best effort). Owner = submitting agent.
+    try {
+      await seedApplicationDocuments({
+        id: row.id,
+        userId: ctx.userId,
+        visaId: row.visaId,
+        passportImageUrl: row.passportImageUrl,
+        personalPhotoUrl: row.personalPhotoUrl,
+        residencyImageUrl: row.residencyImageUrl,
+        residencyBackImageUrl: row.residencyBackImageUrl,
+        visaImageUrl: row.visaImageUrl,
+      });
+    } catch (seedErr) {
+      req.log.error({ err: seedErr }, "Failed to seed agent application documents");
+    }
+
+    // Notify ABSHER TRAVEL staff who process agent applications.
+    try {
+      const staff = await db.select({ id: usersTable.id }).from(usersTable)
+        .where(and(sql`${usersTable.permissions} ? 'visa_applications'`, eq(usersTable.isActive, true), isNull(usersTable.deletedAt)));
+      const admins = await db.select({ id: usersTable.id }).from(usersTable)
+        .where(and(sql`${usersTable.role} IN ('admin','super_admin')`, eq(usersTable.isActive, true), isNull(usersTable.deletedAt)));
+      const ids = [...new Set([...staff.map((s) => s.id), ...admins.map((a) => a.id)])];
+      if (ids.length > 0) {
+        await notifyManyUsers(ids, {
+          titleAr: "طلب تأشيرة جديد من وكالة",
+          titleEn: "New agency visa application",
+          messageAr: `تم استلام طلب جديد ${row.trackingNumber} من ${ctx.agencyName}.`,
+          messageEn: `New application ${row.trackingNumber} received from ${ctx.agencyName}.`,
+          relatedEntityType: "agent_application",
+          relatedEntityId: String(row.id),
+        });
+      }
+    } catch (notifyErr) {
+      req.log.error({ err: notifyErr }, "Failed to notify staff of agent application");
+    }
+
+    logAudit(req, "agent_application.submitted", { entityType: "visa_application", entityId: String(row.id), newValue: { agencyId: ctx.agencyId, trackingNumber } });
+    res.status(201).json({ ...row, createdAt: row.createdAt.toISOString(), updatedAt: row.updatedAt.toISOString() });
+  } catch (e) {
+    req.log.error(e);
+    if (e instanceof z.ZodError) return res.status(400).json({ error: "Invalid input", details: e.issues });
+    res.status(500).json({ error: "An error occurred while submitting the application." });
+  }
+});
+
+// ── GET /api/agent/applications — own agency only ────────────────────────────
+router.get("/agent/applications", requireAuth, requireAgent(), async (req, res) => {
+  const ctx = req.agent!;
+  const rows = await db.select({
+    app: visaApplicationSubmissionsTable,
+    visaType: visasTable.visaType,
+    countryEn: visasTable.countryEn,
+    countryAr: visasTable.countryAr,
+  })
+    .from(visaApplicationSubmissionsTable)
+    .leftJoin(visasTable, eq(visasTable.id, visaApplicationSubmissionsTable.visaId))
+    .where(eq(visaApplicationSubmissionsTable.agencyId, ctx.agencyId))
+    .orderBy(desc(visaApplicationSubmissionsTable.createdAt));
+  res.json(rows.map((r) => ({
+    ...r.app,
+    createdAt: r.app.createdAt.toISOString(),
+    updatedAt: r.app.updatedAt.toISOString(),
+    visaType: r.visaType,
+    countryEn: r.countryEn,
+    countryAr: r.countryAr,
+  })));
+});
+
+// ── GET /api/agent/applications/:id — own agency only ────────────────────────
+router.get("/agent/applications/:id", requireAuth, requireAgent(), async (req, res) => {
+  const ctx = req.agent!;
+  const id = Number(req.params.id);
+  const [row] = await db.select({
+    app: visaApplicationSubmissionsTable,
+    visaType: visasTable.visaType,
+    countryEn: visasTable.countryEn,
+    countryAr: visasTable.countryAr,
+  })
+    .from(visaApplicationSubmissionsTable)
+    .leftJoin(visasTable, eq(visasTable.id, visaApplicationSubmissionsTable.visaId))
+    .where(eq(visaApplicationSubmissionsTable.id, id));
+  // Strict isolation: not found OR belongs to another agency → 404.
+  if (!row || row.app.agencyId !== ctx.agencyId) return res.status(404).json({ error: "Not found" });
+  res.json({
+    ...row.app,
+    createdAt: row.app.createdAt.toISOString(),
+    updatedAt: row.app.updatedAt.toISOString(),
+    visaType: row.visaType,
+    countryEn: row.countryEn,
+    countryAr: row.countryAr,
+  });
+});
+
+export default router;

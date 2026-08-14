@@ -83,6 +83,104 @@ export const AIRPORTS: Airport[] = [
   { iata: "MLE", nameAr: "مطار فيليفارو الدولي", nameEn: "Velana International", cityAr: "ماليه", cityEn: "Male", countryAr: "المالديف", countryEn: "Maldives", countryCode: "MV", searchKeywords: ["maldives","المالديف","male","ماليه"] },
   { iata: "NRT", nameAr: "مطار طوكيو ناريتا", nameEn: "Tokyo Narita International", cityAr: "طوكيو", cityEn: "Tokyo", countryAr: "اليابان", countryEn: "Japan", countryCode: "JP", searchKeywords: ["japan","اليابان","tokyo","طوكيو"] },
   { iata: "DPS", nameAr: "مطار نغوراه راي", nameEn: "Ngurah Rai International", cityAr: "بالي", cityEn: "Bali", countryAr: "إندونيسيا", countryEn: "Indonesia", countryCode: "ID", searchKeywords: ["indonesia","إندونيسيا","bali","بالي"] },
+
+  // ═══════════════ اليمن ═══════════════
+  { iata: "SAH", nameAr: "مطار صنعاء الدولي", nameEn: "Sana'a International Airport", cityAr: "صنعاء", cityEn: "Sana'a", countryAr: "اليمن", countryEn: "Yemen", countryCode: "YE", searchKeywords: ["yemen","يمن","sanaa","صنعاء","sana'a"] },
+  { iata: "ADE", nameAr: "مطار عدن الدولي", nameEn: "Aden International Airport", cityAr: "عدن", cityEn: "Aden", countryAr: "اليمن", countryEn: "Yemen", countryCode: "YE", searchKeywords: ["yemen","يمن","aden","عدن"] },
+  { iata: "MKX", nameAr: "مطار الريان المكلا", nameEn: "Mukalla Riyan Airport", cityAr: "المكلا", cityEn: "Mukalla", countryAr: "اليمن", countryEn: "Yemen", countryCode: "YE", searchKeywords: ["yemen","يمن","mukalla","المكلا","ريان"] },
+  { iata: "TAI", nameAr: "مطار تعز الدولي", nameEn: "Ta'izz International Airport", cityAr: "تعز", cityEn: "Ta'izz", countryAr: "اليمن", countryEn: "Yemen", countryCode: "YE", searchKeywords: ["yemen","يمن","taizz","تعز","taiz"] },
+  { iata: "HOD", nameAr: "مطار الحديدة الدولي", nameEn: "Hodeidah International Airport", cityAr: "الحديدة", cityEn: "Hodeidah", countryAr: "اليمن", countryEn: "Yemen", countryCode: "YE", searchKeywords: ["yemen","يمن","hodeidah","الحديدة","hodeida"] },
+  { iata: "GXF", nameAr: "مطار سيئون", nameEn: "Seiyun Airport", cityAr: "سيئون", cityEn: "Seiyun", countryAr: "اليمن", countryEn: "Yemen", countryCode: "YE", searchKeywords: ["yemen","يمن","seiyun","سيئون","حضرموت","hadhramaut"] },
+  { iata: "BHN", nameAr: "مطار بيحان", nameEn: "Beihan Airport", cityAr: "بيحان", cityEn: "Beihan", countryAr: "اليمن", countryEn: "Yemen", countryCode: "YE", searchKeywords: ["yemen","يمن","beihan","بيحان"] },
+  { iata: "SCT", nameAr: "مطار سقطرى", nameEn: "Socotra Airport", cityAr: "سقطرى", cityEn: "Socotra", countryAr: "اليمن", countryEn: "Yemen", countryCode: "YE", searchKeywords: ["yemen","يمن","socotra","سقطرى","sokotora"] },
+
+  // ═══════════════ المملكة العربية السعودية – مطارات إضافية ═══════════════
+  { iata: "TIF", nameAr: "مطار الطائف الدولي", nameEn: "Ta'if International Airport", cityAr: "الطائف", cityEn: "Ta'if", countryAr: "المملكة العربية السعودية", countryEn: "Saudi Arabia", countryCode: "SA", searchKeywords: ["saudi","سعودية","taif","الطائف"] },
+  { iata: "ELQ", nameAr: "مطار الأمير نايف الإقليمي", nameEn: "Prince Nayef bin Abdulaziz Regional", cityAr: "بريدة", cityEn: "Buraydah", countryAr: "المملكة العربية السعودية", countryEn: "Saudi Arabia", countryCode: "SA", searchKeywords: ["saudi","سعودية","buraydah","بريدة","qassim","القصيم"] },
+  { iata: "HOF", nameAr: "مطار الأحساء الدولي", nameEn: "Al-Ahsa International Airport", cityAr: "الأحساء", cityEn: "Al-Ahsa", countryAr: "المملكة العربية السعودية", countryEn: "Saudi Arabia", countryCode: "SA", searchKeywords: ["saudi","سعودية","ahsa","الأحساء","hofuf","الهفوف"] },
+  { iata: "URY", nameAr: "مطار قريات", nameEn: "Gurayat Airport", cityAr: "قريات", cityEn: "Gurayat", countryAr: "المملكة العربية السعودية", countryEn: "Saudi Arabia", countryCode: "SA", searchKeywords: ["saudi","سعودية","gurayat","قريات"] },
+  { iata: "AQI", nameAr: "مطار عرعر", nameEn: "Arar Airport", cityAr: "عرعر", cityEn: "Arar", countryAr: "المملكة العربية السعودية", countryEn: "Saudi Arabia", countryCode: "SA", searchKeywords: ["saudi","سعودية","arar","عرعر"] },
+  { iata: "WAE", nameAr: "مطار وادي الدواسر", nameEn: "Wadi Al-Dawasir Airport", cityAr: "وادي الدواسر", cityEn: "Wadi Al-Dawasir", countryAr: "المملكة العربية السعودية", countryEn: "Saudi Arabia", countryCode: "SA", searchKeywords: ["saudi","سعودية","wadi dawasir","وادي الدواسر"] },
+  { iata: "SHW", nameAr: "مطار شرورة", nameEn: "Sharurah Airport", cityAr: "شرورة", cityEn: "Sharurah", countryAr: "المملكة العربية السعودية", countryEn: "Saudi Arabia", countryCode: "SA", searchKeywords: ["saudi","سعودية","sharurah","شرورة"] },
+
+  // ═══════════════ الجزائر والسودان ═══════════════
+  { iata: "ALG", nameAr: "مطار هواري بومدين", nameEn: "Houari Boumediene Airport", cityAr: "الجزائر العاصمة", cityEn: "Algiers", countryAr: "الجزائر", countryEn: "Algeria", countryCode: "DZ", searchKeywords: ["algeria","الجزائر","algiers","الجزائر العاصمة"] },
+  { iata: "ORN", nameAr: "مطار أحمد بن بيلة", nameEn: "Oran Es Sénia Airport", cityAr: "وهران", cityEn: "Oran", countryAr: "الجزائر", countryEn: "Algeria", countryCode: "DZ", searchKeywords: ["algeria","الجزائر","oran","وهران"] },
+  { iata: "KRT", nameAr: "مطار الخرطوم الدولي", nameEn: "Khartoum Hamad International", cityAr: "الخرطوم", cityEn: "Khartoum", countryAr: "السودان", countryEn: "Sudan", countryCode: "SD", searchKeywords: ["sudan","سودان","khartoum","الخرطوم"] },
+  { iata: "PZU", nameAr: "مطار بورتسودان الدولي", nameEn: "Port Sudan New International", cityAr: "بورتسودان", cityEn: "Port Sudan", countryAr: "السودان", countryEn: "Sudan", countryCode: "SD", searchKeywords: ["sudan","سودان","port sudan","بورتسودان"] },
+
+  // ═══════════════ سوريا وفلسطين ═══════════════
+  { iata: "DAM", nameAr: "مطار دمشق الدولي", nameEn: "Damascus International Airport", cityAr: "دمشق", cityEn: "Damascus", countryAr: "سوريا", countryEn: "Syria", countryCode: "SY", searchKeywords: ["syria","سوريا","damascus","دمشق"] },
+  { iata: "ALP", nameAr: "مطار حلب الدولي", nameEn: "Aleppo International Airport", cityAr: "حلب", cityEn: "Aleppo", countryAr: "سوريا", countryEn: "Syria", countryCode: "SY", searchKeywords: ["syria","سوريا","aleppo","حلب"] },
+
+  // ═══════════════ إيران وباكستان وأفغانستان ═══════════════
+  { iata: "IKA", nameAr: "مطار إمام خميني الدولي", nameEn: "Imam Khomeini International", cityAr: "طهران", cityEn: "Tehran", countryAr: "إيران", countryEn: "Iran", countryCode: "IR", searchKeywords: ["iran","إيران","tehran","طهران"] },
+  { iata: "KHI", nameAr: "مطار جناح الدولي", nameEn: "Jinnah International Airport", cityAr: "كراتشي", cityEn: "Karachi", countryAr: "باكستان", countryEn: "Pakistan", countryCode: "PK", searchKeywords: ["pakistan","باكستان","karachi","كراتشي"] },
+  { iata: "ISB", nameAr: "مطار إسلام آباد الدولي", nameEn: "Islamabad International Airport", cityAr: "إسلام آباد", cityEn: "Islamabad", countryAr: "باكستان", countryEn: "Pakistan", countryCode: "PK", searchKeywords: ["pakistan","باكستان","islamabad","إسلام آباد"] },
+  { iata: "LHE", nameAr: "مطار علامة إقبال الدولي", nameEn: "Allama Iqbal International", cityAr: "لاهور", cityEn: "Lahore", countryAr: "باكستان", countryEn: "Pakistan", countryCode: "PK", searchKeywords: ["pakistan","باكستان","lahore","لاهور"] },
+
+  // ═══════════════ جنوب وجنوب شرق آسيا – إضافي ═══════════════
+  { iata: "BOM", nameAr: "مطار شاتراباتي شيفاجي", nameEn: "Chhatrapati Shivaji International", cityAr: "مومباي", cityEn: "Mumbai", countryAr: "الهند", countryEn: "India", countryCode: "IN", searchKeywords: ["india","الهند","mumbai","مومباي","bombay","بومباي"] },
+  { iata: "MAA", nameAr: "مطار تشيناي الدولي", nameEn: "Chennai International Airport", cityAr: "تشيناي", cityEn: "Chennai", countryAr: "الهند", countryEn: "India", countryCode: "IN", searchKeywords: ["india","الهند","chennai","تشيناي","madras"] },
+  { iata: "HYD", nameAr: "مطار حيدر آباد الراجيف غاندي", nameEn: "Rajiv Gandhi International", cityAr: "حيدر آباد", cityEn: "Hyderabad", countryAr: "الهند", countryEn: "India", countryCode: "IN", searchKeywords: ["india","الهند","hyderabad","حيدرآباد"] },
+  { iata: "COK", nameAr: "مطار كوتشي الدولي", nameEn: "Cochin International Airport", cityAr: "كوتشي", cityEn: "Kochi", countryAr: "الهند", countryEn: "India", countryCode: "IN", searchKeywords: ["india","الهند","kochi","كوتشي","cochin","كوتشين","kerala","كيرالا"] },
+  { iata: "TRV", nameAr: "مطار ترفاندروم الدولي", nameEn: "Thiruvananthapuram International", cityAr: "ترفاندروم", cityEn: "Thiruvananthapuram", countryAr: "الهند", countryEn: "India", countryCode: "IN", searchKeywords: ["india","الهند","trivandrum","ترفاندروم","kerala","كيرالا"] },
+  { iata: "DAC", nameAr: "مطار شاه جلال الدولي", nameEn: "Hazrat Shahjalal International", cityAr: "دكا", cityEn: "Dhaka", countryAr: "بنغلاديش", countryEn: "Bangladesh", countryCode: "BD", searchKeywords: ["bangladesh","بنغلاديش","dhaka","دكا"] },
+  { iata: "CMB", nameAr: "مطار باندارانايكي الدولي", nameEn: "Bandaranaike International", cityAr: "كولومبو", cityEn: "Colombo", countryAr: "سريلانكا", countryEn: "Sri Lanka", countryCode: "LK", searchKeywords: ["sri lanka","سريلانكا","colombo","كولومبو"] },
+  { iata: "CGK", nameAr: "مطار سوكارنو هاتا الدولي", nameEn: "Soekarno-Hatta International", cityAr: "جاكرتا", cityEn: "Jakarta", countryAr: "إندونيسيا", countryEn: "Indonesia", countryCode: "ID", searchKeywords: ["indonesia","إندونيسيا","jakarta","جاكرتا"] },
+  { iata: "MNL", nameAr: "مطار نينوي أكينو الدولي", nameEn: "Ninoy Aquino International", cityAr: "مانيلا", cityEn: "Manila", countryAr: "الفلبين", countryEn: "Philippines", countryCode: "PH", searchKeywords: ["philippines","الفلبين","manila","مانيلا"] },
+  { iata: "SGN", nameAr: "مطار تان سون نهات", nameEn: "Tan Son Nhat International", cityAr: "هوشي منه", cityEn: "Ho Chi Minh City", countryAr: "فيتنام", countryEn: "Vietnam", countryCode: "VN", searchKeywords: ["vietnam","فيتنام","ho chi minh","هوشي منه","saigon"] },
+  { iata: "HAN", nameAr: "مطار نوي باي الدولي", nameEn: "Noi Bai International Airport", cityAr: "هانوي", cityEn: "Hanoi", countryAr: "فيتنام", countryEn: "Vietnam", countryCode: "VN", searchKeywords: ["vietnam","فيتنام","hanoi","هانوي"] },
+
+  // ═══════════════ شرق آسيا ═══════════════
+  { iata: "HKG", nameAr: "مطار هونغ كونغ الدولي", nameEn: "Hong Kong International", cityAr: "هونغ كونغ", cityEn: "Hong Kong", countryAr: "هونغ كونغ", countryEn: "Hong Kong", countryCode: "HK", searchKeywords: ["hong kong","هونغ كونغ"] },
+  { iata: "ICN", nameAr: "مطار إنتشيون الدولي", nameEn: "Incheon International Airport", cityAr: "سيول", cityEn: "Seoul", countryAr: "كوريا الجنوبية", countryEn: "South Korea", countryCode: "KR", searchKeywords: ["korea","كوريا","seoul","سيول","incheon"] },
+  { iata: "PEK", nameAr: "مطار بيجين كابيتال", nameEn: "Beijing Capital International", cityAr: "بيجين", cityEn: "Beijing", countryAr: "الصين", countryEn: "China", countryCode: "CN", searchKeywords: ["china","الصين","beijing","بيجين","بكين"] },
+  { iata: "PVG", nameAr: "مطار شنغهاي بودونغ", nameEn: "Shanghai Pudong International", cityAr: "شنغهاي", cityEn: "Shanghai", countryAr: "الصين", countryEn: "China", countryCode: "CN", searchKeywords: ["china","الصين","shanghai","شنغهاي"] },
+  { iata: "HND", nameAr: "مطار طوكيو هانيدا", nameEn: "Tokyo Haneda Airport", cityAr: "طوكيو", cityEn: "Tokyo", countryAr: "اليابان", countryEn: "Japan", countryCode: "JP", searchKeywords: ["japan","اليابان","tokyo","طوكيو","haneda"] },
+  { iata: "KIX", nameAr: "مطار كانساي الدولي", nameEn: "Kansai International Airport", cityAr: "أوساكا", cityEn: "Osaka", countryAr: "اليابان", countryEn: "Japan", countryCode: "JP", searchKeywords: ["japan","اليابان","osaka","أوساكا","kansai"] },
+
+  // ═══════════════ أوروبا – إضافي ═══════════════
+  { iata: "MAD", nameAr: "مطار مدريد بارخاس", nameEn: "Madrid Barajas Airport", cityAr: "مدريد", cityEn: "Madrid", countryAr: "إسبانيا", countryEn: "Spain", countryCode: "ES", searchKeywords: ["spain","إسبانيا","madrid","مدريد"] },
+  { iata: "MXP", nameAr: "مطار ميلانو مالبينسا", nameEn: "Milan Malpensa Airport", cityAr: "ميلانو", cityEn: "Milan", countryAr: "إيطاليا", countryEn: "Italy", countryCode: "IT", searchKeywords: ["italy","إيطاليا","milan","ميلانو"] },
+  { iata: "MUC", nameAr: "مطار ميونخ", nameEn: "Munich Airport", cityAr: "ميونخ", cityEn: "Munich", countryAr: "ألمانيا", countryEn: "Germany", countryCode: "DE", searchKeywords: ["germany","ألمانيا","munich","ميونخ"] },
+  { iata: "ZRH", nameAr: "مطار زيورخ", nameEn: "Zurich Airport", cityAr: "زيورخ", cityEn: "Zurich", countryAr: "سويسرا", countryEn: "Switzerland", countryCode: "CH", searchKeywords: ["switzerland","سويسرا","zurich","زيورخ"] },
+  { iata: "VIE", nameAr: "مطار فيينا الدولي", nameEn: "Vienna International Airport", cityAr: "فيينا", cityEn: "Vienna", countryAr: "النمسا", countryEn: "Austria", countryCode: "AT", searchKeywords: ["austria","النمسا","vienna","فيينا"] },
+  { iata: "BRU", nameAr: "مطار بروكسل زافنتيم", nameEn: "Brussels Airport", cityAr: "بروكسل", cityEn: "Brussels", countryAr: "بلجيكا", countryEn: "Belgium", countryCode: "BE", searchKeywords: ["belgium","بلجيكا","brussels","بروكسل"] },
+  { iata: "ARN", nameAr: "مطار ستوكهولم أرلاندا", nameEn: "Stockholm Arlanda Airport", cityAr: "ستوكهولم", cityEn: "Stockholm", countryAr: "السويد", countryEn: "Sweden", countryCode: "SE", searchKeywords: ["sweden","السويد","stockholm","ستوكهولم"] },
+  { iata: "ATH", nameAr: "مطار أثينا إيلفثيريوس فينيزيلوس", nameEn: "Athens Eleftherios Venizelos", cityAr: "أثينا", cityEn: "Athens", countryAr: "اليونان", countryEn: "Greece", countryCode: "GR", searchKeywords: ["greece","اليونان","athens","أثينا"] },
+  { iata: "GVA", nameAr: "مطار جنيف الدولي", nameEn: "Geneva International Airport", cityAr: "جنيف", cityEn: "Geneva", countryAr: "سويسرا", countryEn: "Switzerland", countryCode: "CH", searchKeywords: ["switzerland","سويسرا","geneva","جنيف"] },
+  { iata: "LIS", nameAr: "مطار لشبونة هومبرتو ديلغادو", nameEn: "Lisbon Humberto Delgado", cityAr: "لشبونة", cityEn: "Lisbon", countryAr: "البرتغال", countryEn: "Portugal", countryCode: "PT", searchKeywords: ["portugal","البرتغال","lisbon","لشبونة"] },
+
+  // ═══════════════ روسيا وجورجيا وأذربيجان ═══════════════
+  { iata: "SVO", nameAr: "مطار شيريميتيفو الدولي", nameEn: "Sheremetyevo International", cityAr: "موسكو", cityEn: "Moscow", countryAr: "روسيا", countryEn: "Russia", countryCode: "RU", searchKeywords: ["russia","روسيا","moscow","موسكو"] },
+  { iata: "DME", nameAr: "مطار دوموديدوفو", nameEn: "Domodedovo International", cityAr: "موسكو", cityEn: "Moscow", countryAr: "روسيا", countryEn: "Russia", countryCode: "RU", searchKeywords: ["russia","روسيا","moscow","موسكو","domodedovo"] },
+  { iata: "TBS", nameAr: "مطار تبليسي الدولي", nameEn: "Tbilisi International Airport", cityAr: "تبليسي", cityEn: "Tbilisi", countryAr: "جورجيا", countryEn: "Georgia", countryCode: "GE", searchKeywords: ["georgia","جورجيا","tbilisi","تبليسي"] },
+  { iata: "GYD", nameAr: "مطار حيدر علييف الدولي", nameEn: "Heydar Aliyev International", cityAr: "باكو", cityEn: "Baku", countryAr: "أذربيجان", countryEn: "Azerbaijan", countryCode: "AZ", searchKeywords: ["azerbaijan","أذربيجان","baku","باكو"] },
+
+  // ═══════════════ أمريكا الشمالية ═══════════════
+  { iata: "JFK", nameAr: "مطار جون كينيدي الدولي", nameEn: "John F. Kennedy International", cityAr: "نيويورك", cityEn: "New York", countryAr: "الولايات المتحدة", countryEn: "USA", countryCode: "US", searchKeywords: ["usa","أمريكا","new york","نيويورك","jfk"] },
+  { iata: "LAX", nameAr: "مطار لوس أنجلوس الدولي", nameEn: "Los Angeles International", cityAr: "لوس أنجلوس", cityEn: "Los Angeles", countryAr: "الولايات المتحدة", countryEn: "USA", countryCode: "US", searchKeywords: ["usa","أمريكا","los angeles","لوس أنجلوس","lax"] },
+  { iata: "ORD", nameAr: "مطار شيكاغو أوهير", nameEn: "O'Hare International Airport", cityAr: "شيكاغو", cityEn: "Chicago", countryAr: "الولايات المتحدة", countryEn: "USA", countryCode: "US", searchKeywords: ["usa","أمريكا","chicago","شيكاغو"] },
+  { iata: "IAD", nameAr: "مطار واشنطن دالاس", nameEn: "Washington Dulles International", cityAr: "واشنطن", cityEn: "Washington DC", countryAr: "الولايات المتحدة", countryEn: "USA", countryCode: "US", searchKeywords: ["usa","أمريكا","washington","واشنطن","dc"] },
+  { iata: "MIA", nameAr: "مطار ميامي الدولي", nameEn: "Miami International Airport", cityAr: "ميامي", cityEn: "Miami", countryAr: "الولايات المتحدة", countryEn: "USA", countryCode: "US", searchKeywords: ["usa","أمريكا","miami","ميامي"] },
+  { iata: "YYZ", nameAr: "مطار تورنتو بيرسون الدولي", nameEn: "Toronto Pearson International", cityAr: "تورنتو", cityEn: "Toronto", countryAr: "كندا", countryEn: "Canada", countryCode: "CA", searchKeywords: ["canada","كندا","toronto","تورنتو"] },
+
+  // ═══════════════ أفريقيا ═══════════════
+  { iata: "ADD", nameAr: "مطار بولي الدولي", nameEn: "Addis Ababa Bole International", cityAr: "أديس أبابا", cityEn: "Addis Ababa", countryAr: "إثيوبيا", countryEn: "Ethiopia", countryCode: "ET", searchKeywords: ["ethiopia","إثيوبيا","addis ababa","أديس أبابا"] },
+  { iata: "NBO", nameAr: "مطار جومو كينياتا الدولي", nameEn: "Jomo Kenyatta International", cityAr: "نيروبي", cityEn: "Nairobi", countryAr: "كينيا", countryEn: "Kenya", countryCode: "KE", searchKeywords: ["kenya","كينيا","nairobi","نيروبي"] },
+  { iata: "JNB", nameAr: "مطار أور تامبو الدولي", nameEn: "O.R. Tambo International", cityAr: "جوهانسبرغ", cityEn: "Johannesburg", countryAr: "جنوب أفريقيا", countryEn: "South Africa", countryCode: "ZA", searchKeywords: ["south africa","جنوب أفريقيا","johannesburg","جوهانسبرغ"] },
+  { iata: "LOS", nameAr: "مطار مرتلا محمد الدولي", nameEn: "Murtala Muhammed International", cityAr: "لاغوس", cityEn: "Lagos", countryAr: "نيجيريا", countryEn: "Nigeria", countryCode: "NG", searchKeywords: ["nigeria","نيجيريا","lagos","لاغوس"] },
+  { iata: "MBA", nameAr: "مطار مومباسا مويي الدولي", nameEn: "Mombasa Moi International", cityAr: "مومباسا", cityEn: "Mombasa", countryAr: "كينيا", countryEn: "Kenya", countryCode: "KE", searchKeywords: ["kenya","كينيا","mombasa","مومباسا"] },
+
+  // ═══════════════ أوروبا الشرقية وتركيا – إضافي ═══════════════
+  { iata: "ANK", nameAr: "مطار أنقرة", nameEn: "Ankara Etimesgut Airport", cityAr: "أنقرة", cityEn: "Ankara", countryAr: "تركيا", countryEn: "Turkey", countryCode: "TR", searchKeywords: ["turkey","تركيا","ankara","أنقرة"] },
+  { iata: "TZX", nameAr: "مطار طرابزون", nameEn: "Trabzon Airport", cityAr: "طرابزون", cityEn: "Trabzon", countryAr: "تركيا", countryEn: "Turkey", countryCode: "TR", searchKeywords: ["turkey","تركيا","trabzon","طرابزون"] },
+  { iata: "GZT", nameAr: "مطار غازي عنتاب أوغاكجيلار", nameEn: "Gaziantep Oğuzeli Airport", cityAr: "غازي عنتاب", cityEn: "Gaziantep", countryAr: "تركيا", countryEn: "Turkey", countryCode: "TR", searchKeywords: ["turkey","تركيا","gaziantep","غازي عنتاب"] },
+
+  // ═══════════════ أوقيانوسيا ═══════════════
+  { iata: "SYD", nameAr: "مطار سيدني كينغسفورد سميث", nameEn: "Sydney Kingsford Smith Airport", cityAr: "سيدني", cityEn: "Sydney", countryAr: "أستراليا", countryEn: "Australia", countryCode: "AU", searchKeywords: ["australia","أستراليا","sydney","سيدني"] },
+  { iata: "MEL", nameAr: "مطار ملبورن الدولي", nameEn: "Melbourne Airport", cityAr: "ملبورن", cityEn: "Melbourne", countryAr: "أستراليا", countryEn: "Australia", countryCode: "AU", searchKeywords: ["australia","أستراليا","melbourne","ملبورن"] },
 ];
 
 export function searchAirports(query: string): Airport[] {

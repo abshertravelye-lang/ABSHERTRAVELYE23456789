@@ -1,0 +1,500 @@
+IMPORTANT — CUSTOMER DOCUMENTS MUST BE DISPLAYED AND DOWNLOADABLE CORRECTLY IN ADMIN DASHBOARD
+
+There is a critical issue in the Admin Dashboard → Visa Applications → Application Details.
+
+The customer uploads important documents such as:
+
+1. Personal Photo
+2. Passport Image
+3. Residence ID
+4. Sponsor Residence ID for Umrah applications
+5. Any other documents required by the visa configuration
+
+Currently, the Admin Dashboard shows the documents incorrectly or as broken/low-quality previews, and the Admin cannot easily download the original files.
+
+THIS MUST BE FIXED COMPLETELY.
+
+==================================================
+1. ADMIN MUST SEE THE ACTUAL UPLOADED IMAGE
+==================================================
+
+When a customer uploads a document, the Admin Dashboard must display the ORIGINAL uploaded document/image.
+
+Do NOT display:
+
+- Broken image
+- Missing image
+- Low-quality thumbnail
+- Blurry image
+- Placeholder instead of the real image
+- An incorrect file reference
+- A temporary frontend preview that disappears
+
+The Admin must see the actual file that was uploaded by the customer.
+
+The image must remain available after:
+
+- Page refresh
+- Logout/Login
+- App restart
+- Server restart
+- Deployment
+- Opening the application from another device
+
+==================================================
+2. IMAGE QUALITY MUST BE PRESERVED
+==================================================
+
+Do NOT unnecessarily compress or reduce the resolution of:
+
+- Passport images
+- Personal photos
+- Residence IDs
+- Sponsor residence IDs
+- Other official documents
+
+The original uploaded file must be preserved.
+
+If a thumbnail is used in the application list, it may be optimized for display, BUT:
+
+When the Admin opens the document, the system must load the original/high-quality file.
+
+The Admin must be able to clearly read passport information and official documents.
+
+Do NOT destroy the original image quality during upload.
+
+==================================================
+3. VIEW DOCUMENT
+==================================================
+
+Each document inside:
+
+Admin Dashboard
+→ Visa Applications
+→ Application Details
+
+must have a clear button:
+
+"View"
+
+When clicked:
+
+Open a proper document/image viewer.
+
+For images:
+
+- Display the full image
+- Preserve aspect ratio
+- Allow zoom in/out
+- Allow the Admin to inspect the document clearly
+- Allow opening the image in a larger/full-screen view where appropriate
+
+The Admin should not have to struggle to inspect the document.
+
+==================================================
+4. DOWNLOAD ORIGINAL FILE
+==================================================
+
+Every uploaded document must have a clear:
+
+"Download"
+
+button.
+
+Examples:
+
+Personal Photo → Download
+Passport → Download
+Residence ID → Download
+Sponsor Residence ID → Download
+
+When the Admin clicks Download:
+
+The system must download the ORIGINAL uploaded file.
+
+Do NOT download:
+
+- A screenshot of the preview
+- A compressed thumbnail
+- A broken file
+- An HTML page
+- A temporary frontend blob
+- A low-resolution version
+
+Download the actual stored file.
+
+==================================================
+5. EASY AND SIMPLE ADMIN EXPERIENCE
+==================================================
+
+The Admin should be able to do this easily:
+
+Application Details
+→ Documents
+→ Click document
+→ View full image
+→ Download
+
+The process must be simple and fast.
+
+Do NOT require the Admin to:
+
+- Copy URLs
+- Open browser developer tools
+- Find storage paths
+- Copy file IDs
+- Open complicated links
+- Manually reconstruct file URLs
+
+The Admin should have a normal:
+
+"View"
+
+and:
+
+"Download"
+
+button.
+
+==================================================
+6. DOCUMENTS SECTION
+==================================================
+
+Improve the Documents section inside Application Details.
+
+Instead of only showing buttons such as:
+
+"Passport Image"
+"Personal Photo"
+"Residence"
+
+show each document clearly.
+
+Example:
+
+DOCUMENTS
+
+┌─────────────────────────────────────────────┐
+│ Passport                                    │
+│ [Document Preview]                          │
+│                                             │
+│ [ View ]        [ Download ]                │
+└─────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────┐
+│ Personal Photo                              │
+│ [Photo Preview]                             │
+│                                             │
+│ [ View ]        [ Download ]                │
+└─────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────┐
+│ Residence ID                                │
+│ [Document Preview]                          │
+│                                             │
+│ [ View ]        [ Download ]                │
+└─────────────────────────────────────────────┘
+
+For Umrah:
+
+┌─────────────────────────────────────────────┐
+│ Sponsor Residence ID                        │
+│ [Document Preview]                          │
+│                                             │
+│ [ View ]        [ Download ]                │
+└─────────────────────────────────────────────┘
+
+==================================================
+7. ORIGINAL FILE STORAGE
+==================================================
+
+The backend must store uploaded documents properly.
+
+Each document must have a persistent reference linked to:
+
+- User ID
+- Application ID
+- Document Type
+- Original File Name
+- MIME Type
+- File Size
+- Storage Path / Storage Key
+- Upload Date
+- Document Status
+
+The database must store the reference to the actual stored file.
+
+Do NOT store only a temporary browser URL.
+
+Do NOT rely on:
+
+blob:
+URLs
+
+for permanent document access.
+
+The uploaded files must be stored in persistent storage.
+
+==================================================
+8. SECURE DOCUMENT ACCESS
+==================================================
+
+Documents contain sensitive customer information.
+
+Do NOT make passport images, residence IDs, or personal documents publicly accessible.
+
+The system must use authenticated and authorized access.
+
+Only:
+
+- Super Admin
+- Authorized employees with the correct permission
+
+should be able to view/download customer documents.
+
+The document endpoint must verify:
+
+1. User is authenticated
+2. User has permission
+3. User is authorized to access that application/document
+
+A customer must NOT be able to access another customer's documents by changing an ID in the URL.
+
+==================================================
+9. EMPLOYEE PERMISSIONS
+==================================================
+
+Document access must respect the existing employee RBAC system.
+
+Add/ensure permissions such as:
+
+- View Customer Documents
+- Download Customer Documents
+
+Only employees who have the appropriate permission should see the View/Download actions.
+
+For example:
+
+Visa Employee may have permission to view passport and visa documents.
+
+Other employees should not automatically receive access unless authorized by Super Admin.
+
+==================================================
+10. FILE TYPES
+==================================================
+
+Support common customer-uploaded document formats such as:
+
+- JPG
+- JPEG
+- PNG
+- WEBP
+- PDF where applicable
+
+For images:
+
+Display the image viewer.
+
+For PDF:
+
+Display a PDF viewer or open the PDF securely.
+
+The Download button must download the original file.
+
+==================================================
+11. DO NOT BREAK OCR
+==================================================
+
+IMPORTANT:
+
+Fixing document storage/display MUST NOT break:
+
+Passport OCR / MRZ processing.
+
+The system must keep:
+
+Original Passport File
++
+OCR/MRZ Extracted Data
+
+Both must exist.
+
+The original passport image must remain available to the Admin.
+
+OCR data must remain available separately in the database.
+
+The Admin should be able to:
+
+View Original Passport
++
+View Extracted Passport Data
+
+==================================================
+12. CUSTOMER UPLOAD → STORAGE → ADMIN
+==================================================
+
+The complete process must be:
+
+Customer uploads document
+→ Backend receives file
+→ File is validated
+→ File is stored in persistent storage
+→ Database stores document metadata/reference
+→ Application stores document relationship
+→ Admin Dashboard retrieves authenticated document
+→ Admin sees correct original document
+→ Admin can View
+→ Admin can Download Original File
+
+This must work reliably.
+
+==================================================
+13. WEB + MOBILE
+==================================================
+
+Documents uploaded from the:
+
+Web Platform
+
+and:
+
+Mobile Application
+
+must use the SAME backend and storage system.
+
+If a customer uploads a passport from Mobile:
+
+The Admin must immediately be able to view/download it from the Web Admin Dashboard.
+
+If a customer uploads a document from Web:
+
+The same document must be available to the Admin and application through the same backend.
+
+Do NOT create separate document storage for Web and Mobile.
+
+==================================================
+14. APPLICATION DETAILS
+==================================================
+
+Inside each application, the Admin should be able to see:
+
+APPLICATION INFORMATION
+
+- Application Number
+- Customer
+- Visa Type
+- Application Status
+- Payment Status
+
+DOCUMENTS
+
+- Personal Photo
+- Passport
+- Residence ID
+- Sponsor Residence ID where applicable
+- Other required documents
+
+Each document must have:
+
+- Preview
+- View
+- Download
+- Original file information where appropriate
+
+==================================================
+15. IMPORTANT — NO BROKEN IMAGES
+==================================================
+
+Do NOT consider the feature complete if the Admin sees:
+
+- Broken image icon
+- Empty image box
+- Incorrect preview
+- Image that disappears after refresh
+- Image that works only immediately after upload
+- Image that only works for the uploader
+- Image that cannot be downloaded
+- Downloaded file that is corrupted
+
+The Admin must see the actual document reliably.
+
+==================================================
+16. TESTING
+==================================================
+
+Test with real uploaded files.
+
+Test:
+
+1. Upload Personal Photo
+2. Upload Passport
+3. Upload Residence ID
+4. Upload Sponsor Residence ID
+5. Refresh application
+6. Logout/Login
+7. Open application again
+8. View each document
+9. Zoom each document
+10. Download each document
+11. Open downloaded files
+12. Verify downloaded files are not corrupted
+13. Verify original quality is preserved
+14. Verify OCR still works
+15. Verify Web upload → Admin
+16. Verify Mobile upload → Admin
+17. Verify employee permissions
+18. Verify unauthorized users cannot access documents
+
+==================================================
+FINAL ACCEPTANCE CRITERIA
+==================================================
+
+DO NOT consider this feature complete until:
+
+The Admin can open any visa application and easily see the actual customer-uploaded:
+
+- Personal Photo
+- Passport
+- Residence ID
+- Sponsor Residence ID
+- Other required documents
+
+with clear:
+
+[ View ]
+
+and:
+
+[ Download ]
+
+buttons.
+
+VIEW must display the real high-quality document.
+
+DOWNLOAD must download the ORIGINAL uploaded file.
+
+The files must remain persistent in the existing PostgreSQL/storage architecture.
+
+The documents must be securely protected by authentication and RBAC.
+
+The exact same document must be accessible regardless of whether the customer uploaded it from:
+
+Web
+or
+Mobile.
+
+IMPORTANT:
+
+Do not simply fix the visual preview.
+
+Fix the complete file pipeline:
+
+UPLOAD
+→ STORAGE
+→ DATABASE REFERENCE
+→ APPLICATION
+→ SECURE RETRIEVAL
+→ ADMIN PREVIEW
+→ ORIGINAL DOWNLOAD
+
+The objective is that the Admin can receive, inspect, and download customer documents easily and reliably without any technical steps or manual URL handling.

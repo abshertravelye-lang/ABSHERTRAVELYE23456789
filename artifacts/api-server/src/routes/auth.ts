@@ -2,11 +2,14 @@ import { Router } from "express";
 import bcrypt from "bcryptjs";
 import { db } from "@workspace/db";
 import { usersTable, userSessionsTable } from "@workspace/db";
-import { eq, and, isNull, or } from "drizzle-orm";
+import { eq, and, isNull } from "drizzle-orm";
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from "../lib/jwt";
 import { createHash } from "crypto";
 import { z } from "zod";
 import { requireAuth } from "../middleware/auth";
+import { logAudit } from "../lib/audit";
+import { canonicalCountryEn } from "@workspace/countries";
+import { findUnownedObjectPath } from "../lib/objectAccess";
 
 const router = Router();
 
@@ -31,6 +34,32 @@ function hashToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
 }
 
+/** Compute whether a user profile is "100% complete" per business rules. */
+export function isProfileComplete(user: typeof usersTable.$inferSelect): boolean {
+  // Core personal info
+  if (!user.firstName && !user.lastName) return false;
+  if (!user.nationality) return false;
+  if (!user.dateOfBirth) return false;
+  if (!user.gender) return false;
+  if (!user.phone) return false;
+  // Photo
+  if (!user.profilePhotoUrl) return false;
+  // Passport
+  if (!user.passportNumber) return false;
+  if (!user.passportExpiryDate) return false;
+  if (!user.passportImageUrl) return false;
+  // GCC — if resident, must have country and front image
+  if (user.isGccResident) {
+    if (!user.gccResidenceCountry) return false;
+    if (!user.gccResidenceFrontUrl) return false;
+  }
+  // European — if resident/holder, must have document URL
+  if (user.isEuropeanResident) {
+    if (!user.europeanDocumentUrl) return false;
+  }
+  return true;
+}
+
 function safeUser(user: typeof usersTable.$inferSelect) {
   const {
     passwordHash: _,
@@ -40,7 +69,7 @@ function safeUser(user: typeof usersTable.$inferSelect) {
     phoneOtpExpiresAt: _____,
     ...safe
   } = user;
-  return safe;
+  return { ...safe, isProfileComplete: isProfileComplete(user) };
 }
 
 // POST /api/auth/register
@@ -73,7 +102,7 @@ router.post("/auth/register", async (req, res) => {
       passwordHash,
       firstName: body.firstName,
       lastName: body.lastName,
-      nationality: body.nationality,
+      nationality: body.nationality ? canonicalCountryEn(body.nationality) ?? body.nationality : undefined,
       gender: body.gender,
       dateOfBirth: body.dateOfBirth,
     }).returning();
@@ -91,6 +120,7 @@ router.post("/auth/register", async (req, res) => {
       expiresAt,
     });
 
+    logAudit(req, "user.register", { userId: user.id, entityType: "user", entityId: user.id });
     res.status(201).json({ user: safeUser(user), accessToken, refreshToken });
   } catch (e) {
     req.log.error(e);
@@ -111,11 +141,15 @@ router.post("/auth/login", async (req, res) => {
     const [user] = await db.select().from(usersTable).where(whereClause);
 
     if (!user || !user.isActive) {
+      logAudit(req, "auth.login_failed", { userId: user?.id ?? null, newValue: { identifier: body.email ?? body.phone } });
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
     const valid = await bcrypt.compare(body.password, user.passwordHash);
-    if (!valid) return res.status(401).json({ error: "Invalid credentials" });
+    if (!valid) {
+      logAudit(req, "auth.login_failed", { userId: user.id });
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
 
     await db.update(usersTable)
       .set({ lastLoginAt: new Date() })
@@ -134,15 +168,16 @@ router.post("/auth/login", async (req, res) => {
       expiresAt,
     });
 
+    logAudit(req, "auth.login", { userId: user.id });
     res.json({ user: safeUser(user), accessToken, refreshToken });
   } catch (e) {
     req.log.error(e);
-    if (e instanceof z.ZodError) return res.status(400).json({ error: "Invalid input" });
+    if (e instanceof z.ZodError) return res.status(400).json({ error: "Invalid input", details: e.issues });
     res.status(500).json({ error: "Internal server error" });
   }
 });
 
-// POST /api/auth/refresh
+// POST /api/auth/refresh — rotates the refresh token
 router.post("/auth/refresh", async (req, res) => {
   try {
     const { refreshToken } = z.object({ refreshToken: z.string() }).parse(req.body);
@@ -203,6 +238,7 @@ router.post("/auth/logout", requireAuth, async (req, res) => {
         .set({ revokedAt: new Date() })
         .where(eq(userSessionsTable.refreshTokenHash, tokenHash));
     }
+    logAudit(req, "auth.logout");
     res.json({ message: "Logged out successfully" });
   } catch (e) {
     req.log.error(e);
@@ -219,6 +255,102 @@ router.get("/auth/me", requireAuth, async (req, res) => {
     res.json(safeUser(user));
   } catch (e) {
     req.log.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// PATCH /api/auth/profile
+const profileUpdateSchema = z.object({
+  firstName: z.string().min(1).optional(),
+  lastName: z.string().min(1).optional(),
+  phone: z.string().optional(),
+  whatsapp: z.string().optional(),
+  address: z.string().optional(),
+  nationality: z.string().optional(),
+  gender: z.enum(["male", "female", "other"]).optional(),
+  dateOfBirth: z.string().optional(),
+  profilePhotoUrl: z.string().optional(),
+  preferredLanguage: z.enum(["ar", "en"]).optional(),
+  // Passport
+  passportNumber: z.string().optional(),
+  passportIssueCountry: z.string().optional(),
+  passportIssuePlace: z.string().optional(),
+  passportIssueDate: z.string().optional(),
+  passportExpiryDate: z.string().optional(),
+  passportImageUrl: z.string().optional(),
+  // GCC residence
+  isGccResident: z.boolean().optional(),
+  gccResidenceCountry: z.string().optional(),
+  gccResidenceNumber: z.string().optional(),
+  gccResidenceExpiry: z.string().optional(),
+  gccResidenceFrontUrl: z.string().optional(),
+  gccResidenceBackUrl: z.string().optional(),
+  // European / Schengen
+  isEuropeanResident: z.boolean().optional(),
+  europeanDocumentType: z.string().optional(),
+  europeanDocumentUrl: z.string().optional(),
+  europeanDocumentExpiry: z.string().optional(),
+});
+
+router.patch("/auth/profile", requireAuth, async (req, res) => {
+  try {
+    const body = profileUpdateSchema.parse(req.body);
+
+    // Canonicalize country values so eligibility checks compare exact canonical names.
+    // Unrecognized values are stored as-is (user may still fix them in the UI).
+    if (body.nationality) body.nationality = canonicalCountryEn(body.nationality) ?? body.nationality;
+    if (body.gccResidenceCountry) body.gccResidenceCountry = canonicalCountryEn(body.gccResidenceCountry) ?? body.gccResidenceCountry;
+    if (body.passportIssueCountry) body.passportIssueCountry = canonicalCountryEn(body.passportIssueCountry) ?? body.passportIssueCountry;
+
+    // Postgres rejects "" for date columns — convert empty strings to null
+    const dateFields = ["dateOfBirth", "passportIssueDate", "passportExpiryDate", "gccResidenceExpiry", "europeanDocumentExpiry"] as const;
+    for (const f of dateFields) {
+      if ((body as Record<string, unknown>)[f] === "") (body as Record<string, unknown>)[f] = null;
+    }
+
+    // Ownership guard: reject any /objects/ document path the writer does not
+    // own (per object_uploads). Prevents binding a victim's object into your
+    // own profile to later pass the read-authorization check.
+    const unowned = await findUnownedObjectPath(req.user!.sub, [
+      body.profilePhotoUrl,
+      body.passportImageUrl,
+      body.gccResidenceFrontUrl,
+      body.gccResidenceBackUrl,
+      body.europeanDocumentUrl,
+    ]);
+    if (unowned) {
+      return res.status(403).json({ error: "You do not own the referenced document" });
+    }
+
+    // If phone is changing, check uniqueness
+    if (body.phone) {
+      const existing = await db.select({ id: usersTable.id })
+        .from(usersTable)
+        .where(and(eq(usersTable.phone, body.phone), isNull(usersTable.deletedAt)));
+      if (existing.length > 0 && existing[0].id !== req.user!.sub) {
+        return res.status(409).json({ error: "Phone already in use" });
+      }
+    }
+
+    const [updated] = await db.update(usersTable)
+      .set({ ...body, updatedAt: new Date() })
+      .where(and(eq(usersTable.id, req.user!.sub), isNull(usersTable.deletedAt)))
+      .returning();
+
+    if (!updated) return res.status(404).json({ error: "User not found" });
+
+    // Mark profile as completed if now complete
+    if (isProfileComplete(updated) && !updated.profileCompletedAt) {
+      await db.update(usersTable)
+        .set({ profileCompletedAt: new Date() })
+        .where(eq(usersTable.id, updated.id));
+      updated.profileCompletedAt = new Date();
+    }
+
+    res.json(safeUser(updated));
+  } catch (e) {
+    req.log.error(e);
+    if (e instanceof z.ZodError) return res.status(400).json({ error: "Invalid input", details: e.issues });
     res.status(500).json({ error: "Internal server error" });
   }
 });

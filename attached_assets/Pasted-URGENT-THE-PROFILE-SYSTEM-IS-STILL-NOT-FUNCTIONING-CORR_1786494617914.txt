@@ -1,0 +1,330 @@
+URGENT — THE PROFILE SYSTEM IS STILL NOT FUNCTIONING CORRECTLY
+
+I checked the latest implementation and there are still two critical problems shown in the screenshot.
+
+I do NOT want another UI-only change.
+
+I need the actual upload, storage, image display, OCR/MRZ extraction and profile data flow fixed.
+
+==================================================
+1. PERSONAL PHOTO — UPLOAD SUCCEEDS BUT IMAGE IS NOT DISPLAYED
+==================================================
+
+The system shows:
+
+✓ "Personal photo accepted"
+
+but the actual uploaded photo is NOT visible.
+
+There is a broken/missing image icon instead of the uploaded personal photo.
+
+This means the system is accepting the upload but the image is not being correctly displayed after upload.
+
+FIX THE COMPLETE FLOW:
+
+Select photo
+→ Upload file
+→ Store file correctly
+→ Save the correct file/storage reference in the database
+→ Generate/use a valid accessible image URL
+→ Display the actual uploaded image
+→ Keep the image available after page refresh
+→ Keep the image available after logout/login
+→ Keep the image available on Web and Mobile
+
+The preview must show the REAL uploaded photo.
+
+Do NOT show a broken image icon.
+
+Do NOT show "Photo Accepted" unless the actual file was successfully uploaded, stored and can be displayed.
+
+Also make sure the image URL is not temporary or invalid after refreshing the page.
+
+==================================================
+2. PASSPORT IMAGE — SAME DISPLAY PROBLEM
+==================================================
+
+The passport image is also not being displayed correctly.
+
+The system shows a broken/missing image instead of the actual uploaded passport.
+
+Fix the passport upload/storage/display flow exactly the same way:
+
+Upload
+→ Store
+→ Save reference
+→ Generate valid URL
+→ Display actual passport image
+→ Persist after refresh/login
+→ Available on Web + Mobile
+
+==================================================
+3. PASSPORT OCR / MRZ IS NOT WORKING
+==================================================
+
+This is the most important issue.
+
+The screenshot shows:
+
+"Passport reading failed automatically"
+
+and the passport information has NOT been extracted from the uploaded passport.
+
+The system must NOT consider the passport successfully processed if OCR/MRZ extraction failed.
+
+The current fields appear to contain values such as:
+
+A1234567
+
+and other example/placeholder values.
+
+THIS MUST BE REMOVED.
+
+NEVER use fake, hardcoded, demo, placeholder or sample passport data.
+
+For example, NEVER automatically put:
+
+A1234567
+
+or any other fake passport number into the customer's profile.
+
+Only show passport data when it was actually extracted from the uploaded passport.
+
+==================================================
+4. REAL PASSPORT OCR / MRZ PROCESSING
+==================================================
+
+When the customer uploads the passport:
+
+1. Upload the actual passport image.
+2. Verify that the file was stored successfully.
+3. Display the uploaded passport image.
+4. Start OCR/MRZ processing.
+5. Detect and read the MRZ.
+6. Extract the available passport information.
+7. Populate the passport fields with the REAL extracted information.
+8. Show the extracted information to the customer for review.
+9. Allow the customer to correct an OCR mistake if necessary.
+10. Save the confirmed information to the profile.
+
+The system should extract, where available:
+
+- Full name
+- Given names
+- Surname
+- Passport number
+- Nationality
+- Date of birth
+- Gender
+- Passport issuing country
+- Date of issue
+- Date of expiry
+- MRZ data
+
+==================================================
+5. VERY IMPORTANT — DO NOT SHOW FAKE DATA
+==================================================
+
+If OCR fails:
+
+DO NOT populate the fields with example data.
+
+DO NOT populate them with previously used test data.
+
+DO NOT use:
+
+A1234567
+
+or any other placeholder.
+
+Instead show:
+
+"Passport could not be read."
+
+Arabic:
+
+"تعذر قراءة بيانات الجواز"
+
+Then show:
+
+"Please upload a clear image of the passport information page."
+
+and:
+
+"Try Again"
+
+The customer must be able to upload another passport image.
+
+==================================================
+6. OCR FAILURE MUST BE DEBUGGED
+==================================================
+
+Do not simply catch the OCR error and display "Failed".
+
+Find the actual technical reason why OCR/MRZ is failing.
+
+Check the complete chain:
+
+Frontend file upload
+→ Backend upload endpoint
+→ File storage
+→ Stored file URL/path
+→ OCR service/library
+→ OCR request
+→ OCR response
+→ MRZ parser
+→ Extracted data
+→ Database
+→ Frontend display
+
+Make sure the OCR service actually receives the uploaded passport image.
+
+Make sure the backend is not sending an invalid URL/path to the OCR service.
+
+Make sure the OCR result is correctly parsed.
+
+Make sure the extracted data is correctly returned to the frontend.
+
+Add proper backend error logging so the actual OCR error can be diagnosed.
+
+Do NOT expose technical errors to the customer.
+
+==================================================
+7. DO NOT MARK PASSPORT AS COMPLETE UNTIL OCR WORKS
+==================================================
+
+The passport step should NOT show a successful/completed state simply because the image was uploaded.
+
+There are two separate states:
+
+A) Passport image uploaded
+
+B) Passport successfully read and data extracted
+
+The passport step should only be considered complete when:
+
+✓ Passport image uploaded
+✓ Passport image accessible/displayed
+✓ OCR/MRZ successfully processed
+✓ Required passport information extracted
+✓ Customer reviewed/confirmed the information
+
+==================================================
+8. IMAGE PREVIEW MUST WORK
+==================================================
+
+For both:
+
+Personal Photo
+Passport
+
+the actual image must appear immediately after upload.
+
+Example:
+
+[REAL IMAGE PREVIEW]
+
+✓ Uploaded successfully
+
+Replace Image
+
+The image must remain visible after:
+
+- Refresh
+- Logout/login
+- Opening profile again
+- Opening visa application
+- Using another device/platform
+
+==================================================
+9. WEB + MOBILE
+==================================================
+
+This MUST work on BOTH:
+
+ABSher Travel Web Platform
+AND
+ABSher Travel Mobile Application.
+
+Use the same backend/storage/database.
+
+If the customer uploads the personal photo or passport from Mobile, it must immediately be available on Web.
+
+If uploaded from Web, it must immediately be available on Mobile.
+
+Do NOT create separate image storage or OCR logic for Web and Mobile.
+
+==================================================
+10. PROFILE DATA MUST COME FROM REAL DATA
+==================================================
+
+The profile must work like this:
+
+Personal Photo
+→ Real uploaded photo
+
+Passport
+→ Real uploaded passport image
+→ Real OCR/MRZ extraction
+→ Real passport information
+
+The customer should not have to manually enter passport information that was successfully extracted.
+
+Only information that cannot be extracted should be requested manually.
+
+==================================================
+11. IMPORTANT — CURRENT SCREENSHOT PROBLEM
+==================================================
+
+The screenshot clearly shows:
+
+- Personal photo marked "accepted" but the actual image is broken/not visible.
+- Passport marked as uploaded but the actual passport image is broken/not visible.
+- Passport OCR has failed.
+- Passport fields are not populated from the uploaded passport.
+- Example/placeholder passport information appears in the form.
+
+ALL of these issues must be fixed.
+
+Do not just change the text or visual design.
+
+Fix the underlying functionality.
+
+==================================================
+12. REQUIRED TEST BEFORE COMPLETION
+==================================================
+
+Before telling me that this task is completed, perform a real test using an actual test passport image and an actual test personal photo.
+
+Test:
+
+1. Upload personal photo.
+2. Confirm the real photo appears.
+3. Refresh page.
+4. Confirm photo still appears.
+5. Upload passport.
+6. Confirm the real passport image appears.
+7. Start OCR/MRZ.
+8. Confirm the passport is actually read.
+9. Confirm real passport data appears.
+10. Confirm no fake/sample passport data is used.
+11. Refresh page.
+12. Confirm passport image and extracted data remain.
+13. Log out and log in again.
+14. Confirm the profile remains intact.
+15. Open the same account on Web and Mobile.
+16. Confirm the same photo, passport and passport data are available.
+
+Do not consider the profile system complete until these tests pass.
+
+IMPORTANT:
+I need the actual functionality fixed, not a visual simulation.
+
+The uploaded files must be real, persistent, accessible and displayed correctly.
+
+OCR must actually read the passport.
+
+No fake data.
+No placeholder data.
+No broken image previews.
+No "success" status when the underlying operation failed.

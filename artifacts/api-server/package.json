@@ -10,8 +10,11 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@duffel/api": "^4.28.0",
     "@google-cloud/storage": "^7.21.0",
+    "@types/multer": "^2.2.0",
     "@workspace/api-zod": "workspace:*",
+    "@workspace/countries": "workspace:*",
     "@workspace/db": "workspace:*",
     "bcryptjs": "^3.0.3",
     "cookie-parser": "^1.4.7",
@@ -22,12 +25,13 @@
     "google-auth-library": "^10.9.0",
     "ioredis": "^5.11.1",
     "jsonwebtoken": "^9.0.3",
+    "multer": "^2.2.0",
+    "openai": "^6.47.0",
     "pino": "^9.14.0",
     "pino-http": "^10.5.0",
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@types/bcryptjs": "^3.0.0",
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",

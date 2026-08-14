@@ -28,6 +28,11 @@ export function CountrySelect({ value, onChange, language, placeholder, disabled
   const ar = language === "ar";
   const selected = resolveSelected(value);
 
+  // Sort countries by display name (Arabic or English) for the active language
+  const sortedCountries = ar
+    ? [...COUNTRIES].sort((a, b) => a.nameAr.localeCompare(b.nameAr, "ar"))
+    : COUNTRIES; // Already sorted by English name
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -57,12 +62,15 @@ export function CountrySelect({ value, onChange, language, placeholder, disabled
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-        <Command dir={ar ? "rtl" : "ltr"} filter={(itemValue, search) => (itemValue.includes(search.toLowerCase()) ? 1 : 0)}>
+        <Command dir={ar ? "rtl" : "ltr"} filter={(itemValue, search) => {
+          const s = search.toLowerCase();
+          return itemValue.toLowerCase().includes(s) ? 1 : 0;
+        }}>
           <CommandInput placeholder={ar ? "ابحث عن دولة..." : "Search country..."} />
           <CommandList>
             <CommandEmpty>{ar ? "لا توجد نتائج" : "No countries found"}</CommandEmpty>
             <CommandGroup>
-              {COUNTRIES.map((country) => (
+              {sortedCountries.map((country) => (
                 <CommandItem
                   key={country.code}
                   value={`${country.code.toLowerCase()} ${country.nameEn.toLowerCase()} ${country.nameAr}`}

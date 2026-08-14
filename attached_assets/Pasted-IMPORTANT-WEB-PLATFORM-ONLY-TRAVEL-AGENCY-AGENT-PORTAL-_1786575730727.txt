@@ -1,0 +1,327 @@
+IMPORTANT — WEB PLATFORM ONLY: TRAVEL AGENCY / AGENT PORTAL
+
+Please add a new Travel Agency / Agent Portal feature ONLY to the Web Platform.
+
+Do NOT add this feature to the Mobile Application.
+The existing customer mobile application and customer web experience must remain unchanged.
+
+1. Agent Access
+
+Travel agencies and authorized travel agents should not create an account themselves.
+
+Instead:
+
+The agency contacts ABSHER TRAVEL.
+Admin reviews and approves the agency.
+Admin creates the agent account.
+ABSHER TRAVEL provides the agent with:
+Username
+Password
+
+The agent then logs into a dedicated Agent Portal on the Web Platform.
+
+2. Agent Dashboard
+
+After login, the agent should immediately see a professional dashboard containing:
+
+Agency / Company Name
+Agent Account Status:
+Active
+Suspended
+Pending
+Total Applications
+Submitted Applications
+Approved Applications
+Rejected Applications
+Applications in Progress
+Any other useful application statistics
+
+The dashboard should look professional and business-oriented, not like the normal customer dashboard.
+
+3. Agent Visa Application
+
+The agent should have a clear button:
+
+"Submit New Visa Application"
+
+When starting a new application, the agent selects:
+
+Destination Country
+
+Only countries enabled by Admin for that specific agency should appear.
+
+Applicant Nationality
+
+The agent selects the customer's nationality.
+
+Only nationalities/countries permitted by the system should be available according to the existing visa rules.
+
+Applicant Documents
+
+The agent should be able to upload:
+
+Customer Passport
+Customer Photo
+Additional Required Documents
+
+The upload system must support the existing backend/document infrastructure.
+
+Documents should be uploaded securely and associated with the correct application.
+
+4. Agency-Specific Visa Availability
+
+This is very important.
+
+Admin must be able to control which visa services each agent can access.
+
+For example:
+
+Admin Dashboard → Agent Management → Select Agency → Available Visa Services
+
+Admin can enable/disable:
+
+Saudi Visa
+UAE Visa
+Oman Visa
+Qatar Visa
+Bahrain Visa
+Kuwait Visa
+Other available visa services
+
+If a visa is not enabled for an agency, it must not appear in that agent's portal.
+
+Do not hard-code these options in the frontend.
+
+5. Agency-Specific Pricing
+
+Each agency may have a different price from the normal customer price.
+
+Admin must be able to configure:
+
+Visa → Agent Price
+
+For example:
+
+Customer Price: $100
+Agent Price: $80
+
+The agent should only see the price assigned to their agency.
+
+The normal customer pricing must not be exposed or mixed with the agent pricing.
+
+Pricing must be controlled by the backend, not trusted from frontend values.
+
+6. Agent Application Submission
+
+After the agent:
+
+Selects the destination
+Selects the customer's nationality
+Uploads the passport
+Uploads the photo
+Uploads additional documents
+Confirms the application
+
+The system should:
+
+Validate all required information
+Create a real application in the existing database
+Generate a unique application/reference number
+Record the agency and agent who submitted it
+Record the selected visa
+Record the applicant nationality
+Record the submission date/time
+Apply the correct agency-specific price
+Increase the agent's application counter
+
+Example:
+
+Application #AG-2026-000125
+
+The application must become a real application inside the existing system.
+
+7. Admin Dashboard — Agent Management
+
+Add a new section:
+
+Admin Dashboard → Travel Agencies / Agents
+
+Admin should be able to:
+
+Create an agency
+Create agent accounts
+Edit agency information
+Activate / suspend an agency
+Reset agent password
+View agent applications
+View application statistics
+Configure available visa services
+Configure agency-specific pricing
+View submitted documents
+Download applicant documents
+Review application details
+8. Admin Dashboard — Agent Applications
+
+Add a dedicated section:
+
+Admin Dashboard → Agent Applications
+
+This should be the central location where ABSHER TRAVEL staff receive and process applications submitted by agencies.
+
+Each application should display:
+
+Application Number
+Agency Name
+Agent Name
+Applicant Nationality
+Destination Country
+Visa Type
+Application Status
+Submission Date
+Price
+Applicant Documents
+
+Admin should be able to open the application and securely view/download all uploaded documents.
+
+9. Application Status
+
+The agent should be able to track the application status from their dashboard.
+
+For example:
+
+Submitted → Under Review → Additional Documents Required → Processing → Approved / Rejected
+
+If Admin changes the status, the agent should see the updated status automatically.
+
+Do not create a separate application system for agents.
+
+Use the existing application/backend/database system wherever possible.
+
+10. Document Management
+
+Uploaded documents must:
+
+Be securely stored
+Be associated with the correct application
+Be accessible from Admin Dashboard
+Be downloadable by authorized Admin users
+Never be publicly accessible
+Preserve the existing document/security architecture
+
+Do not create a separate database or unrelated document storage system for agents.
+
+11. Existing System Integration
+
+This feature must integrate with the existing:
+
+Backend
+API
+PostgreSQL
+Users
+Applications
+Documents
+Payments
+Admin Dashboard
+Visa Management
+Permissions
+Notifications
+
+Do NOT create a separate backend or separate database for agents.
+
+The Agent Portal should use the same core system while applying agent-specific permissions, pricing, visa availability, and workflows.
+
+12. Important Permission Rules
+
+Agents must only be able to see:
+
+Their own agency
+Their own applications
+Their own customers/applications
+Visa services enabled for their agency
+Prices assigned to their agency
+
+Agents must never be able to:
+
+Access another agency's applications
+Change visa prices
+Enable their own visa services
+Access Admin Dashboard
+Access other agents' private data
+Download documents belonging to another agency
+
+All of these restrictions must be enforced by the Backend/API, not only by hiding buttons in the frontend.
+
+13. Professional Web Design
+
+The Agent Portal should have a modern, premium B2B design appropriate for a professional travel company.
+
+It should feel like a real Travel Agency Management Portal, not a customer-facing page.
+
+Keep the interface clean and professional with minimal unnecessary icons.
+
+Main navigation could include:
+
+Dashboard
+New Application
+My Applications
+Company Profile
+Support
+Logout
+14. Critical Requirement
+
+This feature is WEB PLATFORM ONLY.
+
+Do not add the Agent Portal or Agent-specific interface to the Mobile Application.
+
+The existing customer Mobile Application should continue working exactly as it does now.
+
+However, applications submitted through the Agent Web Portal must use the same backend and database, so they are visible to the ABSHER TRAVEL Admin team and processed through the existing system.
+
+Final Requirement
+
+DO NOT BUILD A DEMO OR STATIC FRONTEND.
+
+Everything must be functional and connected to the existing system.
+
+No:
+
+Fake applications
+Static visa lists
+Hard-coded agency prices
+Fake application numbers
+Mock documents
+Separate database
+Separate application logic
+Frontend-only permissions
+
+The final flow should be:
+
+ABSHER TRAVEL Admin
+↓
+Creates Agency
+↓
+Creates Agent Username + Password
+↓
+Assigns Available Visa Services
+↓
+Assigns Agency-Specific Prices
+↓
+Agent logs into Web Agent Portal
+↓
+Selects Visa + Destination + Nationality
+↓
+Uploads Passport + Photo + Required Documents
+↓
+Submits Application
+↓
+Real Application Number Generated
+↓
+Application Appears in Admin → Agent Applications
+↓
+Admin Reviews / Downloads Documents / Processes Application
+↓
+Status Updates
+↓
+Agent sees the updated status in their Web Portal.
+
+The goal is a fully functional B2B Agent Portal integrated with the existing ABSHER TRAVEL system — not just a new visual page.

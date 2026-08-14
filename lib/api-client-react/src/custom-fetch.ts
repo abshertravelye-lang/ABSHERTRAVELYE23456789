@@ -44,6 +44,39 @@ export function setAuthTokenGetter(getter: AuthTokenGetter | null): void {
   _authTokenGetter = getter;
 }
 
+/**
+ * Handler invoked when a request fails with 401 Unauthorized.  It should
+ * attempt to refresh the auth session (e.g. exchange a refresh token for a
+ * new access token) and return `true` when the request may be retried with
+ * a fresh token from the token getter, or `false` when refresh failed.
+ */
+export type AuthRefreshHandler = () => Promise<boolean>;
+
+let _authRefreshHandler: AuthRefreshHandler | null = null;
+let _refreshInFlight: Promise<boolean> | null = null;
+
+/**
+ * Register a handler that refreshes the auth session on 401 responses.
+ * When set, any request that fails with 401 triggers a single refresh
+ * attempt (deduplicated across concurrent requests) and is retried once
+ * with the new token. Pass `null` to clear.
+ */
+export function setAuthRefreshHandler(handler: AuthRefreshHandler | null): void {
+  _authRefreshHandler = handler;
+}
+
+async function tryRefreshAuth(): Promise<boolean> {
+  if (!_authRefreshHandler) return false;
+  if (!_refreshInFlight) {
+    _refreshInFlight = _authRefreshHandler()
+      .catch(() => false)
+      .finally(() => {
+        _refreshInFlight = null;
+      });
+  }
+  return _refreshInFlight;
+}
+
 function isRequest(input: RequestInfo | URL): input is Request {
   return typeof Request !== "undefined" && input instanceof Request;
 }
@@ -351,16 +384,45 @@ export async function customFetch<T = unknown>(
 
   // Attach bearer token when an auth getter is configured and no
   // Authorization header has been explicitly provided.
+  let tokenAttachedByGetter = false;
   if (_authTokenGetter && !headers.has("authorization")) {
     const token = await _authTokenGetter();
     if (token) {
       headers.set("authorization", `Bearer ${token}`);
+      tokenAttachedByGetter = true;
     }
   }
 
   const requestInfo = { method, url: resolveUrl(input) };
 
-  const response = await fetch(input, { ...init, method, headers });
+  let response = await fetch(input, { ...init, method, headers });
+
+  // On 401, attempt a single auth refresh and retry with a fresh token.
+  // The retry is deliberately restricted:
+  //  - only when WE attached the Authorization header via the token getter
+  //    (never overwrite a caller-provided header — that could leak the app
+  //    token to a third-party origin);
+  //  - only when the body is replayable (string / undefined — a Request or
+  //    stream body is consumed by the first fetch and cannot be resent).
+  // A 401 comes from the auth middleware before any handler side effects,
+  // so a single retry cannot duplicate a completed mutation.
+  const bodyReplayable =
+    (init.body == null || typeof init.body === "string") && !isRequest(input);
+  if (
+    response.status === 401 &&
+    _authRefreshHandler &&
+    tokenAttachedByGetter &&
+    bodyReplayable
+  ) {
+    const refreshed = await tryRefreshAuth();
+    if (refreshed && _authTokenGetter) {
+      const newToken = await _authTokenGetter();
+      if (newToken) {
+        headers.set("authorization", `Bearer ${newToken}`);
+        response = await fetch(input, { ...init, method, headers });
+      }
+    }
+  }
 
   if (!response.ok) {
     const errorData = await parseErrorBody(response, method);

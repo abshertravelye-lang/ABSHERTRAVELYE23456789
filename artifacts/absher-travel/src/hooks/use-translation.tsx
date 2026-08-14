@@ -19,7 +19,7 @@ const translations = {
     contact: "تواصل معنا",
     admin: "لوحة التحكم",
     bookNow: "احجز الآن",
-    heroTitle: "أبشر أعمال للسفريات والسياحة",
+    heroTitle: "ABSHER TRAVEL",
     heroSub: "بوابتك إلى العالم بخدمات سفر احترافية وأسعار منافسة",
     exploreOffers: "استكشف العروض",
     flightTicketBooking: "حجز تذاكر الطيران",

@@ -50,6 +50,7 @@
     "@vitejs/plugin-react": "catalog:",
     "@workspace/api-client-react": "workspace:*",
     "@workspace/countries": "workspace:*",
+    "@workspace/i18n": "workspace:*",
     "@workspace/object-storage-web": "workspace:*",
     "class-variance-authority": "catalog:",
     "clsx": "catalog:",
@@ -77,10 +78,12 @@
     "zod": "catalog:"
   },
   "dependencies": {
+    "@types/qrcode": "^1.5.6",
     "@uppy/aws-s3": "^5.1.0",
     "@uppy/core": "^5.2.0",
     "@uppy/dashboard": "^5.1.1",
     "@uppy/react": "^5.2.0",
+    "qrcode": "^1.5.4",
     "zustand": "^5.0.14"
   }
 }

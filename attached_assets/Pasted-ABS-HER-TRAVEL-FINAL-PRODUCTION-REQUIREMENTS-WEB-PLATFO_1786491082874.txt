@@ -1,0 +1,1138 @@
+ABS​​HER TRAVEL — FINAL PRODUCTION REQUIREMENTS
+WEB PLATFORM + MOBILE APP + ADMIN DASHBOARD
+COMPLETE ACCOUNT, PROFILE, VISA ELIGIBILITY AND APPLICATION SYSTEM
+
+IMPORTANT:
+Implement the following as one connected production system.
+
+This must work on:
+
+1. ABSHER TRAVEL WEB PLATFORM
+2. ABSHER TRAVEL MOBILE APP — iOS
+3. ABSHER TRAVEL MOBILE APP — Android
+4. ADMIN DASHBOARD
+5. SHARED BACKEND / API
+6. SHARED DATABASE
+
+Web, Mobile and Admin must use the SAME backend, API, database, customer accounts, profiles, visa data, eligibility rules, documents and applications.
+
+Do NOT create separate visa logic or separate customer databases for Web and Mobile.
+
+==================================================
+1. CUSTOMER ACCOUNT IS MANDATORY
+==================================================
+
+A customer MUST NOT be allowed to apply for any visa unless:
+
+- The customer has created an account.
+- The customer is logged in.
+- The customer's profile is 100% complete.
+
+If a visitor clicks "Apply Now" without being logged in:
+
+Redirect them to:
+
+Login / Create Account
+
+After registration/login, the customer must complete their profile before applying.
+
+==================================================
+2. CUSTOMER PROFILE MUST BE COMPLETED ONCE
+==================================================
+
+The customer has ONE permanent master profile.
+
+The customer completes the profile once and should NOT repeatedly enter the same information for every visa application.
+
+The profile must contain:
+
+- Personal photo
+- Passport
+- Passport information extracted by OCR/MRZ
+- Phone number
+- Nationality
+- GCC residency information
+- GCC country if applicable
+- GCC residence permit if applicable
+- European residency / visa information if applicable
+- European residence permit or Schengen visa if applicable
+
+==================================================
+3. PERSONAL PHOTO
+==================================================
+
+The customer must upload a personal/passport-style photo.
+
+The system must validate the image where technically possible.
+
+Check:
+
+- Face detected
+- Exactly one face
+- Face clearly visible
+- Image quality
+- Excessive blur
+- Reasonable lighting
+- Appropriate framing
+
+If the image fails:
+
+Do not accept it.
+
+Show a clear message asking the customer to upload a better photo.
+
+If accepted, show:
+
+✓ Personal Photo Accepted
+
+and a green verification indicator.
+
+==================================================
+4. PASSPORT SCAN AND OCR/MRZ
+==================================================
+
+The customer uploads the passport identity page.
+
+The system must use REAL OCR/MRZ processing where technically available.
+
+Automatically extract available passport information, including:
+
+- Full name
+- Given names
+- Surname
+- Passport number
+- Nationality
+- Date of birth
+- Gender
+- Date of issue
+- Date of expiry
+- MRZ information
+
+Display the extracted information for the customer to review and confirm.
+
+The customer should NOT have to manually type information that was successfully extracted.
+
+If OCR/MRZ fails:
+
+Show:
+
+"We could not read the passport automatically. Please upload a clearer image."
+
+Allow the customer to try again.
+
+Do NOT fake OCR results.
+
+==================================================
+5. GCC RESIDENCY IN PROFILE
+==================================================
+
+Ask:
+
+"Are you a resident of a GCC country?"
+
+If YES:
+
+Show the SIX GCC countries:
+
+- Saudi Arabia
+- United Arab Emirates
+- Kuwait
+- Qatar
+- Bahrain
+- Oman
+
+The customer selects their country of residence.
+
+Then show:
+
+"Upload GCC Residence Permit"
+
+This document is REQUIRED when the customer answers YES.
+
+If NO:
+
+Do not request a GCC residence document.
+
+==================================================
+6. EUROPE / SCHENGEN INFORMATION IN PROFILE
+==================================================
+
+After the GCC question ask:
+
+"Are you a resident of a European country or do you have a visa for Europe/Schengen?"
+
+Options:
+
+YES
+NO
+
+If YES:
+
+Show an upload field for:
+
+- European residence permit
+OR
+- European/Schengen visa
+
+The applicable document is REQUIRED when the customer answers YES.
+
+If NO:
+
+Continue without this document.
+
+==================================================
+7. SAVE PROFILE
+==================================================
+
+At the end of profile completion:
+
+Show:
+
+"SAVE PROFILE"
+
+When the customer clicks Save:
+
+Save all profile data and documents.
+
+Then show a popup:
+
+"Profile Completed Successfully"
+
+Arabic:
+
+"تم إكمال بيانات الملف الشخصي بنجاح"
+
+Show a GREEN indicator:
+
+✓ Profile 100% Complete
+
+The customer must clearly see that their profile is complete.
+
+==================================================
+8. PROFILE COMPLETION IS NOT VISA ELIGIBILITY
+==================================================
+
+THIS IS A CRITICAL BUSINESS RULE.
+
+A profile being 100% complete DOES NOT mean the customer is eligible to apply for every visa.
+
+Profile completion means:
+
+- Account exists
+- Customer is logged in
+- Personal information is complete
+- Passport is available
+- Personal photo is available
+- Required profile information is available
+
+Visa eligibility is a SEPARATE check.
+
+Visa eligibility is determined by the rules configured by ADMIN for the SPECIFIC VISA.
+
+The customer must pass BOTH:
+
+1. Profile Completion
+2. Visa Eligibility
+
+==================================================
+9. ADMIN CONTROLS WHO CAN APPLY
+==================================================
+
+The Admin Dashboard is the source of truth for visa eligibility.
+
+For every visa, Admin must be able to configure:
+
+- Allowed nationalities
+- Prohibited nationalities
+- GCC residency requirement
+- Accepted GCC countries
+- European residency requirement
+- Schengen visa requirement
+- Other visa-specific requirements
+- Required documents
+- Optional documents
+
+Do NOT hardcode these rules.
+
+==================================================
+10. NATIONALITY ELIGIBILITY
+==================================================
+
+When the customer clicks:
+
+"Apply Now"
+
+the system MUST check the customer's nationality against the rules configured by Admin for that specific visa.
+
+If the nationality is not eligible:
+
+BLOCK THE APPLICATION.
+
+This must happen even if:
+
+- Customer is logged in
+- Profile is 100% complete
+- Passport is valid
+- Customer has GCC residence
+- Customer has European residence
+- Customer has a Schengen visa
+
+==================================================
+11. PROHIBITED NATIONALITY ALWAYS WINS
+==================================================
+
+If Admin explicitly marks a nationality as PROHIBITED for a visa:
+
+THAT CUSTOMER MUST BE BLOCKED.
+
+No residency, Schengen visa or other supporting document may override a prohibited nationality.
+
+Example:
+
+Visa X:
+
+Allowed:
+Country A
+Country B
+Country C
+
+Prohibited:
+Country X
+Country Y
+
+Customer:
+
+Nationality = Country X
+GCC resident = YES
+Profile = 100% complete
+
+RESULT:
+
+BLOCK APPLICATION.
+
+Show popup:
+
+"You cannot apply for this visa."
+
+Arabic:
+
+"لا يمكنك التقديم على هذه التأشيرة"
+
+The customer must remain on the visa details page.
+
+Do NOT open the application form.
+
+==================================================
+12. VISA-SPECIFIC GCC RULES
+==================================================
+
+Admin must be able to configure each visa independently:
+
+GCC Residency:
+
+- Not Required
+- Required
+- Required for specific nationalities
+
+Admin must also select which GCC countries are accepted.
+
+The system must use the rules configured for the selected visa.
+
+==================================================
+13. EUROPEAN RESIDENCY / SCHENGEN RULES
+==================================================
+
+For each visa, Admin must be able to configure:
+
+- European residency not required
+- European residency required
+- Valid Schengen visa required
+- European residency OR Schengen visa
+- Both required
+- Neither required
+
+The system evaluates the customer's already saved profile information.
+
+Do NOT ask the customer to enter the same information again.
+
+==================================================
+14. BACKEND MUST ENFORCE ELIGIBILITY
+==================================================
+
+Eligibility MUST be checked on the BACKEND.
+
+Do not rely only on frontend validation.
+
+A customer must not be able to bypass eligibility by modifying:
+
+- Browser requests
+- API requests
+- Mobile requests
+- Application payloads
+
+Before creating/submitting an application, the backend must verify:
+
+- Customer nationality
+- Prohibited nationality
+- Visa eligibility
+- GCC requirements
+- European requirements
+- Schengen requirements
+- Required documents
+- Other visa-specific rules
+
+==================================================
+15. VISA APPLICATION FLOW
+==================================================
+
+After:
+
+LOGIN
++
+PROFILE 100% COMPLETE
+
+the customer can select a visa.
+
+Flow:
+
+Visa List
+↓
+Visa Details
+↓
+Apply Now
+↓
+CHECK ADMIN-CONFIGURED ELIGIBILITY
+↓
+Nationality Check
+↓
+Prohibited Nationality Check
+↓
+GCC Rules
+↓
+European Rules
+↓
+Schengen Rules
+↓
+Other Visa Rules
+
+IF NOT ELIGIBLE:
+
+Block application
++
+Show:
+
+"لا يمكنك التقديم على هذه التأشيرة"
+
+IF ELIGIBLE:
+
+Continue to application.
+
+==================================================
+16. DO NOT RE-ENTER PROFILE DATA
+==================================================
+
+If the customer is eligible:
+
+Automatically load their existing profile data.
+
+Automatically show:
+
+- Full name
+- Date of birth
+- Nationality
+- Phone number
+- Personal photo
+- Passport information
+- Passport number
+- Passport expiry
+- GCC residency
+- GCC country
+- GCC residence permit
+- European residency
+- European residence permit
+- Schengen visa
+
+The customer should NOT need to enter these again.
+
+Only request information that is genuinely specific to the selected visa and not already stored in the profile.
+
+==================================================
+17. VISA APPLICATION REVIEW
+==================================================
+
+Before submission, show a complete review page.
+
+Show:
+
+PERSONAL INFORMATION
+- Full name
+- Date of birth
+- Nationality
+- Phone number
+
+PASSPORT
+- Passport number
+- Nationality
+- Expiry date
+
+RESIDENCY
+- GCC status
+- GCC country
+- GCC residence document
+- European residency status
+- European residence permit / Schengen visa
+
+VISA
+- Visa name
+- Destination
+- Visa type
+- Duration
+- Processing time
+- Applicable fee/payment information
+
+Allow the customer to edit their profile if something is incorrect.
+
+Do not make them start the application from the beginning.
+
+==================================================
+18. DECLARATION
+==================================================
+
+Before submitting:
+
+The customer MUST read and accept the declaration and terms.
+
+Required checkbox:
+
+"I confirm that the information and documents provided are accurate and belong to me."
+
+The Submit button must remain disabled until the declaration is accepted.
+
+==================================================
+19. FINAL SUBMISSION
+==================================================
+
+After declaration:
+
+Show:
+
+"Review Your Application"
+
+Then:
+
+"Confirm and Submit Application"
+
+After confirmation:
+
+Create the REAL application record in the database.
+
+Generate a unique application number.
+
+Example:
+
+AT-2026-000001
+
+Show:
+
+"Visa Application Submitted Successfully"
+
+==================================================
+20. VISA FEE — INITIAL VERSION
+==================================================
+
+For the first version:
+
+The initial visa application submission does NOT automatically require payment unless Admin specifically configures upfront payment.
+
+The intended initial process is:
+
+Customer submits application
+↓
+Admin reviews application
+↓
+Initial approval
+↓
+Customer receives notification
+↓
+Visa fee/payment becomes required
+↓
+Customer completes payment
+↓
+Final processing continues
+
+Admin must be able to configure the applicable fee and payment stage for each visa.
+
+==================================================
+21. APPLICATION STATUS
+==================================================
+
+Customer must be able to track applications.
+
+Possible statuses:
+
+NEW
+UNDER REVIEW
+INITIAL APPROVAL
+PAYMENT REQUIRED
+DOCUMENTS REQUIRED
+APPROVED
+REJECTED
+CANCELLED
+
+When status becomes:
+
+INITIAL APPROVAL
+
+show:
+
+"Initial approval received"
+
+If payment is required:
+
+"Visa fee payment required"
+
+==================================================
+22. ADMIN DASHBOARD — VISA MANAGEMENT
+==================================================
+
+Admin must be able to:
+
+- Add visa
+- Edit visa
+- Activate/deactivate visa
+- Upload/change visa image
+- Set visa name
+- Set visa type
+- Set price
+- Set currency
+- Set duration
+- Set processing time
+- Set allowed nationalities
+- Set prohibited nationalities
+- Set GCC rules
+- Set accepted GCC countries
+- Set European residency rules
+- Set Schengen rules
+- Set required documents
+- Set optional documents
+- Set visa-specific requirements
+- Set payment stage
+- Set visa availability
+
+==================================================
+23. NEW VISA MUST APPEAR EVERYWHERE
+==================================================
+
+When Admin adds a new visa:
+
+It must automatically appear on:
+
+- Web Platform
+- Mobile iOS
+- Mobile Android
+
+Admin must NOT manually create the same visa separately for each platform.
+
+The same database record must power all platforms.
+
+==================================================
+24. ADMIN CHANGES MUST SYNC
+==================================================
+
+When Admin changes:
+
+- Price
+- Duration
+- Processing time
+- Eligibility
+- Nationalities
+- GCC rules
+- European rules
+- Schengen rules
+- Documents
+- Visa status
+
+the changes must automatically apply to:
+
+Web
+Mobile iOS
+Mobile Android
+
+No manual code changes should be required.
+
+==================================================
+25. ADMIN APPLICATION MANAGEMENT
+==================================================
+
+Every submitted application must appear in the Admin Dashboard.
+
+Admin must see:
+
+- Application number
+- Customer
+- Visa
+- Nationality
+- Passport information
+- Country of residence
+- GCC status
+- GCC country
+- European status
+- Schengen status
+- Documents
+- Eligibility result
+- Eligibility reason if rejected
+- Application date
+- Current status
+
+Admin can change the application status.
+
+==================================================
+26. CUSTOMER ACCOUNT SYNCHRONIZATION
+==================================================
+
+The customer has ONE account and ONE profile.
+
+If profile is completed on Mobile:
+
+It must immediately be available on Web.
+
+If profile is completed on Web:
+
+It must immediately be available on Mobile.
+
+The same applies to:
+
+- Documents
+- Passport data
+- Personal photo
+- Applications
+- Application status
+- Notifications
+
+==================================================
+27. APPLICATION SYNCHRONIZATION
+==================================================
+
+If a customer submits from Mobile:
+
+The same application must immediately appear in Admin Dashboard and Web.
+
+If a customer submits from Web:
+
+The same application must immediately appear in Admin Dashboard and Mobile.
+
+There must be ONE application record, not separate Web and Mobile records.
+
+==================================================
+28. FLIGHT BOOKINGS
+==================================================
+
+Flight booking is NOT active in the first version.
+
+When the customer clicks Flights:
+
+Show a professional popup:
+
+"Coming Soon"
+
+Arabic:
+
+"ستتوفر هذه الخدمة قريباً"
+
+Do NOT show a 404.
+
+Do NOT open a broken page.
+
+Do NOT create a fake booking system.
+
+==================================================
+29. HOTEL BOOKINGS
+==================================================
+
+Hotel booking is NOT active in the first version.
+
+When the customer clicks Hotels:
+
+Show:
+
+"Coming Soon"
+
+Arabic:
+
+"ستتوفر هذه الخدمة قريباً"
+
+Do NOT show a 404.
+
+==================================================
+30. CURRENT 404 ERROR MUST BE FIXED
+==================================================
+
+There is currently an important error:
+
+When clicking Visa Details or Apply Now, a 404/Page Not Found can appear.
+
+Fix the actual routing and application logic.
+
+Do NOT hide the problem with a fake page.
+
+Check:
+
+- Frontend routes
+- Backend routes
+- Dynamic visa IDs
+- API
+- Authentication
+- Authorization
+- Database queries
+- Mobile navigation
+- Deep linking
+
+Every active visa must have a working:
+
+Visa Details
+
+and:
+
+Apply Now
+
+route.
+
+==================================================
+31. PHOTO AND PASSPORT DOCUMENT SECURITY
+==================================================
+
+Passport, personal photo, residence permits and Schengen visas are sensitive documents.
+
+Protect them securely.
+
+Do not expose them through publicly guessable URLs.
+
+Only the customer who owns them and authorized Admin users may access them.
+
+==================================================
+32. NOTIFICATIONS
+==================================================
+
+When an application is submitted:
+
+Notify the customer.
+
+When Admin changes status:
+
+Notify the customer.
+
+Examples:
+
+Application Submitted
+Under Review
+Initial Approval
+Payment Required
+Documents Required
+Approved
+Rejected
+
+Notifications should work across Web and Mobile according to the available notification infrastructure.
+
+==================================================
+33. ERROR HANDLING
+==================================================
+
+Handle professionally:
+
+- Visa not found
+- Invalid visa
+- Visa inactive
+- Network failure
+- API failure
+- Upload failure
+- OCR failure
+- Invalid document
+- Missing required information
+- Eligibility rejection
+- Authentication failure
+
+Do not expose raw technical errors to customers.
+
+==================================================
+34. DO NOT BREAK EXISTING SYSTEM
+==================================================
+
+Before implementing:
+
+Inspect the existing architecture.
+
+Do NOT unnecessarily rebuild the entire application.
+
+Do NOT delete existing database records.
+
+Do NOT break:
+
+- Authentication
+- User accounts
+- Web Platform
+- Mobile App
+- Admin Dashboard
+- Existing visa records
+- Existing backend
+
+Reuse existing components and services where appropriate.
+
+==================================================
+35. MANDATORY ELIGIBILITY TESTS
+==================================================
+
+TEST 1:
+
+Allowed nationality
++
+All required conditions satisfied
+
+RESULT:
+Application allowed.
+
+TEST 2:
+
+Prohibited nationality
++
+GCC residence
++
+100% complete profile
+
+RESULT:
+Application BLOCKED.
+
+Show:
+
+"لا يمكنك التقديم على هذه التأشيرة"
+
+TEST 3:
+
+Allowed nationality
++
+GCC residency required
++
+No GCC residence
+
+RESULT:
+Application BLOCKED.
+
+TEST 4:
+
+Allowed nationality
++
+European/Schengen requirement satisfied
+
+RESULT:
+Application allowed.
+
+TEST 5:
+
+Allowed nationality
++
+Required European/Schengen condition not satisfied
+
+RESULT:
+Application BLOCKED.
+
+TEST 6:
+
+Profile 100% complete
++
+Nationality prohibited
+
+RESULT:
+Application BLOCKED.
+
+This test is mandatory.
+
+A complete profile MUST NEVER override Admin-configured visa eligibility.
+
+==================================================
+36. COMPLETE CUSTOMER TEST
+==================================================
+
+Test this exact flow:
+
+Create Account
+↓
+Login
+↓
+Complete Profile
+↓
+Upload Personal Photo
+↓
+Validate Photo
+↓
+Upload Passport
+↓
+OCR/MRZ reads passport
+↓
+Customer confirms passport data
+↓
+GCC residency question
+↓
+If YES → select GCC country + upload residence
+↓
+Europe/Schengen question
+↓
+If YES → upload residence/visa
+↓
+Save Profile
+↓
+Popup:
+"Profile Completed Successfully"
+↓
+Green:
+"Profile 100% Complete"
+↓
+Select Visa
+↓
+Visa Details
+↓
+Apply Now
+↓
+Admin Eligibility Check
+↓
+If eligible → continue
+↓
+Profile data automatically loaded
+↓
+Customer reviews data
+↓
+Declaration
+↓
+Final Review
+↓
+Submit
+↓
+Application Number
+↓
+Admin Review
+↓
+Initial Approval
+↓
+Payment Required
+↓
+Final Processing
+
+==================================================
+37. WEB + MOBILE TEST
+==================================================
+
+The complete flow must work on:
+
+WEB
+MOBILE iOS
+MOBILE Android
+
+Test all three.
+
+Do NOT mark the task complete if it works only on Web.
+
+Do NOT mark the task complete if it works only on Mobile.
+
+All three must use the same backend eligibility engine and same Admin rules.
+
+==================================================
+38. CROSS-PLATFORM TEST
+==================================================
+
+Test:
+
+Customer completes profile on Mobile
+→ Open Web
+→ Same profile appears.
+
+Customer submits application on Mobile
+→ Admin Dashboard
+→ Same application appears.
+
+Open Web
+→ Same application appears.
+
+Change status in Admin
+→ Mobile shows updated status.
+→ Web shows updated status.
+
+Then test the reverse:
+
+Web
+→ Admin
+→ Mobile.
+
+==================================================
+39. NEW VISA TEST
+==================================================
+
+Admin creates a NEW visa.
+
+Configure:
+
+- Visa name
+- Image
+- Price
+- Duration
+- Processing time
+- Allowed nationalities
+- Prohibited nationalities
+- GCC rules
+- European rules
+- Schengen rules
+- Required documents
+- Payment stage
+
+Verify that it automatically appears on:
+
+Web
+Mobile iOS
+Mobile Android
+
+Then change the visa rules from Admin.
+
+Verify that the changes immediately appear on all platforms.
+
+==================================================
+40. FINAL PRODUCTION REQUIREMENT
+==================================================
+
+I DO NOT WANT:
+
+- A visual prototype
+- Fake OCR
+- Fake application records
+- Hardcoded visa eligibility
+- Hardcoded nationality rules
+- Separate Web/Mobile visa logic
+- Separate customer profiles
+- Repeated personal data entry
+- Broken 404 routes
+- Frontend-only eligibility validation
+- Fake booking pages
+
+I NEED A REAL CONNECTED SYSTEM:
+
+CUSTOMER
+↕
+WEB / MOBILE
+↕
+BACKEND / API
+↕
+DATABASE
+↕
+ADMIN DASHBOARD
+
+The Admin Dashboard is the central control system for visa eligibility and visa configuration.
+
+The customer completes their profile ONCE.
+
+The profile provides the customer's information and documents.
+
+The selected visa determines whether that customer is actually allowed to apply.
+
+Profile completion and visa eligibility are TWO SEPARATE checks.
+
+The final permission to apply MUST always come from the Admin-configured rules for the selected visa.
+
+Before reporting "DONE", actually test the complete system on Web, iOS, Android and Admin Dashboard and fix all errors found.
+
+DO NOT SAY THE TASK IS COMPLETE UNTIL THESE REQUIREMENTS ARE ACTUALLY WORKING.

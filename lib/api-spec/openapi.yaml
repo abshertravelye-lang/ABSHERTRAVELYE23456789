@@ -18,6 +18,10 @@ tags:
     description: Booking management
   - name: visas
     description: Visa information
+  - name: visa-countries
+    description: Visa destination countries
+  - name: visa-custom-fields
+    description: Visa custom application form fields
   - name: programs
     description: Tourist programs
   - name: contact
@@ -34,8 +38,20 @@ tags:
     description: Admin/staff account management
   - name: visa-applications
     description: Visa application submissions
+  - name: umrah-applications
+    description: Umrah visa application service (independent workflow)
+  - name: application-documents
+    description: Per-application document management & additional-document requests
+  - name: visa-required-documents
+    description: Per-visa dynamic required-document configuration
   - name: storage
     description: File upload and object storage
+  - name: support-chat
+    description: In-app support chat (customer, guest, and staff)
+  - name: agencies
+    description: Admin management of travel agencies, agent accounts, visa services & pricing
+  - name: agent-portal
+    description: B2B agent portal (agent-scoped dashboard, visa services, applications)
 
 paths:
   /healthz:
@@ -91,6 +107,21 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Offer"
+
+  /offers/admin/list:
+    get:
+      operationId: listOffersAdmin
+      tags: [offers]
+      summary: List all offers (admin, includes inactive)
+      responses:
+        "200":
+          description: List of all offers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Offer"
 
   /offers/{id}:
     get:
@@ -326,11 +357,139 @@ paths:
         "204":
           description: Deleted
 
+  /visa-countries:
+    get:
+      operationId: listVisaCountries
+      tags: [visa-countries]
+      summary: List visa destination countries
+      parameters:
+        - name: region
+          in: query
+          schema:
+            type: string
+            enum: [gulf, arab, asian, european, african, american]
+        - name: activeOnly
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: List of countries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/VisaCountry"
+    post:
+      operationId: createVisaCountry
+      tags: [visa-countries]
+      summary: Create a visa country
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VisaCountryInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VisaCountry"
+
+  /visa-countries/{id}:
+    get:
+      operationId: getVisaCountry
+      tags: [visa-countries]
+      summary: Get a visa country with its visa count
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Country details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VisaCountry"
+    patch:
+      operationId: updateVisaCountry
+      tags: [visa-countries]
+      summary: Update a visa country
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VisaCountryUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VisaCountry"
+    delete:
+      operationId: deleteVisaCountry
+      tags: [visa-countries]
+      summary: Delete a visa country
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /visa-countries/{id}/visas:
+    get:
+      operationId: listVisasByCountry
+      tags: [visa-countries]
+      summary: List visa types for a specific country
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of visas for this country
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Visa"
+
   /visas:
     get:
       operationId: listVisas
       tags: [visas]
       summary: List visa information by country
+      parameters:
+        - name: countryId
+          in: query
+          schema:
+            type: integer
+        - name: region
+          in: query
+          schema:
+            type: string
+            enum: [gulf, arab, asian, european, african, american]
       responses:
         "200":
           description: List of visa entries
@@ -412,6 +571,133 @@ paths:
       responses:
         "204":
           description: Deleted
+
+  /visas/{id}/custom-fields:
+    get:
+      operationId: listVisaCustomFields
+      tags: [visa-custom-fields]
+      summary: List custom fields for a visa type
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of custom fields
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/VisaCustomField"
+    post:
+      operationId: createVisaCustomField
+      tags: [visa-custom-fields]
+      summary: Add a custom field to a visa type
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VisaCustomFieldInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VisaCustomField"
+
+  /visa-custom-fields/{id}:
+    patch:
+      operationId: updateVisaCustomField
+      tags: [visa-custom-fields]
+      summary: Update a custom field
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VisaCustomFieldUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VisaCustomField"
+    delete:
+      operationId: deleteVisaCustomField
+      tags: [visa-custom-fields]
+      summary: Delete a custom field
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /visa-applications/track/{trackingNumber}:
+    get:
+      operationId: trackVisaApplication
+      tags: [visa-applications]
+      summary: Track a visa application by tracking number (public)
+      parameters:
+        - name: trackingNumber
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Application tracking info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VisaApplicationTracking"
+        "404":
+          description: Not found
+
+  /visa-applications/ocr:
+    post:
+      operationId: ocrPassport
+      tags: [visa-applications]
+      summary: Extract passport data from an uploaded image using OCR
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [imageUrl]
+              properties:
+                imageUrl:
+                  type: string
+                  description: Object storage URL of the passport image
+      responses:
+        "200":
+          description: Extracted passport data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OcrResult"
 
   /visa-applications:
     get:
@@ -503,6 +789,411 @@ paths:
               schema:
                 $ref: "#/components/schemas/VisaApplication"
 
+  /umrah/config:
+    get:
+      operationId: getUmrahConfig
+      tags: [umrah-applications]
+      summary: Get Umrah declaration text and fee for a nationality
+      parameters:
+        - name: nationality
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Umrah config
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UmrahConfig"
+
+  /umrah-applications:
+    get:
+      operationId: listUmrahApplications
+      tags: [umrah-applications]
+      summary: List the caller's own Umrah applications
+      responses:
+        "200":
+          description: List of Umrah applications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UmrahApplication"
+    post:
+      operationId: createUmrahApplication
+      tags: [umrah-applications]
+      summary: Submit a new Umrah visa application
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UmrahApplicationCreate"
+      responses:
+        "201":
+          description: Created (awaiting payment)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UmrahApplicationCreated"
+        "409":
+          description: Duplicate active application
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: Validation error (e.g. no sponsor)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /umrah-applications/{id}/pay:
+    post:
+      operationId: payUmrahApplication
+      tags: [umrah-applications]
+      summary: Pay for an Umrah application (owner only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Paid and submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UmrahApplication"
+        "409":
+          description: Application cannot be paid for
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /umrah-applications/admin/list:
+    get:
+      operationId: listUmrahApplicationsAdmin
+      tags: [umrah-applications]
+      summary: List all Umrah applications with user info (admin)
+      responses:
+        "200":
+          description: List of Umrah applications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UmrahApplicationAdmin"
+
+  /umrah-applications/{id}:
+    get:
+      operationId: getUmrahApplication
+      tags: [umrah-applications]
+      summary: Get an Umrah application
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Umrah application details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UmrahApplication"
+    patch:
+      operationId: updateUmrahApplication
+      tags: [umrah-applications]
+      summary: Update an Umrah application status (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UmrahApplicationStatusUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UmrahApplication"
+
+  /visa-applications/{id}/documents:
+    get:
+      operationId: listApplicationDocuments
+      tags: [application-documents]
+      summary: List documents (with version history) for an application
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Application documents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ApplicationDocument"
+        "403":
+          description: Forbidden
+        "404":
+          description: Application not found
+
+  /visa-applications/{id}/documents/request:
+    post:
+      operationId: requestApplicationDocument
+      tags: [application-documents]
+      summary: Request an additional document from the customer (staff)
+      description: Idempotent on (applicationId, documentKey) — a double-click or retry updates the existing slot instead of creating a duplicate.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestApplicationDocumentInput"
+      responses:
+        "201":
+          description: New document request created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApplicationDocument"
+        "200":
+          description: Existing document request updated (idempotent)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApplicationDocument"
+
+  /visa-applications/{id}/documents/{docId}/upload:
+    post:
+      operationId: uploadApplicationDocument
+      tags: [application-documents]
+      summary: Upload (or re-upload) a version of a requested document (customer)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: docId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UploadApplicationDocumentInput"
+      responses:
+        "201":
+          description: New version uploaded, document under review
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApplicationDocument"
+        "400":
+          description: Invalid file type / size / storage object
+        "403":
+          description: Forbidden
+
+  /visa-applications/{id}/documents/{docId}/approve:
+    post:
+      operationId: approveApplicationDocument
+      tags: [application-documents]
+      summary: Approve an uploaded document (staff)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: docId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Document approved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApplicationDocument"
+
+  /visa-applications/{id}/documents/{docId}/reject:
+    post:
+      operationId: rejectApplicationDocument
+      tags: [application-documents]
+      summary: Reject an uploaded document with a required reason (staff)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: docId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RejectApplicationDocumentInput"
+      responses:
+        "200":
+          description: Document rejected, re-upload required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApplicationDocument"
+        "400":
+          description: rejectionReason missing
+
+  /visas/{id}/required-documents:
+    get:
+      operationId: listVisaRequiredDocuments
+      tags: [visa-required-documents]
+      summary: List the required-document config for a visa
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Required document definitions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/VisaRequiredDocument"
+    post:
+      operationId: createVisaRequiredDocument
+      tags: [visa-required-documents]
+      summary: Add a required-document definition to a visa (super admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VisaRequiredDocumentInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VisaRequiredDocument"
+
+  /visas/{id}/required-documents/{docId}:
+    patch:
+      operationId: updateVisaRequiredDocument
+      tags: [visa-required-documents]
+      summary: Update a required-document definition (super admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: docId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VisaRequiredDocumentUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VisaRequiredDocument"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteVisaRequiredDocument
+      tags: [visa-required-documents]
+      summary: Delete a required-document definition (super admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: docId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+
   /storage/uploads/request-url:
     post:
       operationId: requestUploadUrl
@@ -521,6 +1212,29 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UploadUrlResponse"
+
+  /bookings/my:
+    get:
+      operationId: listMyBookings
+      tags: [bookings]
+      security:
+        - bearerAuth: []
+      summary: List the authenticated customer's own bookings
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [flight, hotel, program, visa]
+      responses:
+        "200":
+          description: List of user's bookings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Booking"
 
   /bookings:
     get:
@@ -778,6 +1492,27 @@ paths:
               schema:
                 $ref: "#/components/schemas/SafeUser"
 
+  /auth/profile:
+    patch:
+      operationId: updateProfile
+      tags: [auth]
+      security:
+        - bearerAuth: []
+      summary: Update the authenticated user's profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProfileUpdate"
+      responses:
+        "200":
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SafeUser"
+
   # ── FLIGHTS ──────────────────────────────────────────────────────────────
 
   /flights/search:
@@ -916,6 +1651,89 @@ paths:
                 properties:
                   updated: { type: integer }
 
+  /notifications/send:
+    post:
+      operationId: sendNotification
+      tags: [notifications]
+      security:
+        - bearerAuth: []
+      summary: Admin — create and push a notification to users (requires 'notifications' permission)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NotificationSendRequest"
+      responses:
+        "200":
+          description: Sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationSendResponse"
+
+  /notifications/admin/history:
+    get:
+      operationId: listAdminNotificationHistory
+      tags: [notifications]
+      security:
+        - bearerAuth: []
+      summary: Admin — recent admin-sent notifications (requires 'notifications' permission)
+      responses:
+        "200":
+          description: Admin-sent notification history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Notification"
+
+  # ── PUSH TOKENS ──────────────────────────────────────────────────────────
+
+  /push-tokens:
+    post:
+      operationId: registerPushToken
+      tags: [notifications]
+      security:
+        - bearerAuth: []
+      summary: Register (upsert) a device push token for the authenticated user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PushTokenRegister"
+      responses:
+        "201":
+          description: Registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PushToken"
+    delete:
+      operationId: deletePushToken
+      tags: [notifications]
+      security:
+        - bearerAuth: []
+      summary: Delete a device push token (on logout)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PushTokenDelete"
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [deleted]
+                properties:
+                  deleted: { type: integer }
+
   # ── EMPLOYEES / STAFF ────────────────────────────────────────────────────
 
   /employees:
@@ -974,6 +1792,710 @@ paths:
               schema:
                 $ref: "#/components/schemas/Employee"
 
+  # ── SUPPORT CHAT ───────────────────────────────────────────────────────────
+
+  /support/conversation:
+    post:
+      operationId: getOrCreateSupportConversation
+      tags: [support-chat]
+      summary: Get-or-create the caller's single open support conversation
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Existing open conversation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupportConversation"
+        "201":
+          description: New conversation created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupportConversation"
+
+  /support/messages:
+    get:
+      operationId: listSupportMessages
+      tags: [support-chat]
+      summary: List messages of the caller's conversation (resets customer unread)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: after
+          in: query
+          description: ISO timestamp or message id; returns messages created after it
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Messages (oldest to newest)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SupportMessage"
+    post:
+      operationId: sendSupportMessage
+      tags: [support-chat]
+      summary: Send a customer message (creates conversation if none)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SupportMessageInput"
+      responses:
+        "201":
+          description: Message created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupportMessage"
+
+  /support/guest/conversation:
+    post:
+      operationId: createGuestSupportConversation
+      tags: [support-chat]
+      summary: Create a guest support conversation (no auth)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GuestConversationInput"
+      responses:
+        "201":
+          description: Guest conversation created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GuestConversationResponse"
+
+  /support/guest/messages:
+    get:
+      operationId: listGuestSupportMessages
+      tags: [support-chat]
+      summary: List messages for a guest conversation by token (no auth)
+      description: >-
+        Provide the guest token via the `x-guest-token` header (preferred).
+        The `token` query param is still accepted for backward compatibility
+        but is deprecated. Only works while the conversation is unclaimed;
+        once claimed by an account the token is revoked (404).
+      security: []
+      parameters:
+        - name: x-guest-token
+          in: header
+          required: false
+          description: Guest conversation token (preferred over the query param).
+          schema:
+            type: string
+        - name: token
+          in: query
+          required: false
+          deprecated: true
+          description: Deprecated — use the x-guest-token header instead.
+          schema:
+            type: string
+        - name: after
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Messages (oldest to newest)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SupportMessage"
+        "404":
+          description: Conversation not found
+    post:
+      operationId: sendGuestSupportMessage
+      tags: [support-chat]
+      summary: Send a guest message by token (no auth)
+      description: >-
+        Provide the guest token via the `x-guest-token` header (preferred);
+        the `token` body field is deprecated but still accepted. Only works
+        while the conversation is unclaimed.
+      security: []
+      parameters:
+        - name: x-guest-token
+          in: header
+          required: false
+          description: Guest conversation token (preferred over the body field).
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GuestMessageInput"
+      responses:
+        "201":
+          description: Message created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupportMessage"
+        "404":
+          description: Conversation not found
+        "429":
+          description: Rate limited
+
+  /support/guest/claim:
+    post:
+      operationId: claimGuestSupportConversation
+      tags: [support-chat]
+      summary: Link a guest conversation to the calling account
+      description: >-
+        Atomic, one-time claim. Provide the guest token via the
+        `x-guest-token` header (preferred) or the deprecated `token` body
+        field. On success the guest token is revoked so it can never be
+        replayed. Returns 409 if the token is unknown or the conversation was
+        already claimed (by this or another account).
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: x-guest-token
+          in: header
+          required: false
+          description: Guest conversation token (preferred over the body field).
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClaimGuestConversationInput"
+      responses:
+        "200":
+          description: Conversation linked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupportConversation"
+        "400":
+          description: Missing guest token
+        "409":
+          description: Token invalid or conversation already claimed
+
+  /support/admin/conversations:
+    get:
+      operationId: listAdminSupportConversations
+      tags: [support-chat]
+      summary: List all support conversations (staff)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Conversations (newest activity first)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminSupportConversation"
+
+  /support/admin/conversations/{id}/messages:
+    get:
+      operationId: listAdminSupportMessages
+      tags: [support-chat]
+      summary: Full message history (resets staff unread)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Messages (oldest to newest)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SupportMessage"
+        "404":
+          description: Conversation not found
+
+  /support/admin/conversations/{id}/reply:
+    post:
+      operationId: replyAdminSupportConversation
+      tags: [support-chat]
+      summary: Staff reply (notifies linked customer)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SupportMessageInput"
+      responses:
+        "201":
+          description: Reply created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupportMessage"
+        "404":
+          description: Conversation not found
+
+  /support/admin/conversations/{id}:
+    patch:
+      operationId: updateAdminSupportConversation
+      tags: [support-chat]
+      summary: Update conversation status (open/close)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SupportConversationStatusInput"
+      responses:
+        "200":
+          description: Conversation updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupportConversation"
+        "404":
+          description: Conversation not found
+
+  # ── AGENCIES (ADMIN) ─────────────────────────────────────────────────────────
+
+  /agencies:
+    get:
+      operationId: listAgencies
+      tags: [agencies]
+      summary: List all travel agencies (permission - employees)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Agencies
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Agency"
+    post:
+      operationId: createAgency
+      tags: [agencies]
+      summary: Create a travel agency (permission - employees)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AgencyInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Agency"
+
+  /agencies/{id}:
+    get:
+      operationId: getAgency
+      tags: [agencies]
+      summary: Get an agency (permission - employees)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Agency
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Agency"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateAgency
+      tags: [agencies]
+      summary: Update agency info / status (permission - employees)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AgencyUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Agency"
+
+  /agencies/{id}/agents:
+    get:
+      operationId: listAgencyAgents
+      tags: [agencies]
+      summary: List an agency's agent accounts (permission - employees)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Agents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AgentAccount"
+    post:
+      operationId: createAgencyAgent
+      tags: [agencies]
+      summary: Create an agent account for an agency (permission - employees)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AgentAccountInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentAccount"
+
+  /agents/{agentId}/reset-password:
+    post:
+      operationId: resetAgentPassword
+      tags: [agencies]
+      summary: Reset an agent account password (permission - employees)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: agentId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResetPasswordInput"
+      responses:
+        "200":
+          description: Password reset
+
+  /agents/{agentId}:
+    patch:
+      operationId: updateAgentAccount
+      tags: [agencies]
+      summary: Activate / deactivate / edit an agent account (permission - employees)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: agentId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AgentAccountUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentAccount"
+
+  /agencies/{id}/visa-services:
+    get:
+      operationId: listAgencyVisaServices
+      tags: [agencies]
+      summary: List an agency's configured visa services & prices (permission - employees)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Services
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AgencyVisaService"
+    put:
+      operationId: putAgencyVisaServices
+      tags: [agencies]
+      summary: Upsert an agency's visa services & agent prices (permission - employees)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AgencyVisaServicesInput"
+      responses:
+        "200":
+          description: Updated services
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AgencyVisaService"
+
+  /agent-applications:
+    get:
+      operationId: listAgentApplications
+      tags: [agencies]
+      summary: List agent applications across all agencies (permission - visa_applications)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: agencyId
+          in: query
+          schema: { type: integer }
+        - name: status
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: Agent applications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AgentApplication"
+
+  /agent-applications/{id}:
+    get:
+      operationId: getAgentApplication
+      tags: [agencies]
+      summary: Get an agent application (permission - visa_applications)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Agent application
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentApplication"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateAgentApplication
+      tags: [agencies]
+      summary: Update an agent application status / notes; notifies the agent (permission - visa_applications)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AgentApplicationUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentApplication"
+
+  # ── AGENT PORTAL ─────────────────────────────────────────────────────────────
+
+  /agent/me:
+    get:
+      operationId: getAgentMe
+      tags: [agent-portal]
+      summary: Current agent's account + agency info & status
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Agent context
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentMe"
+        "403":
+          description: Not an agent / agency access only
+
+  /agent/dashboard:
+    get:
+      operationId: getAgentDashboard
+      tags: [agent-portal]
+      summary: Agent dashboard statistics (active agency only)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Dashboard
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentDashboard"
+
+  /agent/visa-services:
+    get:
+      operationId: getAgentVisaServices
+      tags: [agent-portal]
+      summary: Visa services enabled for the agent's agency with AGENT price
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Enabled services
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AgentVisaService"
+
+  /agent/applications:
+    get:
+      operationId: listMyAgentApplications
+      tags: [agent-portal]
+      summary: List applications for the agent's own agency
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Applications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AgentApplication"
+    post:
+      operationId: submitAgentApplication
+      tags: [agent-portal]
+      summary: Submit a new visa application (price applied server-side)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AgentApplicationInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentApplication"
+        "422":
+          description: Validation failed (visa not enabled, nationality ineligible, docs missing)
+
+  /agent/applications/{id}:
+    get:
+      operationId: getMyAgentApplication
+      tags: [agent-portal]
+      summary: Get one application belonging to the agent's agency
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Application
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentApplication"
+        "404":
+          description: Not found
+
 components:
   schemas:
     HealthStatus:
@@ -1007,33 +2529,46 @@ components:
 
     Offer:
       type: object
-      required: [id, titleAr, titleEn, descriptionAr, descriptionEn, price, duration, imageUrl, featured, createdAt]
+      required: [id, titleAr, titleEn, descriptionAr, descriptionEn, imageUrl, isActive, sortOrder, featured, createdAt, updatedAt]
       properties:
         id: { type: integer }
         titleAr: { type: string }
         titleEn: { type: string }
         descriptionAr: { type: string }
         descriptionEn: { type: string }
-        price: { type: number }
-        currency: { type: string }
-        duration: { type: string }
         imageUrl: { type: string }
+        discountLabel: { type: ["string", "null"] }
+        linkUrl: { type: ["string", "null"] }
+        startDate: { type: ["string", "null"] }
+        endDate: { type: ["string", "null"] }
+        isActive: { type: boolean }
+        sortOrder: { type: integer }
+        price: { type: ["number", "null"] }
+        currency: { type: ["string", "null"] }
+        duration: { type: ["string", "null"] }
         destination: { type: ["string", "null"] }
         featured: { type: boolean }
         createdAt: { type: string }
+        updatedAt: { type: string }
 
     OfferInput:
       type: object
-      required: [titleAr, titleEn, descriptionAr, descriptionEn, price, duration, imageUrl]
+      required: [titleAr, titleEn, descriptionAr, descriptionEn, imageUrl]
       properties:
         titleAr: { type: string }
         titleEn: { type: string }
         descriptionAr: { type: string }
         descriptionEn: { type: string }
+        imageUrl: { type: string }
+        discountLabel: { type: string }
+        linkUrl: { type: string }
+        startDate: { type: string }
+        endDate: { type: string }
+        isActive: { type: boolean }
+        sortOrder: { type: integer }
         price: { type: number }
         currency: { type: string }
         duration: { type: string }
-        imageUrl: { type: string }
         destination: { type: string }
         featured: { type: boolean }
 
@@ -1044,10 +2579,16 @@ components:
         titleEn: { type: string }
         descriptionAr: { type: string }
         descriptionEn: { type: string }
+        imageUrl: { type: string }
+        discountLabel: { type: string }
+        linkUrl: { type: string }
+        startDate: { type: string }
+        endDate: { type: string }
+        isActive: { type: boolean }
+        sortOrder: { type: integer }
         price: { type: number }
         currency: { type: string }
         duration: { type: string }
-        imageUrl: { type: string }
         destination: { type: string }
         featured: { type: boolean }
 
@@ -1244,11 +2785,165 @@ components:
         featured: { type: boolean }
         isActive: { type: boolean }
 
+    VisaCountry:
+      type: object
+      required: [id, nameAr, nameEn, countryCode, region, isActive, sortOrder, createdAt]
+      properties:
+        id: { type: integer }
+        nameAr: { type: string }
+        nameEn: { type: string }
+        countryCode: { type: string }
+        region:
+          type: string
+          enum: [gulf, arab, asian, european, african, american]
+        imageUrl: { type: ["string", "null"] }
+        flagEmoji: { type: ["string", "null"] }
+        descriptionAr: { type: ["string", "null"] }
+        descriptionEn: { type: ["string", "null"] }
+        isActive: { type: boolean }
+        sortOrder: { type: integer }
+        visaCount: { type: integer }
+        createdAt: { type: string }
+        updatedAt: { type: string }
+
+    VisaCountryInput:
+      type: object
+      required: [nameAr, nameEn, countryCode, region]
+      properties:
+        nameAr: { type: string }
+        nameEn: { type: string }
+        countryCode: { type: string }
+        region:
+          type: string
+          enum: [gulf, arab, asian, european, african, american]
+        imageUrl: { type: string }
+        flagEmoji: { type: string }
+        descriptionAr: { type: string }
+        descriptionEn: { type: string }
+        isActive: { type: boolean }
+        sortOrder: { type: integer }
+
+    VisaCountryUpdate:
+      type: object
+      properties:
+        nameAr: { type: string }
+        nameEn: { type: string }
+        countryCode: { type: string }
+        region:
+          type: string
+          enum: [gulf, arab, asian, european, african, american]
+        imageUrl: { type: string }
+        flagEmoji: { type: string }
+        descriptionAr: { type: string }
+        descriptionEn: { type: string }
+        isActive: { type: boolean }
+        sortOrder: { type: integer }
+
+    VisaCustomField:
+      type: object
+      required: [id, visaId, labelAr, labelEn, fieldType, isRequired, isActive, sortOrder, createdAt]
+      properties:
+        id: { type: integer }
+        visaId: { type: integer }
+        labelAr: { type: string }
+        labelEn: { type: string }
+        fieldType:
+          type: string
+          enum: [text, textarea, number, select, boolean, date]
+        isRequired: { type: boolean }
+        options:
+          type: array
+          items: { type: string }
+        placeholderAr: { type: ["string", "null"] }
+        placeholderEn: { type: ["string", "null"] }
+        sortOrder: { type: integer }
+        isActive: { type: boolean }
+        createdAt: { type: string }
+        updatedAt: { type: string }
+
+    VisaCustomFieldInput:
+      type: object
+      required: [labelAr, labelEn, fieldType]
+      properties:
+        labelAr: { type: string }
+        labelEn: { type: string }
+        fieldType:
+          type: string
+          enum: [text, textarea, number, select, boolean, date]
+        isRequired: { type: boolean }
+        options:
+          type: array
+          items: { type: string }
+        placeholderAr: { type: string }
+        placeholderEn: { type: string }
+        sortOrder: { type: integer }
+        isActive: { type: boolean }
+
+    VisaCustomFieldUpdate:
+      type: object
+      properties:
+        labelAr: { type: string }
+        labelEn: { type: string }
+        fieldType:
+          type: string
+          enum: [text, textarea, number, select, boolean, date]
+        isRequired: { type: boolean }
+        options:
+          type: array
+          items: { type: string }
+        placeholderAr: { type: string }
+        placeholderEn: { type: string }
+        sortOrder: { type: integer }
+        isActive: { type: boolean }
+
+    OcrResult:
+      type: object
+      required: [success]
+      properties:
+        success: { type: boolean }
+        fullName: { type: ["string", "null"] }
+        fullNameEn: { type: ["string", "null"] }
+        fullNameAr: { type: ["string", "null"] }
+        firstName: { type: ["string", "null"] }
+        lastName: { type: ["string", "null"] }
+        givenName: { type: ["string", "null"] }
+        fatherName: { type: ["string", "null"] }
+        grandName: { type: ["string", "null"] }
+        surname: { type: ["string", "null"] }
+        passportNumber: { type: ["string", "null"] }
+        nationality: { type: ["string", "null"] }
+        gender: { type: ["string", "null"] }
+        dateOfBirth: { type: ["string", "null"] }
+        issueDate: { type: ["string", "null"] }
+        expiryDate: { type: ["string", "null"] }
+        issuingCountry: { type: ["string", "null"] }
+        placeOfBirth: { type: ["string", "null"] }
+        error: { type: ["string", "null"] }
+
+    VisaApplicationTracking:
+      type: object
+      required: [id, trackingNumber, status, visaType, countryAr, countryEn, fullName, createdAt, updatedAt]
+      properties:
+        id: { type: integer }
+        trackingNumber: { type: string }
+        status:
+          type: string
+          enum: [received, under_review, awaiting_documents, documents_uploaded, sent_to_embassy, processing, issued, completed, rejected, cancelled]
+        visaType: { type: string }
+        countryAr: { type: string }
+        countryEn: { type: string }
+        fullName: { type: string }
+        adminNotes: { type: ["string", "null"] }
+        issuedVisaUrl: { type: ["string", "null"] }
+        createdAt: { type: string }
+        updatedAt: { type: string }
+
     Visa:
       type: object
       required: [id, countryAr, countryEn, visaType, processingDays, fee, currency, entryType, status, isActive, createdAt]
       properties:
         id: { type: integer }
+        countryId: { type: ["integer", "null"] }
         countryAr: { type: string }
         countryEn: { type: string }
         countryCode: { type: string }
@@ -1393,11 +3088,126 @@ components:
         ineligibleMessageAr: { type: string }
         ineligibleMessageEn: { type: string }
 
+    UmrahConfig:
+      type: object
+      required: [declarationAr, declarationEn]
+      properties:
+        declarationAr: { type: string }
+        declarationEn: { type: string }
+        feeForNationality:
+          type: object
+          required: [amount, currency]
+          properties:
+            amount: { type: number }
+            currency: { type: string }
+
+    UmrahApplication:
+      type: object
+      required: [id, userId, trackingNumber, sponsorAvailable, passportImageUrl, personalPhotoUrl, phone, emergencyPhone, feeCurrency, paymentStatus, status, declarationAccepted, createdAt, updatedAt]
+      properties:
+        id: { type: string }
+        userId: { type: string }
+        trackingNumber: { type: string }
+        sponsorAvailable: { type: boolean }
+        sponsorResidencyImageUrl: { type: ["string", "null"] }
+        sponsorPhone: { type: ["string", "null"] }
+        passportImageUrl: { type: string }
+        personalPhotoUrl: { type: string }
+        fullName: { type: ["string", "null"] }
+        passportNumber: { type: ["string", "null"] }
+        nationality: { type: ["string", "null"] }
+        dateOfBirth: { type: ["string", "null"] }
+        gender:
+          type: ["string", "null"]
+          enum: [male, female, null]
+        passportIssueDate: { type: ["string", "null"] }
+        passportExpiryDate: { type: ["string", "null"] }
+        phone: { type: string }
+        contactEmail: { type: ["string", "null"] }
+        emergencyPhone: { type: string }
+        feeAmount: { type: ["number", "null"] }
+        feeCurrency: { type: string }
+        paymentStatus:
+          type: string
+          enum: [unpaid, paid, failed]
+        paymentReference: { type: ["string", "null"] }
+        paidAt: { type: ["string", "null"] }
+        status:
+          type: string
+          enum: [awaiting_payment, submitted, under_review, processing, approved, rejected, completed]
+        adminNotes: { type: ["string", "null"] }
+        issuedVisaUrl: { type: ["string", "null"] }
+        declarationAccepted: { type: boolean }
+        createdAt: { type: string }
+        updatedAt: { type: string }
+
+    UmrahApplicationAdmin:
+      allOf:
+        - $ref: "#/components/schemas/UmrahApplication"
+        - type: object
+          required: [user]
+          properties:
+            user:
+              type: object
+              properties:
+                firstName: { type: ["string", "null"] }
+                lastName: { type: ["string", "null"] }
+                email: { type: ["string", "null"] }
+                phone: { type: ["string", "null"] }
+
+    UmrahApplicationCreate:
+      type: object
+      required: [sponsorAvailable, sponsorResidencyImageUrl, sponsorPhone, passportImageUrl, personalPhotoUrl, phone, emergencyPhone, declarationAccepted]
+      properties:
+        sponsorAvailable: { type: boolean }
+        sponsorResidencyImageUrl: { type: string }
+        sponsorPhone: { type: string }
+        passportImageUrl: { type: string }
+        personalPhotoUrl: { type: string }
+        fullName: { type: string }
+        passportNumber: { type: string }
+        nationality: { type: string }
+        dateOfBirth: { type: string }
+        gender:
+          type: string
+          enum: [male, female]
+        passportIssueDate: { type: string }
+        passportExpiryDate: { type: string }
+        phone: { type: string }
+        contactEmail: { type: string }
+        emergencyPhone: { type: string }
+        declarationAccepted: { type: boolean }
+
+    UmrahApplicationCreated:
+      type: object
+      required: [id, trackingNumber, feeCurrency, paymentStatus, status]
+      properties:
+        id: { type: string }
+        trackingNumber: { type: string }
+        feeAmount: { type: ["number", "null"] }
+        feeCurrency: { type: string }
+        paymentStatus:
+          type: string
+          enum: [unpaid, paid, failed]
+        status:
+          type: string
+          enum: [awaiting_payment, submitted, under_review, processing, approved, rejected, completed]
+
+    UmrahApplicationStatusUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [awaiting_payment, submitted, under_review, processing, approved, rejected, completed]
+        adminNotes: { type: string }
+        issuedVisaUrl: { type: string }
+
     VisaApplication:
       type: object
       required: [id, visaId, eligibilityPath, fullName, nationality, passportNumber, passportIssueDate, passportExpiryDate, dateOfBirth, gender, email, phone, agreedToTerms, status, createdAt, updatedAt]
       properties:
         id: { type: integer }
+        trackingNumber: { type: ["string", "null"] }
         visaId: { type: integer }
         userId: { type: ["string", "null"] }
         eligibilityPath:
@@ -1406,31 +3216,41 @@ components:
         gccCountry: { type: ["string", "null"] }
         alternativeRegion: { type: ["string", "null"] }
         fullName: { type: string }
+        fullNameEn: { type: ["string", "null"] }
         nationality: { type: string }
-        passportNumber: { type: string }
-        passportIssueDate: { type: string }
-        passportExpiryDate: { type: string }
-        dateOfBirth: { type: string }
         gender:
           type: string
           enum: [male, female]
+        dateOfBirth: { type: string }
+        countryOfResidence: { type: ["string", "null"] }
         email: { type: string }
         phone: { type: string }
+        passportNumber: { type: string }
+        passportIssueDate: { type: string }
+        passportExpiryDate: { type: string }
+        passportIssuingCountry: { type: ["string", "null"] }
         passportImageUrl: { type: ["string", "null"] }
         personalPhotoUrl: { type: ["string", "null"] }
         residencyImageUrl: { type: ["string", "null"] }
+        residencyBackImageUrl: { type: ["string", "null"] }
+        alternativeVisaNumber: { type: ["string", "null"] }
+        alternativeVisaExpiry: { type: ["string", "null"] }
         visaImageUrl: { type: ["string", "null"] }
+        customFieldResponses:
+          type: object
+          additionalProperties: true
         agreedToTerms: { type: boolean }
         status:
           type: string
-          enum: [received, under_review, awaiting_documents, documents_uploaded, sent_to_embassy, processing, issued, completed, rejected]
+          enum: [received, under_review, awaiting_documents, documents_uploaded, sent_to_embassy, processing, issued, completed, rejected, cancelled]
         adminNotes: { type: ["string", "null"] }
+        issuedVisaUrl: { type: ["string", "null"] }
         createdAt: { type: string }
         updatedAt: { type: string }
 
     VisaApplicationInput:
       type: object
-      required: [visaId, eligibilityPath, fullName, nationality, passportNumber, passportIssueDate, passportExpiryDate, dateOfBirth, gender, email, phone, agreedToTerms]
+      required: [visaId, fullName, nationality, gender, dateOfBirth, email, phone, passportNumber, passportIssueDate, passportExpiryDate, agreedToTerms]
       properties:
         visaId: { type: integer }
         eligibilityPath:
@@ -1439,20 +3259,29 @@ components:
         gccCountry: { type: string }
         alternativeRegion: { type: string }
         fullName: { type: string }
+        fullNameEn: { type: string }
         nationality: { type: string }
-        passportNumber: { type: string }
-        passportIssueDate: { type: string }
-        passportExpiryDate: { type: string }
-        dateOfBirth: { type: string }
         gender:
           type: string
           enum: [male, female]
+        dateOfBirth: { type: string }
+        countryOfResidence: { type: string }
         email: { type: string }
         phone: { type: string }
+        passportNumber: { type: string }
+        passportIssueDate: { type: string }
+        passportExpiryDate: { type: string }
+        passportIssuingCountry: { type: string }
         passportImageUrl: { type: string }
         personalPhotoUrl: { type: string }
         residencyImageUrl: { type: string }
+        residencyBackImageUrl: { type: string }
+        alternativeVisaNumber: { type: string }
+        alternativeVisaExpiry: { type: string }
         visaImageUrl: { type: string }
+        customFieldResponses:
+          type: object
+          additionalProperties: true
         agreedToTerms: { type: boolean }
 
     VisaApplicationStatusUpdate:
@@ -1460,14 +3289,155 @@ components:
       properties:
         status:
           type: string
-          enum: [received, under_review, awaiting_documents, documents_uploaded, sent_to_embassy, processing, issued, completed, rejected]
+          enum: [received, under_review, awaiting_documents, documents_uploaded, sent_to_embassy, processing, issued, completed, rejected, cancelled]
         adminNotes: { type: string }
+        issuedVisaUrl: { type: string }
+
+    ApplicationDocumentVersion:
+      type: object
+      required: [id, documentId, storagePath, uploadedAt, status, versionNumber]
+      properties:
+        id: { type: integer }
+        documentId: { type: integer }
+        storagePath: { type: string }
+        originalFilename: { type: ["string", "null"] }
+        mimeType: { type: ["string", "null"] }
+        size: { type: ["integer", "null"] }
+        uploadedBy: { type: ["string", "null"] }
+        uploadedAt: { type: string }
+        status:
+          type: string
+          enum: [uploaded, approved, rejected]
+        rejectionReason: { type: ["string", "null"] }
+        versionNumber: { type: integer }
+
+    ApplicationDocument:
+      type: object
+      required: [id, applicationId, documentKey, nameAr, nameEn, required, allowedFileType, status, createdAt, updatedAt, versions]
+      properties:
+        id: { type: integer }
+        applicationId: { type: integer }
+        userId: { type: ["string", "null"] }
+        visaId: { type: ["integer", "null"] }
+        documentKey: { type: string }
+        nameAr: { type: string }
+        nameEn: { type: string }
+        description: { type: ["string", "null"] }
+        required: { type: boolean }
+        allowedFileType:
+          type: string
+          enum: [image, pdf, image_pdf]
+        maxFileSizeMb: { type: ["integer", "null"] }
+        status:
+          type: string
+          enum: [required, waiting_customer, uploaded, under_review, approved, rejected, reupload_required]
+        requestedBy: { type: ["string", "null"] }
+        requestDescription: { type: ["string", "null"] }
+        rejectionReason: { type: ["string", "null"] }
+        currentVersionId: { type: ["integer", "null"] }
+        reviewedBy: { type: ["string", "null"] }
+        reviewedAt: { type: ["string", "null"] }
+        createdAt: { type: string }
+        updatedAt: { type: string }
+        currentVersion:
+          oneOf:
+            - $ref: "#/components/schemas/ApplicationDocumentVersion"
+            - type: "null"
+        versions:
+          type: array
+          items:
+            $ref: "#/components/schemas/ApplicationDocumentVersion"
+
+    RequestApplicationDocumentInput:
+      type: object
+      required: [nameAr, nameEn]
+      properties:
+        documentKey: { type: string, description: "Optional stable slug; derived from the name if omitted." }
+        nameAr: { type: string }
+        nameEn: { type: string }
+        description: { type: string }
+        fileType:
+          type: string
+          enum: [image, pdf, image_pdf]
+        required: { type: boolean }
+        maxFileSizeMb: { type: integer }
+
+    UploadApplicationDocumentInput:
+      type: object
+      required: [storagePath]
+      properties:
+        storagePath:
+          type: string
+          description: "Object storage path returned by POST /storage/uploads (must be owned by the caller)."
+
+    RejectApplicationDocumentInput:
+      type: object
+      required: [rejectionReason]
+      properties:
+        rejectionReason: { type: string }
+
+    VisaRequiredDocument:
+      type: object
+      required: [id, visaId, documentKey, nameAr, nameEn, required, allowedFileType, requiredAt, sortOrder, createdAt]
+      properties:
+        id: { type: integer }
+        visaId: { type: integer }
+        documentKey: { type: string }
+        nameAr: { type: string }
+        nameEn: { type: string }
+        description: { type: ["string", "null"] }
+        required: { type: boolean }
+        allowedFileType:
+          type: string
+          enum: [image, pdf, image_pdf]
+        maxFileSizeMb: { type: ["integer", "null"] }
+        requiredAt:
+          type: string
+          enum: [application_start, before_submission, during_processing, optional]
+        sortOrder: { type: integer }
+        createdAt: { type: string }
+
+    VisaRequiredDocumentInput:
+      type: object
+      required: [nameAr, nameEn]
+      properties:
+        documentKey: { type: string }
+        nameAr: { type: string }
+        nameEn: { type: string }
+        description: { type: string }
+        required: { type: boolean }
+        allowedFileType:
+          type: string
+          enum: [image, pdf, image_pdf]
+        maxFileSizeMb: { type: integer }
+        requiredAt:
+          type: string
+          enum: [application_start, before_submission, during_processing, optional]
+        sortOrder: { type: integer }
+
+    VisaRequiredDocumentUpdate:
+      type: object
+      properties:
+        documentKey: { type: string }
+        nameAr: { type: string }
+        nameEn: { type: string }
+        description: { type: string }
+        required: { type: boolean }
+        allowedFileType:
+          type: string
+          enum: [image, pdf, image_pdf]
+        maxFileSizeMb: { type: integer }
+        requiredAt:
+          type: string
+          enum: [application_start, before_submission, during_processing, optional]
+        sortOrder: { type: integer }
 
     Booking:
       type: object
       required: [id, type, clientName, clientPhone, status, createdAt]
       properties:
         id: { type: integer }
+        userId: { type: ["string", "null"] }
         type: { type: string, enum: [flight, hotel, program, visa] }
         clientName: { type: string }
         clientPhone: { type: string }
@@ -1480,6 +3450,8 @@ components:
         notes: { type: ["string", "null"] }
         status: { type: string, enum: [pending, confirmed, cancelled] }
         totalPrice: { type: ["number", "null"] }
+        ticketUrl: { type: ["string", "null"] }
+        duffelOrderId: { type: ["string", "null"] }
         createdAt: { type: string }
 
     BookingInput:
@@ -1504,6 +3476,8 @@ components:
         status: { type: string, enum: [pending, confirmed, cancelled] }
         notes: { type: string }
         totalPrice: { type: number }
+        ticketUrl: { type: string }
+        duffelOrderId: { type: string }
 
     ContactInput:
       type: object
@@ -1527,6 +3501,94 @@ components:
         message: { type: string }
         read: { type: boolean }
         createdAt: { type: string }
+
+    SupportConversation:
+      type: object
+      required: [id, status, customerUnreadCount, staffUnreadCount, createdAt, updatedAt]
+      properties:
+        id: { type: string }
+        userId: { type: ["string", "null"] }
+        guestName: { type: ["string", "null"] }
+        status: { type: string, enum: [open, closed] }
+        lastMessageAt: { type: ["string", "null"] }
+        customerUnreadCount: { type: integer }
+        staffUnreadCount: { type: integer }
+        createdAt: { type: string }
+        updatedAt: { type: string }
+
+    AdminSupportConversation:
+      type: object
+      required: [id, status, customerUnreadCount, staffUnreadCount, createdAt, updatedAt, customerName, isGuest]
+      properties:
+        id: { type: string }
+        userId: { type: ["string", "null"] }
+        guestName: { type: ["string", "null"] }
+        status: { type: string, enum: [open, closed] }
+        lastMessageAt: { type: ["string", "null"] }
+        customerUnreadCount: { type: integer }
+        staffUnreadCount: { type: integer }
+        createdAt: { type: string }
+        updatedAt: { type: string }
+        customerName: { type: string }
+        userEmail: { type: ["string", "null"] }
+        userPhone: { type: ["string", "null"] }
+        isGuest: { type: boolean }
+        lastMessagePreview: { type: ["string", "null"] }
+        lastMessageSenderAt: { type: ["string", "null"] }
+
+    SupportMessage:
+      type: object
+      required: [id, conversationId, sender, body, createdAt]
+      properties:
+        id: { type: string }
+        conversationId: { type: string }
+        sender: { type: string, enum: [customer, staff] }
+        senderUserId: { type: ["string", "null"] }
+        body: { type: string }
+        createdAt: { type: string }
+
+    SupportMessageInput:
+      type: object
+      required: [body]
+      properties:
+        body: { type: string, minLength: 1, maxLength: 2000 }
+
+    GuestConversationInput:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 120 }
+
+    GuestConversationResponse:
+      type: object
+      required: [conversationId, guestToken]
+      properties:
+        conversationId: { type: string }
+        guestToken: { type: string }
+
+    GuestMessageInput:
+      type: object
+      required: [body]
+      properties:
+        token:
+          type: string
+          deprecated: true
+          description: Deprecated — send the token via the x-guest-token header instead.
+        body: { type: string, minLength: 1, maxLength: 2000 }
+
+    ClaimGuestConversationInput:
+      type: object
+      properties:
+        token:
+          type: string
+          deprecated: true
+          description: Deprecated — send the token via the x-guest-token header instead.
+
+    SupportConversationStatusInput:
+      type: object
+      required: [status]
+      properties:
+        status: { type: string, enum: [open, closed] }
 
     DashboardStats:
       type: object
@@ -1592,8 +3654,53 @@ components:
           enum: [in_app, email, whatsapp, sms]
         relatedEntityType: { type: ["string", "null"] }
         relatedEntityId: { type: ["string", "null"] }
+        url: { type: ["string", "null"] }
         isRead: { type: boolean }
+        sentBy: { type: ["string", "null"] }
         createdAt: { type: string }
+
+    PushTokenRegister:
+      type: object
+      required: [token]
+      properties:
+        token: { type: string }
+        platform: { type: string, enum: [ios, android, web] }
+        deviceName: { type: string }
+
+    PushToken:
+      type: object
+      required: [id, token]
+      properties:
+        id: { type: string }
+        token: { type: string }
+        platform: { type: ["string", "null"] }
+        deviceName: { type: ["string", "null"] }
+
+    PushTokenDelete:
+      type: object
+      required: [token]
+      properties:
+        token: { type: string }
+
+    NotificationSendRequest:
+      type: object
+      required: [titleAr, titleEn, messageAr, messageEn, audience]
+      properties:
+        titleAr: { type: string }
+        titleEn: { type: string }
+        messageAr: { type: string }
+        messageEn: { type: string }
+        audience: { type: string, enum: [all, users] }
+        userIds:
+          type: array
+          items: { type: string }
+        url: { type: string }
+
+    NotificationSendResponse:
+      type: object
+      required: [sentCount]
+      properties:
+        sentCount: { type: integer }
 
     Employee:
       type: object
@@ -1657,9 +3764,39 @@ components:
         phone: { type: string }
         password: { type: string }
 
+    ProfileUpdate:
+      type: object
+      properties:
+        firstName: { type: string }
+        lastName: { type: string }
+        phone: { type: string }
+        whatsapp: { type: string }
+        address: { type: string }
+        nationality: { type: string }
+        gender: { type: string, enum: [male, female, other] }
+        dateOfBirth: { type: string, format: date }
+        profilePhotoUrl: { type: string }
+        preferredLanguage: { type: string, enum: [ar, en] }
+        passportNumber: { type: string }
+        passportIssueCountry: { type: string }
+        passportIssuePlace: { type: string }
+        passportIssueDate: { type: string, format: date }
+        passportExpiryDate: { type: string, format: date }
+        passportImageUrl: { type: string }
+        isGccResident: { type: boolean }
+        gccResidenceCountry: { type: string }
+        gccResidenceNumber: { type: string }
+        gccResidenceExpiry: { type: string, format: date }
+        gccResidenceFrontUrl: { type: string }
+        gccResidenceBackUrl: { type: string }
+        isEuropeanResident: { type: boolean }
+        europeanDocumentType: { type: string }
+        europeanDocumentUrl: { type: string }
+        europeanDocumentExpiry: { type: string, format: date }
+
     SafeUser:
       type: object
-      required: [id, role, isActive, createdAt, updatedAt]
+      required: [id, role, isActive, isGccResident, isEuropeanResident, createdAt, updatedAt]
       properties:
         id: { type: string, format: uuid }
         email: { type: ["string", "null"] }
@@ -1670,12 +3807,34 @@ components:
         gender: { type: ["string", "null"] }
         dateOfBirth: { type: ["string", "null"] }
         role: { type: string, enum: [customer, agent, admin, super_admin] }
+        preferredLanguage: { type: string, enum: [ar, en] }
         isActive: { type: boolean }
         emailVerifiedAt: { type: ["string", "null"] }
         phoneVerifiedAt: { type: ["string", "null"] }
         lastLoginAt: { type: ["string", "null"] }
         createdAt: { type: string }
         updatedAt: { type: string }
+        whatsapp: { type: ["string", "null"] }
+        address: { type: ["string", "null"] }
+        profilePhotoUrl: { type: ["string", "null"] }
+        passportNumber: { type: ["string", "null"] }
+        passportIssueCountry: { type: ["string", "null"] }
+        passportIssuePlace: { type: ["string", "null"] }
+        passportIssueDate: { type: ["string", "null"] }
+        passportExpiryDate: { type: ["string", "null"] }
+        passportImageUrl: { type: ["string", "null"] }
+        isGccResident: { type: boolean }
+        gccResidenceCountry: { type: ["string", "null"] }
+        gccResidenceNumber: { type: ["string", "null"] }
+        gccResidenceExpiry: { type: ["string", "null"] }
+        gccResidenceFrontUrl: { type: ["string", "null"] }
+        gccResidenceBackUrl: { type: ["string", "null"] }
+        isEuropeanResident: { type: boolean }
+        europeanDocumentType: { type: ["string", "null"] }
+        europeanDocumentUrl: { type: ["string", "null"] }
+        europeanDocumentExpiry: { type: ["string", "null"] }
+        profileCompletedAt: { type: ["string", "null"] }
+        isProfileComplete: { type: boolean }
 
     AuthResponse:
       type: object
@@ -1763,6 +3922,251 @@ components:
         name: { type: string }
         supportsBooking: { type: boolean }
         isAvailable: { type: boolean }
+
+    # ── Agencies / Agent Portal ──────────────────────────────────────────────
+    Agency:
+      type: object
+      required: [id, name, status, createdAt, updatedAt]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        contactEmail: { type: string, nullable: true }
+        contactPhone: { type: string, nullable: true }
+        address: { type: string, nullable: true }
+        notes: { type: string, nullable: true }
+        status: { type: string, enum: [active, suspended, pending] }
+        createdAt: { type: string }
+        updatedAt: { type: string }
+
+    AgencyInput:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string }
+        contactEmail: { type: string }
+        contactPhone: { type: string }
+        address: { type: string }
+        notes: { type: string }
+        status: { type: string, enum: [active, suspended, pending] }
+
+    AgencyUpdate:
+      type: object
+      properties:
+        name: { type: string }
+        contactEmail: { type: string }
+        contactPhone: { type: string }
+        address: { type: string }
+        notes: { type: string }
+        status: { type: string, enum: [active, suspended, pending] }
+
+    AgentAccount:
+      type: object
+      required: [id, role, isActive, createdAt]
+      properties:
+        id: { type: string }
+        email: { type: string, nullable: true }
+        phone: { type: string, nullable: true }
+        firstName: { type: string, nullable: true }
+        lastName: { type: string, nullable: true }
+        role: { type: string }
+        agencyId: { type: integer, nullable: true }
+        isActive: { type: boolean }
+        createdAt: { type: string }
+        lastLoginAt: { type: string, nullable: true }
+
+    AgentAccountInput:
+      type: object
+      required: [password, firstName]
+      properties:
+        email: { type: string }
+        phone: { type: string }
+        password: { type: string, minLength: 8 }
+        firstName: { type: string }
+        lastName: { type: string }
+
+    AgentAccountUpdate:
+      type: object
+      properties:
+        isActive: { type: boolean }
+        firstName: { type: string }
+        lastName: { type: string }
+
+    ResetPasswordInput:
+      type: object
+      required: [password]
+      properties:
+        password: { type: string, minLength: 8 }
+
+    AgencyVisaService:
+      type: object
+      required: [id, agencyId, visaId, enabled, agentPrice, currency, createdAt, updatedAt]
+      properties:
+        id: { type: integer }
+        agencyId: { type: integer }
+        visaId: { type: integer }
+        enabled: { type: boolean }
+        agentPrice: { type: string }
+        currency: { type: string }
+        createdAt: { type: string }
+        updatedAt: { type: string }
+
+    AgencyVisaServicesInput:
+      type: object
+      required: [services]
+      properties:
+        services:
+          type: array
+          items:
+            type: object
+            required: [visaId, enabled, agentPrice]
+            properties:
+              visaId: { type: integer }
+              enabled: { type: boolean }
+              agentPrice:
+                oneOf:
+                  - { type: number }
+                  - { type: string }
+              currency: { type: string }
+
+    AgentVisaService:
+      type: object
+      required: [visaId, agentPrice]
+      properties:
+        serviceId: { type: integer }
+        visaId: { type: integer }
+        agentPrice: { type: string }
+        currency: { type: string }
+        countryAr: { type: string }
+        countryEn: { type: string }
+        countryCode: { type: string, nullable: true }
+        visaType: { type: string }
+        category: { type: string }
+        descriptionAr: { type: string, nullable: true }
+        descriptionEn: { type: string, nullable: true }
+        processingDays: { type: integer }
+        stayDuration: { type: integer, nullable: true }
+        validityDays: { type: integer, nullable: true }
+        entryType: { type: string }
+        allowedNationalities:
+          type: array
+          items: { type: string }
+        blockedNationalities:
+          type: array
+          items: { type: string }
+        imageUrl: { type: string, nullable: true }
+        requiresPassportImage: { type: boolean }
+        requiresPersonalPhoto: { type: boolean }
+
+    AgentApplication:
+      type: object
+      required: [id, trackingNumber, visaId, status, createdAt, updatedAt]
+      properties:
+        id: { type: integer }
+        trackingNumber: { type: string, nullable: true }
+        visaId: { type: integer }
+        agencyId: { type: integer, nullable: true }
+        submittedByAgentId: { type: string, nullable: true }
+        agentPrice: { type: string, nullable: true }
+        fullName: { type: string }
+        fullNameEn: { type: string, nullable: true }
+        nationality: { type: string }
+        gender: { type: string }
+        dateOfBirth: { type: string }
+        email: { type: string }
+        phone: { type: string }
+        passportNumber: { type: string }
+        passportIssueDate: { type: string, nullable: true }
+        passportExpiryDate: { type: string }
+        passportIssuingCountry: { type: string, nullable: true }
+        countryOfResidence: { type: string, nullable: true }
+        passportImageUrl: { type: string, nullable: true }
+        personalPhotoUrl: { type: string, nullable: true }
+        residencyImageUrl: { type: string, nullable: true }
+        residencyBackImageUrl: { type: string, nullable: true }
+        visaImageUrl: { type: string, nullable: true }
+        customFieldResponses: { type: object, additionalProperties: true }
+        agreedToTerms: { type: boolean }
+        status: { type: string }
+        adminNotes: { type: string, nullable: true }
+        issuedVisaUrl: { type: string, nullable: true }
+        agencyName: { type: string, nullable: true }
+        agentName: { type: string, nullable: true }
+        visaType: { type: string, nullable: true }
+        countryEn: { type: string, nullable: true }
+        countryAr: { type: string, nullable: true }
+        createdAt: { type: string }
+        updatedAt: { type: string }
+
+    AgentApplicationInput:
+      type: object
+      required: [visaId, applicantNationality, fullName, gender, dateOfBirth, email, phone, passportNumber, passportIssueDate, passportExpiryDate]
+      properties:
+        visaId: { type: integer }
+        applicantNationality: { type: string }
+        fullName: { type: string }
+        fullNameEn: { type: string }
+        gender: { type: string, enum: [male, female] }
+        dateOfBirth: { type: string }
+        email: { type: string }
+        phone: { type: string }
+        passportNumber: { type: string }
+        passportIssueDate: { type: string }
+        passportExpiryDate: { type: string }
+        passportIssuingCountry: { type: string }
+        countryOfResidence: { type: string }
+        passportImageUrl: { type: string }
+        personalPhotoUrl: { type: string }
+        residencyImageUrl: { type: string }
+        residencyBackImageUrl: { type: string }
+        visaImageUrl: { type: string }
+        customFieldResponses: { type: object, additionalProperties: true }
+        agreedToTerms: { type: boolean }
+
+    AgentApplicationUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [received, under_review, awaiting_documents, documents_uploaded, sent_to_embassy, processing, issued, completed, rejected, cancelled]
+        adminNotes: { type: string }
+        issuedVisaUrl: { type: string }
+
+    AgentMe:
+      type: object
+      required: [agent, agency]
+      properties:
+        agent:
+          type: object
+          properties:
+            id: { type: string }
+            email: { type: string, nullable: true }
+            phone: { type: string, nullable: true }
+            firstName: { type: string, nullable: true }
+            lastName: { type: string, nullable: true }
+        agency:
+          type: object
+          properties:
+            id: { type: integer }
+            name: { type: string }
+            status: { type: string, enum: [active, suspended, pending] }
+            contactEmail: { type: string, nullable: true }
+            contactPhone: { type: string, nullable: true }
+
+    AgentDashboard:
+      type: object
+      required: [agencyName, agencyStatus, stats]
+      properties:
+        agencyName: { type: string }
+        agencyStatus: { type: string, enum: [active, suspended, pending] }
+        stats:
+          type: object
+          properties:
+            total: { type: integer }
+            submitted: { type: integer }
+            approved: { type: integer }
+            rejected: { type: integer }
+            inProgress: { type: integer }
+            byStatus: { type: object, additionalProperties: { type: integer } }
 
   securitySchemes:
     bearerAuth:

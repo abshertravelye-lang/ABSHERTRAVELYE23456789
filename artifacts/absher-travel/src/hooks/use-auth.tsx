@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback, useMemo, type ReactNode } from "react";
-import { setAuthTokenGetter, SafeUser, useLoginUser, useRegisterUser, useLogoutUser } from "@workspace/api-client-react";
+import { setAuthTokenGetter, setAuthRefreshHandler, SafeUser, useLoginUser, useRegisterUser, useLogoutUser } from "@workspace/api-client-react";
 
 const ACCESS_TOKEN_KEY = "absher_access_token";
 const REFRESH_TOKEN_KEY = "absher_refresh_token";
@@ -34,6 +34,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     setAuthTokenGetter(() => localStorage.getItem(ACCESS_TOKEN_KEY));
+    // Auto-refresh expired access tokens (15 min TTL) using the refresh token,
+    // so long-lived pages don't silently start failing with 401s.
+    setAuthRefreshHandler(async () => {
+      const refreshTokenValue = localStorage.getItem(REFRESH_TOKEN_KEY);
+      if (!refreshTokenValue) return false;
+      try {
+        const base = (import.meta.env.BASE_URL ?? "/").replace(/\/$/, "");
+        const res = await fetch(`${base}/api/auth/refresh`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ refreshToken: refreshTokenValue }),
+        });
+        if (!res.ok) {
+          // Refresh token invalid/expired — clear the stale session
+          localStorage.removeItem(ACCESS_TOKEN_KEY);
+          localStorage.removeItem(REFRESH_TOKEN_KEY);
+          localStorage.removeItem(USER_KEY);
+          setAccessToken(null);
+          setUser(null);
+          return false;
+        }
+        const data = await res.json();
+        localStorage.setItem(ACCESS_TOKEN_KEY, data.accessToken);
+        localStorage.setItem(REFRESH_TOKEN_KEY, data.refreshToken);
+        setAccessToken(data.accessToken);
+        return true;
+      } catch {
+        return false;
+      }
+    });
+    return () => setAuthRefreshHandler(null);
   }, []);
 
   const persist = useCallback((authUser: SafeUser, tokens: { accessToken: string; refreshToken: string }) => {
