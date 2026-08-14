@@ -2,7 +2,7 @@ import { Link, useLocation } from "wouter";
 import { useTranslation } from "@/hooks/use-translation";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { Globe, Menu, X, Phone, MapPin, User, LogOut, Mail, MessageCircle, Headphones } from "lucide-react";
+import { Globe, Menu, X, Phone, MapPin, User, LogOut, Mail, MessageCircle, Headphones, Building2 } from "lucide-react";
 import logo from "@assets/absher-business-logo.png";
 import { useState } from "react";
 import { AppDownloadLinks } from "@/components/app-download-links";
@@ -209,6 +209,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   </Link>
                 </li>
               ))}
+              <li className="pt-3 mt-1 border-t border-white/10">
+                <Link href="/agent" className="text-sm text-accent hover:text-white transition-colors font-medium flex items-center gap-1.5">
+                  <Building2 size={13} />
+                  {language === "ar" ? "بوابة الوكلاء" : "Agent Portal"}
+                </Link>
+              </li>
             </ul>
           </div>
           <div>
