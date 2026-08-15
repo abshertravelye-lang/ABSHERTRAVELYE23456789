@@ -123,7 +123,7 @@ function NotifItem({ notification, onMarkRead }: { notification: Notification; o
 
 export default function NotificationsTab() {
   const colors = useColors();
-  const { t, lang, isRTL } = useLanguage();
+  const { t, lang, isRTL, toggle } = useLanguage();
   const insets = useSafeAreaInsets();
   
   const { data, isLoading, error, refetch, isRefetching } = useListNotifications();
@@ -158,7 +158,7 @@ export default function NotificationsTab() {
           <View style={[styles.header, { paddingTop: Math.max(insets.top + 16, 40) }]}>
             {/* Top Bar */}
             <View style={[styles.topBar, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
-              <Pressable onPress={() => {}} style={[styles.iconBtn, { backgroundColor: colors.card }]}>
+              <Pressable onPress={toggle} style={[styles.iconBtn, { backgroundColor: colors.card }]}>
                 <Ionicons name="options-outline" size={24} color={colors.primary} />
               </Pressable>
               
@@ -171,10 +171,10 @@ export default function NotificationsTab() {
                 />
               </View>
               
-              <View style={[styles.langPill, { backgroundColor: colors.card }]}>
+              <Pressable onPress={toggle} style={[styles.langPill, { backgroundColor: colors.card }]}>
                 <Text style={[styles.langText, { color: colors.primary }]}>{lang === 'ar' ? 'AR' : 'EN'}</Text>
                 <Ionicons name="globe-outline" size={16} color={colors.primary} />
-              </View>
+              </Pressable>
             </View>
 
             {/* Title Area */}

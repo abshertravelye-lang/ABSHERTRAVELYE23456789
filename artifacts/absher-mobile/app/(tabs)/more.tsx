@@ -9,7 +9,7 @@ import { useLanguage } from '@/context/LanguageContext';
 
 export default function MoreScreen() {
   const colors = useColors();
-  const { t, lang, isRTL } = useLanguage();
+  const { t, lang, isRTL, toggle } = useLanguage();
   const insets = useSafeAreaInsets();
   
   const isDark = colors.background === '#041021';
@@ -112,10 +112,10 @@ export default function MoreScreen() {
                 />
               </View>
               
-              <View style={[styles.langPill, { backgroundColor: colors.card }]}>
+              <Pressable onPress={toggle} style={[styles.langPill, { backgroundColor: colors.card }]}>
                 <Text style={[styles.langText, { color: colors.primary }]}>{lang === 'ar' ? 'AR' : 'EN'}</Text>
                 <Ionicons name="globe-outline" size={16} color={colors.primary} />
-              </View>
+              </Pressable>
             </View>
 
             {/* Title Area */}

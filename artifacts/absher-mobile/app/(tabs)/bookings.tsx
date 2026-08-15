@@ -33,7 +33,7 @@ function formatDate(iso: string, lang: string) {
 export default function BookingsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { t, lang, isRTL } = useLanguage();
+  const { t, lang, isRTL, toggle } = useLanguage();
   const topInset = Platform.OS === 'web' ? 20 : insets.top;
   
   const { data, isLoading, error, refetch, isRefetching } = useListMyBookings();
@@ -145,7 +145,7 @@ export default function BookingsScreen() {
             <Ionicons name="chevron-back" size={23} color={colors.primary} />
           </Pressable>
           <Image source={require('@/assets/images/absher-travel-logo-nobg.png')} style={styles.logo} contentFit="contain" tintColor={colors.primary} />
-          <Pressable style={[styles.langPill, { backgroundColor: colors.card }]} onPress={() => {}}>
+          <Pressable style={[styles.langPill, { backgroundColor: colors.card }]} onPress={toggle}>
             <Text style={[styles.lang, { color: colors.primary }]}>{lang === 'ar' ? 'AR' : 'EN'}</Text>
             <Ionicons name="globe-outline" size={16} color={colors.primary} />
           </Pressable>

@@ -23,7 +23,7 @@ export default function AccountScreen() {
   const bottomInset = Platform.OS === 'web' ? 34 : Math.max(insets.bottom, 20);
   
   const { user, isLoading, logout } = useAuth();
-  const { t, lang, isRTL } = useLanguage();
+  const { t, lang, isRTL, toggle } = useLanguage();
   const [logoutVisible, setLogoutVisible] = useState(false);
   
   const { data: apps, refetch: refetchApps } = useListVisaApplications();
@@ -61,7 +61,7 @@ export default function AccountScreen() {
           <View style={[styles.topBar, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
             <View style={{ width: 44 }} />
             <Image source={require('@/assets/images/absher-travel-logo-nobg.png')} style={styles.logo} contentFit="contain" />
-            <Pressable style={[styles.langPill, { backgroundColor: colors.card }]} onPress={() => {}}>
+            <Pressable style={[styles.langPill, { backgroundColor: colors.card }]} onPress={toggle}>
               <Text style={[styles.lang, { color: colors.primary }]}>{lang === 'ar' ? 'AR' : 'EN'}</Text>
               <Ionicons name="globe-outline" size={16} color={colors.primary} />
             </Pressable>
@@ -131,7 +131,7 @@ export default function AccountScreen() {
             <Ionicons name="notifications-outline" size={23} color={colors.primary} />
           </Pressable>
           <Image source={require('@/assets/images/absher-travel-logo-nobg.png')} style={styles.logo} contentFit="contain" tintColor={colors.primary} />
-          <Pressable style={[styles.langPill, { backgroundColor: colors.card }]} onPress={() => {}}>
+          <Pressable style={[styles.langPill, { backgroundColor: colors.card }]} onPress={toggle}>
             <Text style={[styles.lang, { color: colors.primary }]}>{lang === 'ar' ? 'AR' : 'EN'}</Text>
             <Ionicons name="globe-outline" size={16} color={colors.primary} />
           </Pressable>
