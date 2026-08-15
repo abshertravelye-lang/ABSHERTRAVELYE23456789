@@ -133,10 +133,10 @@ export default function NotificationsTab() {
   const [activeFilter, setActiveFilter] = useState('all');
 
   const filters = [
-    { id: 'all', label: lang === 'ar' ? 'الكل' : 'All' },
-    { id: 'unread', label: lang === 'ar' ? 'غير مقروءة' : 'Unread' },
-    { id: 'alerts', label: lang === 'ar' ? 'تنبيهات' : 'Alerts' },
-    { id: 'offers', label: lang === 'ar' ? 'عروض وخصومات' : 'Offers' },
+    { id: 'all', label: t('common.all') as string },
+    { id: 'unread', label: t('notifications.filter.unread') as string },
+    { id: 'alerts', label: t('notifications.filter.alerts') as string },
+    { id: 'offers', label: t('notifications.filter.offers') as string },
   ];
 
   const filteredNotifs = notifications.filter(n => {
@@ -180,10 +180,10 @@ export default function NotificationsTab() {
             {/* Title Area */}
             <View style={styles.titleArea}>
               <Text style={[styles.title, { color: colors.primary, fontFamily: 'Cairo_700Bold', textAlign: 'center' }]}>
-                {lang === 'ar' ? 'الإشعارات' : 'Notifications'}
+                {t('notifications.title') as string}
               </Text>
               <Text style={[styles.subtitle, { color: colors.textSecondary, fontFamily: 'Cairo_400Regular', textAlign: 'center' }]}>
-                {lang === 'ar' ? 'جميع التنبيهات والتحديثات الخاصة بك' : 'All your alerts and updates'}
+                {t('notifications.subtitle') as string}
               </Text>
               <View style={[styles.divider, { backgroundColor: colors.accent }]} />
             </View>
@@ -214,7 +214,7 @@ export default function NotificationsTab() {
           !isLoading ? (
             <EmptyState
               icon="notifications-off-outline"
-              title={lang === 'ar' ? 'لا توجد إشعارات' : 'No notifications'}
+              title={t('notifications.empty') as string}
               description=""
             />
           ) : null

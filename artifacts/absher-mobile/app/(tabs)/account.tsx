@@ -104,18 +104,18 @@ export default function AccountScreen() {
   const completedCount = (apps?.filter(a => a.status === 'issued' || a.status === 'completed' || a.status === 'rejected' || a.status === 'cancelled').length || 0) + (bookings?.filter(b => b.status === 'cancelled').length || 0);
 
   const stats = [
-    { id: 'active', icon: 'document-text-outline', label: lang === 'ar' ? 'طلبات نشطة' : 'Active requests', count: activeCount },
-    { id: 'completed', icon: 'checkmark-circle-outline', label: lang === 'ar' ? 'طلبات مكتملة' : 'Completed', count: completedCount },
+    { id: 'active', icon: 'document-text-outline', label: t('account.stats.active') as string, count: activeCount },
+    { id: 'completed', icon: 'checkmark-circle-outline', label: t('account.stats.completed') as string, count: completedCount },
   ];
 
   const menuItems = [
-    { id: 'info', icon: 'person-outline', title: lang === 'ar' ? 'المعلومات الشخصية' : 'Personal info', sub: lang === 'ar' ? 'إدارة بياناتك ومعلومات التواصل' : 'Manage your data and contact info', route: '/profile-edit' },
-    { id: 'docs', icon: 'id-card-outline', title: lang === 'ar' ? 'الوثائق والمستندات' : 'Documents', sub: lang === 'ar' ? 'إدارة مستنداتك وملفاتك الشخصية' : 'Manage your files and documents', route: '/profile-edit' },
-    { id: 'pay', icon: 'wallet-outline', title: lang === 'ar' ? 'وسائل الدفع' : 'Payment methods', sub: lang === 'ar' ? 'إدارة بطاقاتك وطرق الدفع الخاصة بك' : 'Manage your cards and payment methods', route: '/wallet' },
-    { id: 'sec', icon: 'shield-checkmark-outline', title: lang === 'ar' ? 'الأمان والخصوصية' : 'Security and Privacy', sub: lang === 'ar' ? 'إعدادات الأمان والخصوصية' : 'Security settings and privacy', route: '/settings' },
-    { id: 'notif', icon: 'notifications-outline', title: lang === 'ar' ? 'الإشعارات' : 'Notifications', sub: lang === 'ar' ? 'تخصيص الإشعارات والتنبيهات' : 'Customize notifications and alerts', route: '/notification-settings' },
-    { id: 'help', icon: 'headset-outline', title: lang === 'ar' ? 'الدعم والمساعدة' : 'Help & Support', sub: lang === 'ar' ? 'تواصل معنا للحصول على المساعدة' : 'Contact us for assistance', action: () => router.push('/support-chat') },
-    { id: 'logout', icon: 'log-out-outline', title: lang === 'ar' ? 'تسجيل الخروج' : 'Logout', sub: lang === 'ar' ? 'تسجيل الخروج من حسابك' : 'Sign out of your account', action: handleLogout, destructive: true },
+    { id: 'info', icon: 'person-outline', title: t('account.menu.info') as string, sub: t('account.menu.infoSub') as string, route: '/profile-edit' },
+    { id: 'docs', icon: 'id-card-outline', title: t('account.menu.docs') as string, sub: t('account.menu.docsSub') as string, route: '/profile-edit' },
+    { id: 'pay', icon: 'wallet-outline', title: t('account.menu.pay') as string, sub: t('account.menu.paySub') as string, route: '/wallet' },
+    { id: 'sec', icon: 'shield-checkmark-outline', title: t('account.menu.sec') as string, sub: t('account.menu.secSub') as string, route: '/settings' },
+    { id: 'notif', icon: 'notifications-outline', title: t('account.menu.notif') as string, sub: t('account.menu.notifSub') as string, route: '/notification-settings' },
+    { id: 'help', icon: 'headset-outline', title: t('account.menu.help') as string, sub: t('account.menu.helpSub') as string, action: () => router.push('/support-chat') },
+    { id: 'logout', icon: 'log-out-outline', title: t('profile.logout') as string, sub: t('account.menu.logoutSub') as string, action: handleLogout, destructive: true },
   ];
 
   return (
@@ -178,19 +178,19 @@ export default function AccountScreen() {
             <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: 8 }}>
                  <Text style={[styles.completionText, { color: isComplete ? colors.success : colors.warning, fontFamily: 'Cairo_600SemiBold' }]}>
-                   {isComplete ? (lang === 'ar' ? 'تم إكمال الملف الشخصي' : 'Profile completed') : (lang === 'ar' ? 'أكمل ملفك الشخصي' : 'Complete your profile')}
+                   {isComplete ? t('profile.completionDone') as string : t('profile.completionPending') as string}
                  </Text>
                </View>
                <Ionicons name="checkmark-circle" size={20} color={isComplete ? colors.success : colors.warning} />
             </View>
             {!isComplete && (
                <Text style={[styles.completionSub, { color: colors.textSecondary, fontFamily: 'Cairo_400Regular', textAlign: isRTL ? 'right' : 'left', marginTop: 4 }]}>
-                 {lang === 'ar' ? 'ملفك الشخصي غير مكتمل، يرجى إكماله للاستفادة من جميع خدماتنا.' : 'Your profile is incomplete, please complete it.'}
+                 {t('profile.completionPendingSub') as string}
                </Text>
             )}
             {isComplete && (
                <Text style={[styles.completionSub, { color: colors.textSecondary, fontFamily: 'Cairo_400Regular', textAlign: isRTL ? 'right' : 'left', marginTop: 4 }]}>
-                 {lang === 'ar' ? 'ملفك الشخصي مكتمل وجاهز للاستفادة من جميع خدماتنا.' : 'Your profile is complete and ready.'}
+                 {t('profile.completionDoneSub') as string}
                </Text>
             )}
           </View>

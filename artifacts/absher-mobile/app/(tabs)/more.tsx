@@ -17,50 +17,50 @@ export default function MoreScreen() {
   const items = [
     {
       id: 'programs',
-      title: lang === 'ar' ? 'البرامج السياحية' : 'Tourism Programs',
-      subtitle: lang === 'ar' ? 'اكتشف برامجنا السياحية واختر الوجهة المناسبة لك' : 'Discover our programs and choose your destination',
+      title: t('nav.programs') as string,
+      subtitle: t('more.programs.subtitle') as string,
       icon: 'compass-outline',
       route: '/(tabs)/programs',
     },
     {
       id: 'bookings',
-      title: lang === 'ar' ? 'إدارة طلباتي' : 'Manage Bookings',
-      subtitle: lang === 'ar' ? 'متابعة جميع طلبات التأشيرات والعمرة وحالة كل طلب' : 'Track all your visa and umrah requests',
+      title: t('more.bookings.title') as string,
+      subtitle: t('more.bookings.subtitle') as string,
       icon: 'clipboard-outline',
       route: '/(tabs)/bookings',
     },
     {
       id: 'documents',
-      title: lang === 'ar' ? 'المستندات' : 'Documents',
-      subtitle: lang === 'ar' ? 'الوصول إلى المستندات والملفات المرتبطة بطلباتك' : 'Access documents and files related to your requests',
+      title: t('more.documents.title') as string,
+      subtitle: t('more.documents.subtitle') as string,
       icon: 'folder-open-outline',
       route: '/(tabs)/account', // Or documents if it exists
     },
     {
       id: 'notifications',
-      title: lang === 'ar' ? 'الإشعارات' : 'Notifications',
-      subtitle: lang === 'ar' ? 'جميع التنبيهات والتحديثات الخاصة بطلباتك' : 'All alerts and updates for your requests',
+      title: t('notifications.title') as string,
+      subtitle: t('more.notifications.subtitle') as string,
       icon: 'notifications-outline',
       route: '/(tabs)/notifications',
     },
     {
       id: 'support',
-      title: lang === 'ar' ? 'الدعم والتواصل' : 'Support & Contact',
-      subtitle: lang === 'ar' ? 'التواصل مع فريق الدعم والاستفسار عن الخدمات' : 'Contact our support team for inquiries',
+      title: t('more.support.title') as string,
+      subtitle: t('more.support.subtitle') as string,
       icon: 'headset-outline',
       route: 'support',
     },
     {
       id: 'help',
-      title: lang === 'ar' ? 'مركز المساعدة' : 'Help Center',
-      subtitle: lang === 'ar' ? 'الأسئلة الشائعة والتعليمات المهمة' : 'Frequently asked questions and important instructions',
+      title: t('more.help.title') as string,
+      subtitle: t('more.help.subtitle') as string,
       icon: 'help-circle-outline',
       route: 'help',
     },
     {
       id: 'settings',
-      title: lang === 'ar' ? 'الإعدادات' : 'Settings',
-      subtitle: lang === 'ar' ? 'إدارة اللغة، الإشعارات، الحساب والخصوصية' : 'Manage language, notifications, account and privacy',
+      title: t('settings.title') as string,
+      subtitle: t('more.settings.subtitle') as string,
       icon: 'settings-outline',
       route: '/settings',
     },
@@ -121,10 +121,10 @@ export default function MoreScreen() {
             {/* Title Area */}
             <View style={styles.titleArea}>
               <Text style={[styles.title, { color: colors.primary, fontFamily: 'Cairo_700Bold', textAlign: 'center' }]}>
-                {lang === 'ar' ? 'المزيد من الخدمات' : 'More Services'}
+                {t('more.title') as string}
               </Text>
               <Text style={[styles.subtitle, { color: colors.textSecondary, fontFamily: 'Cairo_400Regular', textAlign: 'center' }]}>
-                {lang === 'ar' ? 'كل ما تحتاجه لرحلة أسهل وأكثر راحة' : 'Everything you need for an easier and more comfortable journey'}
+                {t('more.subtitle') as string}
               </Text>
             </View>
           </View>

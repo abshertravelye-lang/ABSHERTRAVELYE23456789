@@ -42,19 +42,19 @@ export default function BookingsScreen() {
   const [activeFilter, setActiveFilter] = useState('all');
 
   const filters = [
-    { id: 'all', label: lang === 'ar' ? 'الكل' : 'All' },
-    { id: 'visa', label: lang === 'ar' ? 'التأشيرات' : 'Visas' },
-    { id: 'umrah', label: lang === 'ar' ? 'تأشيرة العمرة' : 'Umrah' },
-    { id: 'flight', label: lang === 'ar' ? 'حجوزات الطيران' : 'Flights' },
-    { id: 'hotel', label: lang === 'ar' ? 'حجوزات الفنادق' : 'Hotels' },
+    { id: 'all', label: t('common.all') as string },
+    { id: 'visa', label: t('nav.visas') as string },
+    { id: 'umrah', label: t('umrah.title') as string },
+    { id: 'flight', label: t('bookings.filter.flights') as string },
+    { id: 'hotel', label: t('bookings.filter.hotels') as string },
   ];
 
   const stats = useMemo(() => [
-    { id: 'pending', label: lang === 'ar' ? 'في الانتظار' : 'Pending', count: bookings.filter(b => b.status === 'pending').length, icon: 'time-outline', color: '#D97706', bg: '#FEF3C7' },
-    { id: 'confirmed', label: lang === 'ar' ? 'مكتملة' : 'Completed', count: bookings.filter(b => b.status === 'confirmed').length, icon: 'checkmark-outline', color: '#059669', bg: '#D1FAE5' },
-    { id: 'processing', label: lang === 'ar' ? 'قيد المعالجة' : 'Processing', count: 0, icon: 'airplane-outline', color: '#0284C7', bg: '#E0F2FE' },
-    { id: 'cancelled', label: lang === 'ar' ? 'مرفوضة' : 'Rejected', count: bookings.filter(b => b.status === 'cancelled').length, icon: 'close-outline', color: '#DC2626', bg: '#FEE2E2' },
-  ], [bookings, lang]);
+    { id: 'pending', label: t('status.pending') as string, count: bookings.filter(b => b.status === 'pending').length, icon: 'time-outline', color: '#D97706', bg: '#FEF3C7' },
+    { id: 'confirmed', label: t('status.completed') as string, count: bookings.filter(b => b.status === 'confirmed').length, icon: 'checkmark-outline', color: '#059669', bg: '#D1FAE5' },
+    { id: 'processing', label: t('status.processing') as string, count: 0, icon: 'airplane-outline', color: '#0284C7', bg: '#E0F2FE' },
+    { id: 'cancelled', label: t('status.rejected') as string, count: bookings.filter(b => b.status === 'cancelled').length, icon: 'close-outline', color: '#DC2626', bg: '#FEE2E2' },
+  ], [bookings, t]);
 
   const filteredBookings = useMemo(() => {
     return bookings.filter(b => {
@@ -100,10 +100,10 @@ export default function BookingsScreen() {
             {typeConf.label} {item.destination ? `- ${item.destination}` : ''}
           </Text>
           <Text style={[styles.cardSub, { color: colors.textSecondary, fontFamily: 'Cairo_400Regular' }]}>
-            {lang === 'ar' ? 'رقم الطلب:' : 'Order No:'} {formattedId}
+            {t('bookings.orderNo') as string} {formattedId}
           </Text>
           <Text style={[styles.cardSub, { color: colors.textSecondary, fontFamily: 'Cairo_400Regular' }]}>
-            {lang === 'ar' ? 'تاريخ الطلب:' : 'Date:'} {formatDate(item.createdAt, lang)}
+            {t('bookings.date') as string} {formatDate(item.createdAt, lang)}
           </Text>
         </View>
 
@@ -123,7 +123,7 @@ export default function BookingsScreen() {
             }}
           >
             <Text style={[styles.detailsBtnText, { color: colors.textSecondary, fontFamily: 'Cairo_600SemiBold' }]}>
-              {lang === 'ar' ? 'عرض التفاصيل' : 'Details'}
+              {t('bookings.viewDetails') as string}
             </Text>
           </Pressable>
         </View>
@@ -168,7 +168,7 @@ export default function BookingsScreen() {
                 {t('nav.bookings') || 'طلباتي'}
               </Text>
               <Text style={[styles.pageSubtitle, { color: colors.textSecondary, fontFamily: 'Cairo_400Regular' }]}>
-                {lang === 'ar' ? 'تابع جميع طلباتك وحالة كل طلب بسهولة' : 'Track all your requests and their status easily'}
+                {t('bookings.subtitle') as string}
               </Text>
               <View style={[styles.titleUnderline, { backgroundColor: colors.accent }]} />
             </View>
@@ -218,7 +218,7 @@ export default function BookingsScreen() {
             {/* Section Title */}
             <View style={[styles.listSectionHeader, { alignItems: isRTL ? 'flex-end' : 'flex-start' }]}>
               <Text style={[styles.listTitle, { color: colors.primary, fontFamily: 'Cairo_700Bold' }]}>
-                {lang === 'ar' ? 'قائمة الطلبات' : 'Requests List'}
+                {t('bookings.requestsList') as string}
               </Text>
               <View style={[styles.listTitleUnderline, { backgroundColor: colors.accent }]} />
             </View>

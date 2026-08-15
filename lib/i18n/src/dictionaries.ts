@@ -18,6 +18,8 @@ import type { Domain } from "./types";
 /** Generic UI: buttons, actions, statuses, generic labels. */
 export const common: Domain = {
   "common.brand": { ar: "ABSHER TRAVEL", en: "ABSHER TRAVEL" },
+  "common.loadingError": { ar: "تعذّر التحميل", en: "Failed to load" },
+  "common.result": { ar: "نتيجة", en: "result(s)" },
   "common.tagline": {
     ar: "خدمات موثوقة للتأشيرات والسفر",
     en: "Trusted visa & travel services",
@@ -258,6 +260,14 @@ export const profile: Domain = {
   "profile.title": { ar: "الملف الشخصي", en: "My Profile" },
   "profile.edit": { ar: "تعديل الملف الشخصي", en: "Edit profile" },
   "profile.complete": { ar: "ملفك الشخصي مكتمل", en: "Your profile is complete" },
+  "profile.guestWelcome": { ar: "مرحباً بك!", en: "Welcome!" },
+  "profile.guestSubtitle": { ar: "سجّل دخولك للوصول إلى جميع خدماتنا وتتبع طلباتك", en: "Sign in to access all our services and track your requests" },
+  "profile.logoutConfirmTitle": { ar: "هل تريد تسجيل الخروج؟", en: "Sign out?" },
+  "profile.logoutConfirmBody": { ar: "هل أنت متأكد أنك تريد تسجيل الخروج من حسابك؟", en: "Are you sure you want to sign out of your account?" },
+  "profile.completionDone": { ar: "تم إكمال الملف الشخصي", en: "Profile completed" },
+  "profile.completionDoneSub": { ar: "ملفك الشخصي مكتمل وجاهز للاستفادة من جميع خدماتنا.", en: "Your profile is complete and ready to use all our services." },
+  "profile.completionPending": { ar: "أكمل ملفك الشخصي", en: "Complete your profile" },
+  "profile.completionPendingSub": { ar: "ملفك الشخصي غير مكتمل، يرجى إكماله للاستفادة من جميع خدماتنا.", en: "Your profile is incomplete, please complete it to use all our services." },
   "profile.firstName": { ar: "الاسم الأول", en: "First name" },
   "profile.lastName": { ar: "الاسم الأخير", en: "Last name" },
   "profile.email": { ar: "البريد الإلكتروني", en: "Email" },
@@ -295,7 +305,36 @@ export const visas: Domain = {
   "visas.entryType": { ar: "نوع الدخول", en: "Entry type" },
   "visas.selectCountry": { ar: "اختر الوجهة", en: "Select destination" },
   "visas.selectType": { ar: "اختر نوع التأشيرة", en: "Select visa type" },
+  // hub / search screen
+  "visas.hub.title": { ar: "بوابة التأشيرات", en: "Visa Hub" },
+  "visas.hub.availableVisas": { ar: "تأشيرة متاحة", en: "visas available" },
+  "visas.hub.allDestinations": { ar: "جميع الوجهات", en: "All destinations" },
+  "visas.hub.searchPlaceholder": { ar: "ابحث عن وجهة...", en: "Search destination..." },
+  "visas.hub.visaCount": { ar: "تأشيرة", en: "Visas" },
+  "visas.hub.fastApproval": { ar: "موافقة سريعة", en: "Fast Approval" },
+  "visas.hub.multipleEntry": { ar: "دخول متعدد", en: "Multiple Entry" },
+  // filters
+  "visas.filter.entryType": { ar: "نوع الدخول", en: "Entry type" },
+  "visas.filter.processingTime": { ar: "مدة المعالجة", en: "Processing time" },
+  "visas.filter.anyEntry": { ar: "أي نوع", en: "Any type" },
+  "visas.filter.singleEntry": { ar: "دخول واحد", en: "Single entry" },
+  "visas.filter.multipleEntry": { ar: "دخول متعدد", en: "Multiple entry" },
+  "visas.filter.anyDuration": { ar: "أي مدة", en: "Any duration" },
+  // sections
+  "visas.section.fastApprovalSub": { ar: "تأشيرة بموافقة خلال 3 أيام أو أقل", en: "visa(s) approved in 3 days or less" },
+  "visas.section.lowestPrice": { ar: "الأقل تكلفة", en: "Most Affordable" },
+  "visas.section.lowestPriceSub": { ar: "أفضل قيمة مقابل المال", en: "Best value for money" },
+  "visas.section.multipleEntrySub": { ar: "سافر أكثر من مرة بتأشيرة واحدة", en: "Travel multiple times on one visa" },
+  "visas.section.newest": { ar: "أحدث التأشيرات", en: "Newest Visas" },
+  "visas.section.newestSub": { ar: "وجهات أضيفت حديثاً", en: "Recently added destinations" },
+  "visas.section.destinationsAvailable": { ar: "وجهة متاحة", en: "destinations available" },
+  // empty states
+  "visas.error.loading": { ar: "تعذّر تحميل قائمة التأشيرات", en: "Could not load the visa list" },
+  "visas.empty.title": { ar: "لا توجد نتائج", en: "No results found" },
+  "visas.empty.noMatch": { ar: "لا توجد تأشيرات تطابق معايير البحث", en: "No visas match your search criteria" },
+  "visas.empty.noVisas": { ar: "لا توجد تأشيرات متاحة حالياً", en: "No visas available at the moment" },
   // categories
+  "visas.category.all": { ar: "جميع الوجهات", en: "All Destinations" },
   "visas.category.tourist": { ar: "سياحية", en: "Tourist" },
   "visas.category.business": { ar: "عمل", en: "Business" },
   "visas.category.medical": { ar: "علاجية", en: "Medical" },
@@ -310,6 +349,7 @@ export const visas: Domain = {
 /** Umrah wizard & umrah visa flow. */
 export const umrah: Domain = {
   "umrah.title": { ar: "تأشيرة العمرة", en: "Umrah Visa" },
+  "umrah.instantApply": { ar: "قدّم طلب تأشيرة العمرة الآن", en: "Apply for an Umrah visa now" },
   "umrah.packages": { ar: "باقات العمرة", en: "Umrah Packages" },
   "umrah.applyTitle": { ar: "التقديم على تأشيرة العمرة", en: "Apply for Umrah Visa" },
   "umrah.step.personal": { ar: "البيانات الشخصية", en: "Personal details" },
@@ -329,6 +369,10 @@ export const umrah: Domain = {
 /** Applications & visa tracking, status labels. */
 export const tracking: Domain = {
   "tracking.title": { ar: "تتبع الطلب", en: "Track application" },
+  "tracking.error.title": { ar: "حدث خطأ", en: "An error occurred" },
+  "tracking.error.desc": { ar: "تعذّر تحميل الطلبات، يرجى المحاولة مجدداً", en: "Could not load requests, please try again" },
+  "tracking.empty.noRequestsTitle": { ar: "لا توجد طلبات", en: "No requests yet" },
+  "tracking.empty.noRequestsDesc": { ar: "لم تقم بتقديم أي طلبات بعد.", en: "You haven't submitted any requests yet." },
   "tracking.applications": { ar: "طلبات التأشيرة", en: "Visa applications" },
   "tracking.bookings": { ar: "الحجوزات", en: "Bookings" },
   "tracking.myRequests": { ar: "طلباتي", en: "My requests" },
@@ -357,6 +401,14 @@ export const tracking: Domain = {
 /** Booking requests (web book form). */
 export const booking: Domain = {
   "booking.request": { ar: "طلب حجز", en: "Booking Request" },
+  "booking.searchFlights": { ar: "احجز الآن", en: "Book now" },
+  "bookings.subtitle": { ar: "تابع جميع طلباتك وحالة كل طلب بسهولة", en: "Track all your requests and their status easily" },
+  "bookings.requestsList": { ar: "قائمة الطلبات", en: "Requests List" },
+  "bookings.orderNo": { ar: "رقم الطلب:", en: "Order No:" },
+  "bookings.date": { ar: "تاريخ الطلب:", en: "Date:" },
+  "bookings.viewDetails": { ar: "عرض التفاصيل", en: "Details" },
+  "bookings.filter.flights": { ar: "حجوزات الطيران", en: "Flights" },
+  "bookings.filter.hotels": { ar: "حجوزات الفنادق", en: "Hotels" },
   "booking.submit": { ar: "إرسال الطلب", en: "Submit Request" },
   "booking.name": { ar: "الاسم", en: "Name" },
   "booking.phone": { ar: "رقم الهاتف", en: "Phone" },
@@ -397,9 +449,13 @@ export const payment: Domain = {
 /** Notifications. */
 export const notifications: Domain = {
   "notifications.title": { ar: "الإشعارات", en: "Notifications" },
+  "notifications.subtitle": { ar: "جميع التنبيهات والتحديثات الخاصة بك", en: "All your alerts and updates" },
   "notifications.markAllRead": { ar: "الكل مقروء", en: "Mark all read" },
   "notifications.empty": { ar: "لا توجد إشعارات", en: "No notifications" },
   "notifications.now": { ar: "الآن", en: "Now" },
+  "notifications.filter.unread": { ar: "غير مقروءة", en: "Unread" },
+  "notifications.filter.alerts": { ar: "تنبيهات", en: "Alerts" },
+  "notifications.filter.offers": { ar: "عروض وخصومات", en: "Offers" },
   "notifications.type.booking": { ar: "الحجوزات", en: "Booking" },
   "notifications.type.application": { ar: "الطلبات", en: "Application" },
   "notifications.type.flight": { ar: "الرحلات", en: "Flight" },
@@ -619,6 +675,42 @@ export const errors: Domain = {
   "toasts.sent": { ar: "تم الإرسال بنجاح", en: "Sent successfully" },
 };
 
+/** Account screen menu items and stats. */
+export const account: Domain = {
+  "account.stats.active": { ar: "طلبات نشطة", en: "Active requests" },
+  "account.stats.completed": { ar: "طلبات مكتملة", en: "Completed" },
+  "account.menu.info": { ar: "المعلومات الشخصية", en: "Personal info" },
+  "account.menu.infoSub": { ar: "إدارة بياناتك ومعلومات التواصل", en: "Manage your data and contact info" },
+  "account.menu.docs": { ar: "الوثائق والمستندات", en: "Documents" },
+  "account.menu.docsSub": { ar: "إدارة مستنداتك وملفاتك الشخصية", en: "Manage your files and documents" },
+  "account.menu.pay": { ar: "وسائل الدفع", en: "Payment methods" },
+  "account.menu.paySub": { ar: "إدارة بطاقاتك وطرق الدفع الخاصة بك", en: "Manage your cards and payment methods" },
+  "account.menu.sec": { ar: "الأمان والخصوصية", en: "Security & Privacy" },
+  "account.menu.secSub": { ar: "إعدادات الأمان والخصوصية", en: "Security settings and privacy" },
+  "account.menu.notif": { ar: "الإشعارات", en: "Notifications" },
+  "account.menu.notifSub": { ar: "تخصيص الإشعارات والتنبيهات", en: "Customize notifications and alerts" },
+  "account.menu.help": { ar: "الدعم والمساعدة", en: "Help & Support" },
+  "account.menu.helpSub": { ar: "تواصل معنا للحصول على المساعدة", en: "Contact us for assistance" },
+  "account.menu.logoutSub": { ar: "تسجيل الخروج من حسابك", en: "Sign out of your account" },
+};
+
+/** More / extra services screen. */
+export const more: Domain = {
+  "more.title": { ar: "المزيد من الخدمات", en: "More Services" },
+  "more.subtitle": { ar: "كل ما تحتاجه لرحلة أسهل وأكثر راحة", en: "Everything you need for an easier and more comfortable journey" },
+  "more.programs.subtitle": { ar: "اكتشف برامجنا السياحية واختر الوجهة المناسبة لك", en: "Discover our programs and choose your destination" },
+  "more.bookings.title": { ar: "إدارة طلباتي", en: "Manage Bookings" },
+  "more.bookings.subtitle": { ar: "متابعة جميع طلبات التأشيرات والعمرة وحالة كل طلب", en: "Track all your visa and umrah requests" },
+  "more.documents.title": { ar: "المستندات", en: "Documents" },
+  "more.documents.subtitle": { ar: "الوصول إلى المستندات والملفات المرتبطة بطلباتك", en: "Access documents and files related to your requests" },
+  "more.notifications.subtitle": { ar: "جميع التنبيهات والتحديثات الخاصة بطلباتك", en: "All alerts and updates for your requests" },
+  "more.support.title": { ar: "الدعم والتواصل", en: "Support & Contact" },
+  "more.support.subtitle": { ar: "التواصل مع فريق الدعم والاستفسار عن الخدمات", en: "Contact our support team for inquiries" },
+  "more.help.title": { ar: "مركز المساعدة", en: "Help Center" },
+  "more.help.subtitle": { ar: "الأسئلة الشائعة والتعليمات المهمة", en: "Frequently asked questions and important instructions" },
+  "more.settings.subtitle": { ar: "إدارة اللغة، الإشعارات، الحساب والخصوصية", en: "Manage language, notifications, account and privacy" },
+};
+
 /** Ordered list of all domains merged into the flat dictionary. */
 export const DOMAINS: Domain[] = [
   common,
@@ -627,6 +719,7 @@ export const DOMAINS: Domain[] = [
   auth,
   country,
   profile,
+  account,
   visas,
   umrah,
   tracking,
@@ -639,5 +732,6 @@ export const DOMAINS: Domain[] = [
   home,
   flightsHotels,
   about,
+  more,
   errors,
 ];
