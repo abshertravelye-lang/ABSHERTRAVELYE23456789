@@ -13,7 +13,6 @@ import {
   StyleSheet,
   Text,
   View,
-  useWindowDimensions,
 } from 'react-native';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -207,16 +206,13 @@ const VISAS_IMG = { uri: 'https://images.unsplash.com/photo-1569098644584-210bcd
 
 function ServiceCard({ service }: { service: ServiceDef }) {
   const { t, isRTL } = useLanguage();
-  const { width: winW } = useWindowDimensions();
-  // 2-column grid: subtract horizontal padding (×2) and gap between columns
-  const cardW = (winW - H_PAD * 2 - 12) / 2;
 
   return (
     <Pressable
       onPress={() => router.push(service.route as never)}
       style={({ pressed }) => [
         styles.service,
-        { width: cardW, opacity: pressed ? 0.88 : 1, transform: [{ scale: pressed ? 0.97 : 1 }] },
+        { opacity: pressed ? 0.88 : 1, transform: [{ scale: pressed ? 0.97 : 1 }] },
       ]}
     >
       {/* Background image */}
@@ -518,6 +514,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   service: {
+    width: '48%',
     height: 172,
     borderRadius: 20,
     overflow: 'hidden',
