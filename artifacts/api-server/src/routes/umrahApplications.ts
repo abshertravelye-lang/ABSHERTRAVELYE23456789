@@ -104,11 +104,21 @@ router.post("/umrah-applications", requireAuth, async (req, res) => {
     if (typeof body.personalPhotoUrl !== "string" || !body.personalPhotoUrl.trim()) {
       return res.status(422).json({ error: bilingual("الصورة الشخصية مطلوبة.", "Personal photo is required.") });
     }
-    if (typeof body.phone !== "string" || !body.phone.trim()) {
-      return res.status(422).json({ error: bilingual("رقم جوال المعتمر مطلوب.", "Pilgrim phone number is required.") });
+    if (typeof body.phone !== "string" || !SAUDI_PHONE_RE.test(body.phone)) {
+      return res.status(422).json({
+        error: bilingual(
+          "رقم جوال المعتمر غير صالح. يجب أن يبدأ بـ +966 ويكون رقماً سعودياً صحيحاً.",
+          "Pilgrim phone number is invalid. It must start with +966 and be a valid Saudi mobile number.",
+        ),
+      });
     }
-    if (typeof body.emergencyPhone !== "string" || !body.emergencyPhone.trim()) {
-      return res.status(422).json({ error: bilingual("رقم جوال الطوارئ مطلوب.", "Emergency phone number is required.") });
+    if (typeof body.emergencyPhone !== "string" || !SAUDI_PHONE_RE.test(body.emergencyPhone)) {
+      return res.status(422).json({
+        error: bilingual(
+          "رقم جوال الطوارئ غير صالح. يجب أن يبدأ بـ +966 ويكون رقماً سعودياً صحيحاً.",
+          "Emergency phone number is invalid. It must start with +966 and be a valid Saudi mobile number.",
+        ),
+      });
     }
 
     // 4. Declaration must be accepted.

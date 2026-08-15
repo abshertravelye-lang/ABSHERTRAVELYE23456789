@@ -13,6 +13,7 @@ import {
   StyleSheet,
   Text,
   View,
+  useWindowDimensions,
 } from 'react-native';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -206,41 +207,63 @@ const VISAS_IMG = { uri: 'https://images.unsplash.com/photo-1569098644584-210bcd
 
 function ServiceCard({ service }: { service: ServiceDef }) {
   const { t, isRTL } = useLanguage();
+  const { width: winW } = useWindowDimensions();
+  // 2-column grid: subtract horizontal padding (×2) and gap between columns
+  const cardW = (winW - H_PAD * 2 - 12) / 2;
+
   return (
     <Pressable
       onPress={() => router.push(service.route as never)}
-      style={({ pressed }) => [styles.service, { opacity: pressed ? 0.9 : 1 }]}
+      style={({ pressed }) => [
+        styles.service,
+        { width: cardW, opacity: pressed ? 0.88 : 1, transform: [{ scale: pressed ? 0.97 : 1 }] },
+      ]}
     >
-      <View style={styles.serviceImageWrap}>
+      {/* Background image */}
+      <View style={StyleSheet.absoluteFillObject}>
         <Image source={service.image} style={StyleSheet.absoluteFill as never} contentFit="cover" />
+        {/* Two-stop gradient: top transparent → bottom dark navy */}
         <LinearGradient
-          colors={
-            service.distinctive
-              ? ['rgba(10,35,66,0.45)', 'rgba(10,35,66,0.92)']
-              : ['rgba(10,35,66,0.35)', 'rgba(10,35,66,0.9)']
-          }
+          colors={['rgba(8,28,58,0.08)', 'rgba(8,28,58,0.55)', 'rgba(8,28,58,0.96)']}
+          locations={[0, 0.45, 1]}
           style={StyleSheet.absoluteFill}
         />
       </View>
 
-      {/* Gold circular minimal icon */}
-      <View style={[styles.serviceIconRing, service.distinctive && { borderColor: GOLD, borderWidth: 1.5 }]}>
-        <Ionicons name={service.icon} size={22} color={GOLD} />
+      {/* Icon badge — top corner (right for RTL, left for LTR) */}
+      <View style={[
+        styles.serviceIconRing,
+        service.distinctive && { borderColor: GOLD, backgroundColor: 'rgba(10,35,66,0.55)' },
+        isRTL ? { right: 12, left: null as any } : { left: 12, right: null as any },
+      ]}>
+        <Ionicons name={service.icon} size={20} color={GOLD} />
       </View>
 
-      {/* Copy */}
-      <View style={styles.serviceCopy}>
-        <Text style={[styles.serviceTitle, { fontFamily: 'Cairo_700Bold' }]} numberOfLines={2}>
+      {/* Text block — always at bottom, aligned to reading direction */}
+      <View style={[styles.serviceCopy, { alignItems: isRTL ? 'flex-end' : 'flex-start' }]}>
+        <Text
+          style={[styles.serviceTitle, { fontFamily: 'Cairo_700Bold', textAlign: isRTL ? 'right' : 'left' }]}
+          numberOfLines={2}
+        >
           {t(service.titleKey)}
         </Text>
-        <Text style={[styles.serviceDesc, { fontFamily: 'Cairo_400Regular' }]} numberOfLines={2}>
+        <Text
+          style={[styles.serviceDesc, { fontFamily: 'Cairo_400Regular', textAlign: isRTL ? 'right' : 'left' }]}
+          numberOfLines={2}
+        >
           {t(service.descKey)}
         </Text>
-      </View>
 
-      {/* Gold arrow action */}
-      <View style={styles.serviceArrow}>
-        <Ionicons name={isRTL ? 'arrow-back' : 'arrow-forward'} size={16} color={NAVY} />
+        {/* Inline arrow row */}
+        <View style={[styles.serviceArrowRow, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+          <View style={styles.serviceArrowPill}>
+            <Ionicons
+              name={isRTL ? 'arrow-back-outline' : 'arrow-forward-outline'}
+              size={13}
+              color={NAVY}
+            />
+          </View>
+        </View>
       </View>
     </Pressable>
   );
@@ -486,45 +509,48 @@ const styles = StyleSheet.create({
   sectionHeader: { marginTop: 26, marginHorizontal: H_PAD, gap: 7 },
   sectionTitle: { fontSize: 20 },
   titleLine: { width: 36, height: 3, borderRadius: 2 },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14, paddingHorizontal: H_PAD, marginTop: 16 },
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    paddingHorizontal: H_PAD,
+    marginTop: 16,
+    marginBottom: 8,
+  },
   service: {
-    width: (SCREEN_W - H_PAD * 2 - 14) / 2,
-    height: 176,
-    borderRadius: 22,
+    height: 172,
+    borderRadius: 20,
     overflow: 'hidden',
-    padding: 16,
+    padding: 14,
     justifyContent: 'flex-end',
     backgroundColor: NAVY,
-    shadowColor: NAVY,
-    shadowOpacity: 0.18,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 6,
+    shadowColor: '#000',
+    shadowOpacity: 0.22,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 8,
   },
-  serviceImageWrap: { ...StyleSheet.absoluteFillObject },
   serviceIconRing: {
     position: 'absolute',
-    top: 14,
-    right: 14,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    borderWidth: 1,
-    borderColor: 'rgba(201,162,75,0.6)',
-    backgroundColor: 'rgba(10,35,66,0.4)',
+    top: 12,
+    right: 12,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    borderWidth: 1.5,
+    borderColor: 'rgba(201,162,75,0.65)',
+    backgroundColor: 'rgba(8,28,58,0.45)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  serviceCopy: { alignItems: 'flex-end', gap: 3 },
-  serviceTitle: { color: '#FFFFFF', fontSize: 15, textAlign: 'right' },
-  serviceDesc: { color: 'rgba(255,255,255,0.78)', fontSize: 11.5, textAlign: 'right', lineHeight: 17 },
-  serviceArrow: {
-    position: 'absolute',
-    bottom: 14,
-    left: 14,
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+  serviceCopy: { gap: 2 },
+  serviceTitle: { color: '#FFFFFF', fontSize: 14, lineHeight: 20 },
+  serviceDesc: { color: 'rgba(255,255,255,0.72)', fontSize: 11, lineHeight: 16 },
+  serviceArrowRow: { marginTop: 8, alignItems: 'center' },
+  serviceArrowPill: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: GOLD,
     alignItems: 'center',
     justifyContent: 'center',

@@ -239,11 +239,16 @@ export default function Umrah() {
     }
   };
 
+  // Optional contact email: valid only when empty or matches a basic email pattern.
+  const emailTrimmed = contactEmail.trim();
+  const contactEmailValid = !emailTrimmed || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrimmed);
+
   const pilgrimValid =
     !!passportImageUrl &&
     !!personalPhotoUrl &&
     saudiPhoneValid(phoneDigits) &&
-    saudiPhoneValid(emergencyDigits);
+    saudiPhoneValid(emergencyDigits) &&
+    contactEmailValid;
 
   const surfaceError = (e: any) =>
     setServerError(
@@ -253,6 +258,30 @@ export default function Umrah() {
 
   const submitApplication = async () => {
     setServerError(null);
+
+    // Final client-side guard — mirrors server validation so the user gets a
+    // friendly message before the request even leaves the browser.
+    if (!saudiPhoneValid(phoneDigits)) {
+      return setServerError(ar
+        ? "رقم جوال المعتمر يجب أن يبدأ بـ 5 ويتكون من 9 أرقام."
+        : "Pilgrim phone must start with 5 and be exactly 9 digits.");
+    }
+    if (!saudiPhoneValid(emergencyDigits)) {
+      return setServerError(ar
+        ? "رقم جوال الطوارئ يجب أن يبدأ بـ 5 ويتكون من 9 أرقام."
+        : "Emergency phone must start with 5 and be exactly 9 digits.");
+    }
+    if (!contactEmailValid) {
+      return setServerError(ar
+        ? "البريد الإلكتروني غير صالح. تأكد من صحة الصيغة أو اتركه فارغاً."
+        : "Contact email is invalid. Enter a valid address or leave it blank.");
+    }
+    if (!declarationAccepted) {
+      return setServerError(ar
+        ? "يجب الموافقة على الإقرار قبل الإرسال."
+        : "You must accept the declaration before submitting.");
+    }
+
     try {
       const res = await createMutation.mutateAsync({
         data: {

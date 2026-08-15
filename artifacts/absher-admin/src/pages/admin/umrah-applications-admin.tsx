@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   useListUmrahApplicationsAdmin,
@@ -120,16 +120,65 @@ function Field({ label, value, mono }: { label: string; value: React.ReactNode; 
 /** A document image entry read off the Umrah application row. */
 interface DocEntry { labelAr: string; labelEn: string; path: string | null | undefined; }
 
+/** Resolve a storage path to a displayable URL (signed for /objects/ paths). */
+function useSignedUrl(path: string | null | undefined): string | null {
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => {
+    if (!path) { setUrl(null); return; }
+    const base = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
+    if (/^https?:\/\//.test(path)) { setUrl(path); return; }
+    if (!path.startsWith("/objects/")) {
+      setUrl(`${base}${path.startsWith("/") ? "" : "/"}${path}`);
+      return;
+    }
+    let cancelled = false;
+    const token = localStorage.getItem(ADMIN_ACCESS_TOKEN_KEY);
+    fetch(`${base}/api/storage/sign?path=${encodeURIComponent(path)}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    })
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then(({ url: signed }) => { if (!cancelled) setUrl(signed); })
+      .catch(() => { if (!cancelled) setUrl(null); });
+    return () => { cancelled = true; };
+  }, [path]);
+  return url;
+}
+
+const IMAGE_RE = /\.(jpe?g|png|webp|gif|bmp|heic)(\?|$)/i;
+const PDF_RE   = /\.pdf(\?|$)/i;
+
 function DocumentThumb({ doc, ar }: { doc: DocEntry; ar: boolean }) {
+  const signedUrl = useSignedUrl(doc.path);
   if (!doc.path) return null;
+
+  const isImage = IMAGE_RE.test(doc.path);
+  const isPdf   = PDF_RE.test(doc.path);
+
   return (
     <button
       type="button"
       onClick={() => openObjectInNewTab(doc.path as string)}
-      className="border rounded-2xl overflow-hidden bg-white text-start hover:border-[#0d2351]/50 transition-colors group"
+      className="border rounded-2xl overflow-hidden bg-white text-start hover:border-[#0d2351]/50 transition-colors group w-full"
     >
-      <div className="h-32 bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-slate-200 transition-colors">
-        <FileText className="w-8 h-8" />
+      <div className="h-36 bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-slate-50 transition-colors overflow-hidden relative">
+        {isImage && signedUrl ? (
+          <img
+            src={signedUrl}
+            alt={ar ? doc.labelAr : doc.labelEn}
+            className="w-full h-full object-cover"
+            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+          />
+        ) : isImage ? (
+          /* signed URL loading — show spinner */
+          <div className="w-8 h-8 rounded-full border-2 border-[#0d2351]/30 border-t-[#0d2351] animate-spin" />
+        ) : isPdf ? (
+          <div className="flex flex-col items-center gap-1">
+            <FileText className="w-9 h-9 text-red-400" />
+            <span className="text-xs font-semibold text-red-400 tracking-wide">PDF</span>
+          </div>
+        ) : (
+          <FileText className="w-8 h-8" />
+        )}
       </div>
       <div className="px-3 py-2 flex items-center justify-between gap-2">
         <span className="text-sm font-medium truncate">{ar ? doc.labelAr : doc.labelEn}</span>
