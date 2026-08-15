@@ -1,3 +1,9 @@
 uploads = []
 generated = []
-outputs = []
+
+[[outputs]]
+id = "onMwBPkjJ83LIxVOSmgKf"
+uri = "file://attached_assets/debug-logs-bundle.zip"
+type = "unspecified"
+title = "ملف سجلات التصحيح الكامل"
+description = "يحتوي على ملفات debug-logs الأربعة المرفوعة، مجمعة في ملف ZIP واحد لإرساله إلى دعم Replit."
