@@ -3,3 +3,16 @@
 
 # No need to store the pnpm store twice.
 .local
+
+# Build / dependency caches — not needed at runtime (771 MB+)
+.cache
+
+# Scratch and debug output — not needed at runtime
+tmp
+screenshots
+attached_assets/*.zip
+
+# All user-uploaded reference images in attached_assets except the one logo the
+# travel web build imports at compile time via the @assets alias.
+attached_assets/*
+!attached_assets/absher-business-logo.png
