@@ -18,3 +18,4 @@
 - [Expo build port conflict](expo-build-port-conflict.md) — mobile static builds need port 8081 free; pause mockup-sandbox during the build, then restore it.
 - [Dark mode fix pattern](dark-mode-fix-pattern.md) — StyleSheet backgroundColor must be moved inline with colors.card; logos need tintColor={colors.primary}.
 - [Vite config env guards](vite-config-env-guards.md) — vite.config must default PORT/BASE_PATH, never throw; production builds run without workflow-injected env.
+- [Nix store corruption blocking publish](nix-store-corruption-publish.md) — "self-healing corrupt nix store paths" publish loop → repair the named store path in the shell (remove stray .lock dir first), don't republish repeatedly.
