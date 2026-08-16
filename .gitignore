@@ -50,3 +50,4 @@ Thumbs.db
 .local/
 .local-uploads/
 attached_assets/debug-logs*.zip
+.github/workflows/
