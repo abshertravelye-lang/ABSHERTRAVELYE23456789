@@ -48,6 +48,11 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+
+# Build outputs — distribute via GitHub Releases or Object Storage, not the repo
+*.apk
+*.aab
+artifacts/absher-mobile/build-output/
 .local-uploads/
 attached_assets/debug-logs*.zip
 .github/workflows/
