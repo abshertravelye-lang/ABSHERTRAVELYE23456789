@@ -24,6 +24,11 @@ export const notificationsTable = pgTable("notifications", {
   // Optional deep-link / external URL carried with the notification (e.g. admin
   // broadcasts). Persisted so clients can render a tap-through target.
   url: text("url"),
+  // Optional PUBLIC image path shown with the notification (admin broadcasts).
+  // Stored as a public storage path (e.g. /api/storage/public-objects/...) so
+  // every recipient can render it without ownership checks, and so the Expo
+  // push payload can reference it directly.
+  imageUrl: text("image_url"),
   isRead: boolean("is_read").notNull().default(false),
   // Set to the admin user id when this notification was created via an admin
   // broadcast (/notifications/send). Null for system/automatic notifications.

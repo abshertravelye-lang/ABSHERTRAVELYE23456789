@@ -15,7 +15,6 @@ const DestinationsAdmin = lazy(() => import("./destinations-admin"));
 const CustomersAdmin = lazy(() => import("./customers-admin"));
 const MessagesAdmin = lazy(() => import("./messages-admin"));
 const VisaApplicationsAdmin = lazy(() => import("./visa-applications-admin"));
-const AgenciesAdmin = lazy(() => import("./agencies-admin"));
 
 function LoadingSpinner() {
   return (
@@ -40,7 +39,6 @@ export default function AdminLayout() {
     { href: "/admin/destinations",       icon: Building2,       labelAr: "الوجهات",           labelEn: "Destinations" },
     { href: "/admin/customers",          icon: Users,           labelAr: "المستخدمون",        labelEn: "Users" },
     { href: "/admin/messages",           icon: MessageSquare,   labelAr: "الرسائل",           labelEn: "Messages" },
-    { href: "/admin/agencies",           icon: UserCheck,       labelAr: "الوكلاء المعتمدون", labelEn: "Agencies" },
   ];
 
   const currentItem = navItems.find(i =>
@@ -106,7 +104,6 @@ export default function AdminLayout() {
               <Route path="/admin/destinations" component={DestinationsAdmin} />
               <Route path="/admin/customers" component={CustomersAdmin} />
               <Route path="/admin/messages" component={MessagesAdmin} />
-              <Route path="/admin/agencies" component={AgenciesAdmin} />
               <Route path="/admin/:rest*">
                 <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-20 text-center text-slate-500 flex flex-col items-center justify-center min-h-[60vh]">
                   <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-6">

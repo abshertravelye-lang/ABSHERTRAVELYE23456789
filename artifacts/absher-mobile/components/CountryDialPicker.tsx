@@ -178,6 +178,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     paddingHorizontal: 14,
     paddingVertical: Platform.OS === 'ios' ? 12 : 6,
+    minHeight: 48,
     marginBottom: 12,
   },
   searchInput: { flex: 1, fontSize: 15, textAlign: 'right' },

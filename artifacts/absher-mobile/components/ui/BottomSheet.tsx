@@ -1,6 +1,17 @@
 import React, { useEffect, useRef } from 'react';
-import { Animated, Modal, Pressable, StyleSheet, View, Dimensions, PanResponder } from 'react-native';
+import {
+  Animated,
+  Modal,
+  Platform,
+  Pressable,
+  StyleSheet,
+  View,
+  Dimensions,
+  PanResponder,
+} from 'react-native';
 import { useColors } from '@/hooks/useColors';
+import { haptics } from '@/lib/haptics';
+import { KeyboardAwareForm } from '@/components/KeyboardAwareForm';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -8,9 +19,11 @@ export interface BottomSheetProps {
   visible: boolean;
   onClose: () => void;
   children: React.ReactNode;
+  /** Pass true when the sheet contains text inputs so it avoids the keyboard. */
+  hasInputs?: boolean;
 }
 
-export function BottomSheet({ visible, onClose, children }: BottomSheetProps) {
+export function BottomSheet({ visible, onClose, children, hasInputs = false }: BottomSheetProps) {
   const c = useColors();
   const panY = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -55,6 +68,7 @@ export function BottomSheet({ visible, onClose, children }: BottomSheetProps) {
       },
       onPanResponderRelease: (e, gestureState) => {
         if (gestureState.dy > 100 || gestureState.vy > 1.5) {
+          haptics.light();
           onClose();
         } else {
           Animated.spring(panY, {
@@ -72,7 +86,13 @@ export function BottomSheet({ visible, onClose, children }: BottomSheetProps) {
   return (
     <Modal visible transparent animationType="none" onRequestClose={onClose} statusBarTranslucent>
       <Animated.View style={[styles.backdrop, { opacity: fadeAnim }]}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
+        <Pressable
+          style={StyleSheet.absoluteFill}
+          onPress={() => {
+            haptics.light();
+            onClose();
+          }}
+        />
       </Animated.View>
 
       <Animated.View
@@ -81,7 +101,6 @@ export function BottomSheet({ visible, onClose, children }: BottomSheetProps) {
           {
             backgroundColor: c.card,
             transform: [{ translateY: panY }],
-            paddingBottom: 40, // safe area padding
           },
         ]}
         {...panResponder.panHandlers}
@@ -89,7 +108,20 @@ export function BottomSheet({ visible, onClose, children }: BottomSheetProps) {
         <View style={styles.handleContainer}>
           <View style={[styles.handle, { backgroundColor: c.border }]} />
         </View>
-        <View style={styles.content}>{children}</View>
+
+        {hasInputs ? (
+          /* When the sheet contains inputs, use KeyboardAwareForm so the
+             active field scrolls above the keyboard automatically. */
+          <KeyboardAwareForm
+            bottomPadding={40}
+            bottomOffset={16}
+            contentContainerStyle={styles.content}
+          >
+            {children}
+          </KeyboardAwareForm>
+        ) : (
+          <View style={[styles.content, styles.staticPadding]}>{children}</View>
+        )}
       </Animated.View>
     </Modal>
   );
@@ -98,7 +130,7 @@ export function BottomSheet({ visible, onClose, children }: BottomSheetProps) {
 const styles = StyleSheet.create({
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(3, 27, 58, 0.4)', // Deep navy transparent
+    backgroundColor: 'rgba(3, 27, 58, 0.4)',
   },
   sheet: {
     position: 'absolute',
@@ -122,5 +154,8 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: 20,
+  },
+  staticPadding: {
+    paddingBottom: 40,
   },
 });

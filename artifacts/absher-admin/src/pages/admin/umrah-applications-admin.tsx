@@ -16,13 +16,17 @@ import {
 import { Button } from "@/components/ui/button";
 
 // ── Storage upload helper (matches visa-applications-admin conventions) ──────
+// IMPORTANT: API routes (/api/...) must NEVER be prefixed with
+// import.meta.env.BASE_URL. BASE_URL is the artifact base path (/absher-admin/)
+// and prepending it turns /api/storage/... into /absher-admin/api/storage/...
+// which the proxy routes to the admin SPA, not the API server. Use root-absolute
+// paths (/api/...) directly — the shared proxy handles routing at the root level.
 async function uploadFile(file: File): Promise<string | null> {
-  const base = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
   const fd = new FormData();
   fd.append("file", file);
   try {
     const token = localStorage.getItem(ADMIN_ACCESS_TOKEN_KEY);
-    const res = await fetch(`${base}/api/storage/uploads`, {
+    const res = await fetch(`/api/storage/uploads`, {
       method: "POST",
       body: fd,
       headers: token ? { Authorization: `Bearer ${token}` } : undefined,
@@ -39,21 +43,25 @@ async function uploadFile(file: File): Promise<string | null> {
  * Open a private storage object in a new tab. Objects require auth, so we
  * first exchange the path for a short-lived signed URL (an <a href> cannot
  * carry the Authorization header).
+ *
+ * API calls use root-absolute paths (/api/...) — NOT prefixed with BASE_URL
+ * (/absher-admin/) which would route to the admin SPA instead of the API server.
  */
 async function openObjectInNewTab(path: string): Promise<void> {
-  const base = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
   if (/^https?:\/\//.test(path)) { window.open(path, "_blank", "noopener"); return; }
-  if (!path.startsWith("/objects/")) { window.open(`${base}${path.startsWith("/") ? "" : "/"}${path}`, "_blank", "noopener"); return; }
+  if (!path.startsWith("/objects/")) {
+    window.open(path.startsWith("/") ? path : `/${path}`, "_blank", "noopener");
+    return;
+  }
   try {
     const token = localStorage.getItem(ADMIN_ACCESS_TOKEN_KEY);
-    const res = await fetch(`${base}/api/storage/sign?path=${encodeURIComponent(path)}`, {
+    const res = await fetch(`/api/storage/sign?path=${encodeURIComponent(path)}`, {
       headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     });
     if (!res.ok) throw new Error(String(res.status));
     const { url } = await res.json();
-    // url is already a root-absolute path (/api/storage/...); do not prepend
-    // the artifact base prefix or it becomes /absher-admin/api/... which routes
-    // to the admin SPA instead of the API server.
+    // url is a root-absolute path (/api/storage/objects/...?exp=&sig=);
+    // open directly without any base-path prefix.
     window.open(url, "_blank", "noopener");
   } catch {
     toast.error("تعذر فتح الملف");
@@ -120,20 +128,22 @@ function Field({ label, value, mono }: { label: string; value: React.ReactNode; 
 /** A document image entry read off the Umrah application row. */
 interface DocEntry { labelAr: string; labelEn: string; path: string | null | undefined; }
 
-/** Resolve a storage path to a displayable URL (signed for /objects/ paths). */
+/** Resolve a storage path to a displayable URL (signed for /objects/ paths).
+ *  Uses root-absolute API paths (/api/...) — never BASE_URL-prefixed. */
 function useSignedUrl(path: string | null | undefined): string | null {
   const [url, setUrl] = useState<string | null>(null);
   useEffect(() => {
     if (!path) { setUrl(null); return; }
-    const base = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
     if (/^https?:\/\//.test(path)) { setUrl(path); return; }
     if (!path.startsWith("/objects/")) {
-      setUrl(`${base}${path.startsWith("/") ? "" : "/"}${path}`);
+      // Non-object paths: serve as-is (root-absolute).
+      setUrl(path.startsWith("/") ? path : `/${path}`);
       return;
     }
     let cancelled = false;
     const token = localStorage.getItem(ADMIN_ACCESS_TOKEN_KEY);
-    fetch(`${base}/api/storage/sign?path=${encodeURIComponent(path)}`, {
+    // /api/storage/sign — root-absolute, NOT prefixed with BASE_URL.
+    fetch(`/api/storage/sign?path=${encodeURIComponent(path)}`, {
       headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     })
       .then((r) => (r.ok ? r.json() : Promise.reject()))

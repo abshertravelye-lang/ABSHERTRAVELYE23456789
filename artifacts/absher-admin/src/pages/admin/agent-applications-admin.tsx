@@ -8,20 +8,22 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   useListAgentApplications, useGetAgentApplication, useUpdateAgentApplication,
   getListAgentApplicationsQueryKey, getGetAgentApplicationQueryKey,
-  type AgentApplication,
+  useListAgencies,
+  type AgentApplication, type ListAgentApplicationsParams, type Agency,
 } from "@workspace/api-client-react";
 import { useTranslation } from "@/hooks/use-translation";
-import { ADMIN_ACCESS_TOKEN_KEY } from "@/hooks/use-admin-auth";
+import { ADMIN_ACCESS_TOKEN_KEY, useAdminAuth } from "@/hooks/use-admin-auth";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Briefcase, Loader2, FileText, Upload, X, Search } from "lucide-react";
+import { ApplicationDocumentsSection, DocumentViewer, type ViewerTarget } from "./visa-applications-admin";
 
-const STATUSES = [
+export const STATUSES = [
   "received", "under_review", "awaiting_documents", "documents_uploaded",
   "sent_to_embassy", "processing", "issued", "completed", "rejected", "cancelled",
 ] as const;
 
-const STATUS_META: Record<string, { ar: string; en: string; cls: string }> = {
+export const STATUS_META: Record<string, { ar: string; en: string; cls: string }> = {
   received:           { ar: "تم الاستلام", en: "Received", cls: "bg-sky-100 text-sky-800" },
   under_review:       { ar: "قيد المراجعة", en: "Under Review", cls: "bg-amber-100 text-amber-800" },
   awaiting_documents: { ar: "بانتظار مستندات", en: "Awaiting Docs", cls: "bg-orange-100 text-orange-800" },
@@ -34,7 +36,7 @@ const STATUS_META: Record<string, { ar: string; en: string; cls: string }> = {
   cancelled:          { ar: "ملغي", en: "Cancelled", cls: "bg-gray-200 text-gray-600" },
 };
 
-function Pill({ status, ar }: { status: string; ar: boolean }) {
+export function Pill({ status, ar }: { status: string; ar: boolean }) {
   const m = STATUS_META[status] ?? { ar: status, en: status, cls: "bg-gray-100 text-gray-600" };
   return <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${m.cls}`}>{ar ? m.ar : m.en}</span>;
 }
@@ -83,12 +85,14 @@ function DocLink({ label, path }: { label: string; path?: string | null }) {
   );
 }
 
-function DetailPanel({ id, ar, onClose }: { id: number; ar: boolean; onClose: () => void }) {
+export function DetailPanel({ id, ar, onClose }: { id: number; ar: boolean; onClose: () => void }) {
   const qc = useQueryClient();
   const { data: app, isLoading } = useGetAgentApplication(id);
   const update = useUpdateAgentApplication();
+  const { hasPermission } = useAdminAuth();
   const [notes, setNotes] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [viewerDoc, setViewerDoc] = useState<ViewerTarget | null>(null);
 
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: getListAgentApplicationsQueryKey() });
@@ -126,16 +130,19 @@ function DetailPanel({ id, ar, onClose }: { id: number; ar: boolean; onClose: ()
               <Row l={ar ? "جوال العميل" : "Customer phone"} v={app.phone ?? "-"} />
             </div>
 
-            <div className="space-y-2">
-              <p className="font-semibold text-sm">{ar ? "المستندات" : "Documents"}</p>
+            <ApplicationDocumentsSection
+              app={app as unknown as Record<string, unknown>}
+              appId={id}
+              ar={ar}
+              canRequest={hasPermission("documents_request")}
+              canReview={hasPermission("documents_review")}
+              onView={setViewerDoc}
+            />
+            {app.issuedVisaUrl && (
               <div className="flex flex-wrap gap-2">
-                <DocLink label={ar ? "الجواز" : "Passport"} path={app.passportImageUrl} />
-                <DocLink label={ar ? "الصورة الشخصية" : "Photo"} path={app.personalPhotoUrl} />
-                <DocLink label={ar ? "مستند إضافي" : "Extra doc"} path={app.residencyImageUrl} />
-                <DocLink label={ar ? "مستند إضافي 2" : "Extra doc 2"} path={app.visaImageUrl} />
                 <DocLink label={ar ? "التأشيرة الصادرة" : "Issued visa"} path={app.issuedVisaUrl} />
               </div>
-            </div>
+            )}
 
             <div className="space-y-2">
               <p className="font-semibold text-sm">{ar ? "تغيير الحالة" : "Change status"}</p>
@@ -180,6 +187,9 @@ function DetailPanel({ id, ar, onClose }: { id: number; ar: boolean; onClose: ()
           </>
         )}
       </div>
+      {viewerDoc && (
+        <DocumentViewer path={viewerDoc.path} label={viewerDoc.label} ar={ar} onClose={() => setViewerDoc(null)} />
+      )}
     </div>
   );
 }
@@ -196,7 +206,18 @@ function Row({ l, v }: { l: string; v: string }) {
 export default function AgentApplicationsAdmin() {
   const { language } = useTranslation();
   const ar = language === "ar";
-  const { data = [], isLoading } = useListAgentApplications();
+  const [status, setStatus] = useState<string>("");
+  const [agencyId, setAgencyId] = useState<string>("");
+  const params = useMemo<ListAgentApplicationsParams>(() => {
+    const p: ListAgentApplicationsParams = {};
+    if (status) p.status = status;
+    if (agencyId) p.agencyId = Number(agencyId);
+    return p;
+  }, [status, agencyId]);
+  const { data = [], isLoading } = useListAgentApplications(params, {
+    query: { queryKey: [...getListAgentApplicationsQueryKey(params)] },
+  });
+  const { data: agencies = [] } = useListAgencies();
   const [openId, setOpenId] = useState<number | null>(null);
   const [q, setQ] = useState("");
 
@@ -216,11 +237,25 @@ export default function AgentApplicationsAdmin() {
           <h1 className="text-xl font-bold flex items-center gap-2"><Briefcase className="w-5 h-5" />{ar ? "طلبات الوكالات" : "Agent Applications"}</h1>
           <p className="text-sm text-muted-foreground">{ar ? "الطلبات المقدمة عبر بوابة وكلاء السفر" : "Applications submitted via the travel agent portal"}</p>
         </div>
-        <div className="relative">
-          <Search className="w-4 h-4 absolute top-2.5 start-3 text-muted-foreground" />
-          <input className="border rounded-xl ps-9 pe-3 py-2 text-sm w-64" placeholder={ar ? "بحث..." : "Search..."} value={q} onChange={(e) => setQ(e.target.value)} />
+        <div className="flex flex-wrap items-center gap-2">
+          <select className="border rounded-xl px-3 py-2 text-sm bg-white" value={agencyId} onChange={(e) => setAgencyId(e.target.value)}>
+            <option value="">{ar ? "كل الوكالات" : "All agencies"}</option>
+            {(agencies as Agency[]).map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+          </select>
+          <select className="border rounded-xl px-3 py-2 text-sm bg-white" value={status} onChange={(e) => setStatus(e.target.value)}>
+            <option value="">{ar ? "كل الحالات" : "All statuses"}</option>
+            {STATUSES.map((s) => <option key={s} value={s}>{ar ? STATUS_META[s].ar : STATUS_META[s].en}</option>)}
+          </select>
+          <div className="relative">
+            <Search className="w-4 h-4 absolute top-2.5 start-3 text-muted-foreground" />
+            <input className="border rounded-xl ps-9 pe-3 py-2 text-sm w-56" placeholder={ar ? "بحث..." : "Search..."} value={q} onChange={(e) => setQ(e.target.value)} />
+          </div>
         </div>
       </div>
+
+      <p className="text-sm text-muted-foreground">
+        {ar ? `عدد النتائج: ${rows.length}` : `Results: ${rows.length}`}
+      </p>
 
       {isLoading ? (
         <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>

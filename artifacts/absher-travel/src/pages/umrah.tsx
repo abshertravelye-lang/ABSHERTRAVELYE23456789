@@ -17,6 +17,7 @@
  * uploadFileAuthenticated helper (BASE_URL-prefixed — never root-relative).
  */
 import { useState, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "@/hooks/use-translation";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
@@ -28,6 +29,7 @@ import {
   useOcrPassport,
   useListUmrahApplications,
   getListUmrahApplicationsQueryKey,
+  useGetPaymentConfig,
 } from "@workspace/api-client-react";
 import type { OcrResult, UmrahApplication } from "@workspace/api-client-react";
 import { uploadFileAuthenticated, getSignedObjectUrl } from "@/lib/objectMedia";
@@ -42,6 +44,8 @@ import {
   Home as HomeIcon, ArrowLeft, ArrowRight, ScanLine, CreditCard, FileText,
   ChevronLeft, ChevronRight, Download, Clock, Hash, StickyNote,
 } from "lucide-react";
+import { StepIndicator } from "@/components/step-indicator";
+import { friendlyError } from "@/lib/error-message";
 
 type Step = "ask" | "host" | "pilgrim" | "declaration" | "payment" | "success";
 
@@ -156,6 +160,7 @@ export default function Umrah() {
   const ar = language === "ar";
   const [, navigate] = useLocation();
   const { isAuthenticated } = useAuth();
+  const queryClient = useQueryClient();
 
   const [step, setStep] = useState<Step>("ask");
   const [showReject, setShowReject] = useState(false);
@@ -194,6 +199,11 @@ export default function Umrah() {
     nationality ? { nationality } : undefined,
     { query: { queryKey: getGetUmrahConfigQueryKey(nationality ? { nationality } : undefined), enabled: step === "declaration" || step === "payment" } },
   );
+
+  // Dynamic payment methods (admin-managed) shown on the payment step.
+  const { data: paymentConfig } = useGetPaymentConfig();
+  const paymentMethods = paymentConfig?.paymentMethods ?? [];
+  const [selectedMethodId, setSelectedMethodId] = useState<number | null>(null);
 
   // The caller's own Umrah applications ("طلباتي للعمرة").
   const { data: myApps } = useListUmrahApplications({
@@ -250,11 +260,7 @@ export default function Umrah() {
     saudiPhoneValid(emergencyDigits) &&
     contactEmailValid;
 
-  const surfaceError = (e: any) =>
-    setServerError(
-      e?.data?.error || e?.message ||
-      (ar ? "حدث خطأ، يرجى المحاولة مرة أخرى" : "An error occurred. Please try again."),
-    );
+  const surfaceError = (e: any) => setServerError(friendlyError(e, ar));
 
   const submitApplication = async () => {
     setServerError(null);
@@ -312,6 +318,9 @@ export default function Umrah() {
         status: res.status,
         fullName: ocr.fullName || ocr.fullNameAr || ocr.fullNameEn || null,
       });
+      // Invalidate the "my applications" list so it reflects the new application
+      // when the user navigates back to the ask step (even before payment).
+      queryClient.invalidateQueries({ queryKey: getListUmrahApplicationsQueryKey() });
       setStep("payment");
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (e: any) {
@@ -333,6 +342,8 @@ export default function Umrah() {
         feeAmount: res.feeAmount ?? c.feeAmount,
         feeCurrency: res.feeCurrency ?? c.feeCurrency,
       } : c);
+      // Invalidate again after payment so the list shows the updated payment status.
+      queryClient.invalidateQueries({ queryKey: getListUmrahApplicationsQueryKey() });
       setStep("success");
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (e: any) {
@@ -398,10 +409,24 @@ export default function Umrah() {
     );
   }
 
+  // Step labels for the progress indicator (only shown for active steps)
+  const umrahStepLabels = ar
+    ? ["المستضيف", "المعتمر", "الإقرار", "الدفع"]
+    : ["Host", "Pilgrim", "Declaration", "Payment"];
+  const umrahStepIndex: Record<Step, number> = {
+    ask: -1,
+    host: 0,
+    pilgrim: 1,
+    declaration: 2,
+    payment: 3,
+    success: 3,
+  };
+  const currentUmrahStep = umrahStepIndex[step];
+
   return (
     <div className="min-h-screen bg-slate-50 pb-24" dir={ar ? "rtl" : "ltr"}>
       {/* Header */}
-      <div className="bg-[#0A2342] pt-16 pb-20 relative">
+      <div className="bg-[#0A2342] pt-16 pb-24 relative">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_right,rgba(212,175,55,0.12)_0%,transparent_50%)]" />
         <div className="container mx-auto px-4 relative z-10 text-center">
           <div className="text-4xl mb-2">🕋</div>
@@ -411,6 +436,12 @@ export default function Umrah() {
           <p className="text-[#D4AF37] text-base font-bold">
             {ar ? "خدمة مستقلة لتقديم طلب تأشيرة العمرة" : "A dedicated Umrah visa application service"}
           </p>
+          {/* Step indicator — only show once user has started the flow */}
+          {step !== "ask" && step !== "success" && (
+            <div className="mt-8 max-w-md mx-auto">
+              <StepIndicator steps={umrahStepLabels} current={currentUmrahStep} ar={ar} />
+            </div>
+          )}
         </div>
       </div>
 
@@ -741,6 +772,58 @@ export default function Umrah() {
                     <div className="text-sm text-slate-500">{feeCurrency}</div>
                   </div>
                 </div>
+                {/* Dynamic payment methods — admin-managed, appear instantly */}
+                {paymentMethods.length > 0 && (
+                  <div className="space-y-3">
+                    <div className="text-sm font-bold text-[#0A2342]">
+                      {ar ? "اختر وسيلة الدفع" : "Choose a payment method"}
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {paymentMethods.map((m) => {
+                        const selected = selectedMethodId === m.id;
+                        const logo = m.logoUrl
+                          ? (m.logoUrl.startsWith("http") ? m.logoUrl : `${import.meta.env.BASE_URL?.replace(/\/$/, "") ?? ""}${m.logoUrl}`)
+                          : null;
+                        return (
+                          <button
+                            key={m.id}
+                            type="button"
+                            onClick={() => setSelectedMethodId(m.id)}
+                            className={`flex items-center gap-3 p-4 rounded-2xl border-2 text-start transition-all ${
+                              selected
+                                ? "border-[#D4AF37] bg-[#D4AF37]/5 shadow-sm"
+                                : "border-slate-100 bg-white hover:border-slate-200"
+                            }`}
+                            data-testid={`button-payment-method-${m.id}`}
+                          >
+                            {logo ? (
+                              <img src={logo} alt="" className="w-10 h-10 rounded-lg object-contain bg-slate-50 border border-slate-100 p-1 shrink-0" />
+                            ) : (
+                              <div className="w-10 h-10 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0">
+                                <CreditCard className="w-5 h-5 text-slate-400" />
+                              </div>
+                            )}
+                            <div className="min-w-0">
+                              <div className="font-bold text-sm text-[#0A2342] truncate">{ar ? m.nameAr : m.nameEn}</div>
+                              {(ar ? m.descriptionAr : m.descriptionEn) && (
+                                <div className="text-xs text-slate-500 truncate">{ar ? m.descriptionAr : m.descriptionEn}</div>
+                              )}
+                              {(m.feePercent > 0 || m.feeFixed > 0) && (
+                                <div className="text-[11px] text-amber-600 font-semibold">
+                                  {ar ? "رسوم: " : "Fee: "}
+                                  {m.feePercent > 0 ? `${m.feePercent}%` : ""}
+                                  {m.feePercent > 0 && m.feeFixed > 0 ? " + " : ""}
+                                  {m.feeFixed > 0 ? `${m.feeFixed} ${ar ? "ريال" : "SAR"}` : ""}
+                                </div>
+                              )}
+                            </div>
+                            {selected && <CheckCircle2 className="w-5 h-5 text-[#D4AF37] ms-auto shrink-0" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
                 <p className="text-xs text-slate-400 text-center">
                   {ar
                     ? "يتم تحديد الرسوم حسب جنسية المعتمر ويتحقق النظام من عملية الدفع من الخادم."
@@ -748,7 +831,7 @@ export default function Umrah() {
                 </p>
                 <Button
                   onClick={handlePay}
-                  disabled={payMutation.isPending}
+                  disabled={payMutation.isPending || (paymentMethods.length > 0 && selectedMethodId === null)}
                   className="w-full h-14 bg-[#D4AF37] text-[#0A2342] font-black text-lg rounded-2xl hover:bg-[#D4AF37]/90 disabled:opacity-50 gap-3"
                   data-testid="button-umrah-pay"
                 >

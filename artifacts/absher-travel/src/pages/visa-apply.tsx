@@ -24,6 +24,8 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AuthImage } from "@/components/auth-image";
 import { UnsavedChangesGuard } from "@/components/unsaved-changes-guard";
+import { StepIndicator } from "@/components/step-indicator";
+import { friendlyError } from "@/lib/error-message";
 
 /** Profile completeness — mirrors the backend `isProfileComplete()` */
 function checkProfileComplete(user: any): { complete: boolean; missing: string[] } {
@@ -99,9 +101,19 @@ export default function VisaApply() {
       setSubmitted(res.trackingNumber ?? null);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (e: any) {
-      setServerError(e?.data?.error || e?.message || (ar ? "حدث خطأ، يرجى المحاولة مرة أخرى" : "An error occurred. Please try again."));
+      setServerError(friendlyError(e, ar));
     }
   };
+
+  // Step labels for the top progress indicator
+  const hasCustomFields = customFields && customFields.length > 0;
+  const stepLabels = hasCustomFields
+    ? (ar ? ["بياناتك", "معلومات إضافية", "التأكيد"] : ["Your Info", "Extra Info", "Confirm"])
+    : (ar ? ["بياناتك", "التأكيد"] : ["Your Info", "Confirm"]);
+
+  // 0 = profile review, 1 = custom fields (if any), last = confirm/submit
+  const currentStep = 0; // Single-page form — all steps visible; highlight last (confirm)
+  const confirmStep = stepLabels.length - 1;
 
   // ── Loading ──────────────────────────────────────────────────────────────
   if (isLoadingVisa || isLoadingUser) {
@@ -201,7 +213,7 @@ export default function VisaApply() {
     <div className="min-h-screen bg-slate-50 pb-24" dir={ar ? "rtl" : "ltr"}>
       <UnsavedChangesGuard enabled={isDirty} ar={ar} />
       {/* Header */}
-      <div className="bg-[#0A2342] pt-20 pb-20 relative">
+      <div className="bg-[#0A2342] pt-20 pb-24 relative">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_right,rgba(212,175,55,0.1)_0%,transparent_50%)]" />
         <div className="container mx-auto px-4 relative z-10">
           <div className="flex items-center gap-3 text-sm font-medium text-slate-400 mb-6">
@@ -215,6 +227,11 @@ export default function VisaApply() {
           <p className="text-[#D4AF37] text-lg font-bold">
             {ar ? visa.countryAr : visa.countryEn} — {visa.visaType}
           </p>
+
+          {/* Step indicator */}
+          <div className="mt-8 max-w-md mx-auto">
+            <StepIndicator steps={stepLabels} current={confirmStep} ar={ar} />
+          </div>
         </div>
       </div>
 
@@ -421,7 +438,10 @@ export default function VisaApply() {
                   className="w-full h-14 bg-[#D4AF37] text-[#0A2342] font-black text-lg rounded-2xl hover:bg-[#c8a84b] disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-3 shadow-lg"
                 >
                   {submitMutation.isPending ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span>{ar ? "جارٍ إرسال الطلب..." : "Submitting..."}</span>
+                    </>
                   ) : (
                     <>
                       {ar ? "تقديم الطلب" : "Submit Application"}

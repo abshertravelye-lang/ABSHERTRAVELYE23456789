@@ -444,6 +444,17 @@ export const payment: Domain = {
   "payment.method": { ar: "طريقة الدفع", en: "Payment method" },
   "payment.success": { ar: "تم الدفع بنجاح", en: "Payment successful" },
   "payment.failed": { ar: "فشلت عملية الدفع", en: "Payment failed" },
+  "wallet.active": { ar: "نشطة", en: "Active" },
+  "wallet.availableBalance": { ar: "الرصيد المتاح", en: "Available balance" },
+  "wallet.currency": { ar: "ريال", en: "SAR" },
+  "wallet.deposit": { ar: "إيداع", en: "Deposit" },
+  "wallet.withdraw": { ar: "سحب", en: "Withdraw" },
+  "wallet.transfer": { ar: "تحويل", en: "Transfer" },
+  "wallet.history": { ar: "سجل المعاملات", en: "Transaction history" },
+  "wallet.empty.title": { ar: "لا توجد معاملات بعد", en: "No transactions yet" },
+  "wallet.empty.desc": { ar: "ستظهر جميع حركات محفظتك هنا.", en: "All your wallet activity will appear here." },
+  "wallet.actionSoon": { ar: "خدمة {action} ستتوفر قريباً", en: "{action} will be available soon" },
+  "wallet.txSuccess": { ar: "ناجحة", en: "Successful" },
 };
 
 /** Notifications. */

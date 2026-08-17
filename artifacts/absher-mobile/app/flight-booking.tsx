@@ -4,11 +4,10 @@
  * Step 2: مراجعة وتأكيد
  * Step 3: تم الحجز
  */
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   Alert,
   FlatList,
-  KeyboardAvoidingView,
   Modal,
   Platform,
   Pressable,
@@ -27,6 +26,7 @@ import * as Haptics from 'expo-haptics';
 import { useColors } from '@/hooks/useColors';
 import { useCreateBooking } from '@workspace/api-client-react';
 import type { FlightOffer } from '@workspace/api-client-react';
+import { KeyboardAwareForm } from '@/components/KeyboardAwareForm';
 import NationalityPicker from '@/components/NationalityPicker';
 import type { Nationality } from '@/constants/nationalities';
 
@@ -301,6 +301,12 @@ function PassengerForm({
   const [showDial, setShowDial] = useState(false);
   const set = (key: keyof PassengerData, value: string) => onChange({ ...data, [key]: value });
 
+  // Focus chaining across the text fields (keyboard stays open between them).
+  const lastNameRef = useRef<TextInput>(null);
+  const emailRef = useRef<TextInput>(null);
+  const phoneRef = useRef<TextInput>(null);
+  const passportRef = useRef<TextInput>(null);
+
   const inputStyle = [pf.input, { backgroundColor: colors.muted, borderColor: colors.border, color: colors.foreground }];
 
   return (
@@ -336,12 +342,16 @@ function PassengerForm({
           placeholderTextColor={colors.mutedForeground}
           autoCapitalize="characters"
           textAlign="right"
+          returnKeyType="next"
+          blurOnSubmit={false}
+          onSubmitEditing={() => lastNameRef.current?.focus()}
         />
       </View>
 
       <View style={pf.field}>
         <Text style={[pf.label, { color: colors.mutedForeground, fontFamily: 'Cairo_400Regular' }]}>اسم العائلة</Text>
         <TextInput
+          ref={lastNameRef}
           style={[inputStyle, { fontFamily: 'Cairo_400Regular' }]}
           value={data.lastName}
           onChangeText={(v) => set('lastName', v)}
@@ -349,6 +359,9 @@ function PassengerForm({
           placeholderTextColor={colors.mutedForeground}
           autoCapitalize="characters"
           textAlign="right"
+          returnKeyType="next"
+          blurOnSubmit={false}
+          onSubmitEditing={() => emailRef.current?.focus()}
         />
       </View>
 
@@ -385,6 +398,7 @@ function PassengerForm({
       <View style={pf.field}>
         <Text style={[pf.label, { color: colors.mutedForeground, fontFamily: 'Cairo_400Regular' }]}>البريد الإلكتروني</Text>
         <TextInput
+          ref={emailRef}
           style={[inputStyle, { fontFamily: 'Cairo_400Regular' }]}
           value={data.email}
           onChangeText={(v) => set('email', v)}
@@ -393,6 +407,9 @@ function PassengerForm({
           keyboardType="email-address"
           autoCapitalize="none"
           textAlign="right"
+          returnKeyType="next"
+          blurOnSubmit={false}
+          onSubmitEditing={() => phoneRef.current?.focus()}
         />
       </View>
 
@@ -408,6 +425,7 @@ function PassengerForm({
             <Ionicons name="chevron-down" size={14} color={colors.mutedForeground} />
           </Pressable>
           <TextInput
+            ref={phoneRef}
             style={[inputStyle, pf.phoneInput, { fontFamily: 'Cairo_400Regular' }]}
             value={data.phone}
             onChangeText={(v) => set('phone', v)}
@@ -415,6 +433,9 @@ function PassengerForm({
             placeholderTextColor={colors.mutedForeground}
             keyboardType="phone-pad"
             textAlign="right"
+            returnKeyType="next"
+            blurOnSubmit={false}
+            onSubmitEditing={() => passportRef.current?.focus()}
           />
         </View>
         <DialCodeModal visible={showDial} onSelect={(d) => set('dialCode', d)} onClose={() => setShowDial(false)} />
@@ -424,6 +445,7 @@ function PassengerForm({
       <View style={pf.field}>
         <Text style={[pf.label, { color: colors.mutedForeground, fontFamily: 'Cairo_400Regular' }]}>رقم الجواز</Text>
         <TextInput
+          ref={passportRef}
           style={[inputStyle, { fontFamily: 'Cairo_400Regular' }]}
           value={data.passportNumber}
           onChangeText={(v) => set('passportNumber', v.toUpperCase())}
@@ -431,6 +453,7 @@ function PassengerForm({
           placeholderTextColor={colors.mutedForeground}
           autoCapitalize="characters"
           textAlign="right"
+          returnKeyType="done"
         />
       </View>
 
@@ -478,12 +501,12 @@ const pf = StyleSheet.create({
   cardTitle: { fontSize: 16, borderBottomWidth: 2, borderBottomColor: '#D4AF37', paddingBottom: 8, textAlign: 'right' },
   field: { gap: 6 },
   label: { fontSize: 13, textAlign: 'right' },
-  input: { borderRadius: 10, borderWidth: 1, paddingHorizontal: 14, paddingVertical: 13, fontSize: 14 },
+  input: { borderRadius: 10, borderWidth: 1, paddingHorizontal: 14, paddingVertical: 13, fontSize: 14, minHeight: 48 },
   chipRow: { flexDirection: 'row', gap: 8 },
   chip: { borderRadius: 8, borderWidth: 1, paddingHorizontal: 14, paddingVertical: 10 },
   chipText: { fontSize: 13 },
   phoneRow: { flexDirection: 'row', gap: 8 },
-  dialBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: 10, borderWidth: 1, paddingHorizontal: 12, paddingVertical: 13 },
+  dialBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, borderRadius: 10, borderWidth: 1, paddingHorizontal: 12, paddingVertical: 13, minHeight: 48 },
   dialText: { fontSize: 14 },
   phoneInput: { flex: 1 },
 });
@@ -560,8 +583,7 @@ export default function FlightBookingScreen() {
   };
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <View style={[s.container, { backgroundColor: colors.background }]}>
+    <View style={[s.container, { backgroundColor: colors.background }]}>
         {/* Header */}
         <View style={[s.header, { paddingTop: topInset + 8, backgroundColor: '#052B5B' }]}>
           <View style={s.headerRow}>
@@ -592,7 +614,7 @@ export default function FlightBookingScreen() {
 
         {/* ── STEP 1: Passenger Form ── */}
         {step === 1 && (
-          <ScrollView contentContainerStyle={s.scrollContent} keyboardShouldPersistTaps="handled">
+          <KeyboardAwareForm contentContainerStyle={s.scrollContent} bottomPadding={40}>
             {passengers.map((p, i) => (
               <PassengerForm key={i} data={p} index={i} colors={colors} onChange={(d) => {
                 const updated = [...passengers];
@@ -607,7 +629,7 @@ export default function FlightBookingScreen() {
               <Ionicons name="arrow-back" size={18} color="#052B5B" />
               <Text style={[s.nextBtnText, { fontFamily: 'Cairo_700Bold' }]}>التالي — مراجعة</Text>
             </Pressable>
-          </ScrollView>
+          </KeyboardAwareForm>
         )}
 
         {/* ── STEP 2: Review ── */}
@@ -713,8 +735,7 @@ export default function FlightBookingScreen() {
             </View>
           </View>
         )}
-      </View>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 

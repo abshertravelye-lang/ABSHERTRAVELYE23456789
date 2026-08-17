@@ -49,6 +49,12 @@ Organized into 4 sections:
 
 Country list is inlined (~200 countries) with Arabic and English names. Values stored as English names (to match OCR/eligibility normalization).
 
+## Listing pages filter by stored nationality (UX only)
+Web `visas.tsx` and mobile `(tabs)/visas.tsx` hide visas the signed-in user's stored nationality doesn't qualify for (blocked list wins; non-empty allowed list must contain it), using `isSameCountry`. Residency-based rules stay server-side only. This is a UX filter — the server still re-checks everything on apply. Guests see all visas.
+
+## Apply flow (mobile)
+`app/visa/[id].tsx` is profile-driven like web: NO nationality picker, NO personal-data inputs, NO doc re-upload. Shows read-only profile summary, collects only custom-field answers + terms, submits `{visaId, customFieldResponses, agreedToTerms}`. Server builds everything else from the stored profile (extra doc URLs sent by client are IGNORED by the server — don't add uploaders there).
+
 ## Apply flow (web)
 1. `visa-view.tsx` Apply button → calls `handleApply()` → checks auth, profile complete, then calls eligibility endpoint → navigates to `/visas/apply/:id`
 2. `visa-apply.tsx` → auth gate at mount (redirect to login), profile completeness check, displays stored profile data (read-only), collects only custom fields + agreement → submits `{visaId, customFieldResponses, agreedToTerms}`

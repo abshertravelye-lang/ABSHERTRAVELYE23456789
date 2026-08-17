@@ -17,7 +17,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ActivityIndicator,
   FlatList,
-  KeyboardAvoidingView,
+  KeyboardAvoidingView as RNKeyboardAvoidingView,
   Platform,
   Pressable,
   StyleSheet,
@@ -25,6 +25,11 @@ import {
   TextInput,
   View,
 } from 'react-native';
+// Keyboard-controller's KeyboardAvoidingView tracks the keyboard frame
+// natively (smooth, no jump/lag). Fall back to RN's on web.
+import { KeyboardAvoidingView as KCKeyboardAvoidingView } from 'react-native-keyboard-controller';
+
+const KeyboardAvoidingView = Platform.OS === 'web' ? RNKeyboardAvoidingView : KCKeyboardAvoidingView;
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -300,7 +305,7 @@ export default function SupportChatScreen() {
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior="padding"
         keyboardVerticalOffset={0}
       >
         {needsName ? (
@@ -416,8 +421,8 @@ const styles = StyleSheet.create({
   gateIcon: { width: 84, height: 84, borderRadius: 26, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
   gatePrompt: { fontSize: 16, textAlign: 'center', lineHeight: 26, marginBottom: 8 },
   gateLabel: { fontSize: 13, alignSelf: 'stretch', textAlign: 'center' },
-  gateInput: { alignSelf: 'stretch', borderWidth: 1, borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14, fontSize: 15 },
-  gateBtn: { alignSelf: 'stretch', borderRadius: 14, paddingVertical: 15, alignItems: 'center', marginTop: 4 },
+  gateInput: { alignSelf: 'stretch', borderWidth: 1, borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14, fontSize: 15, minHeight: 48 },
+  gateBtn: { alignSelf: 'stretch', borderRadius: 14, paddingVertical: 15, alignItems: 'center', marginTop: 4, minHeight: 48, justifyContent: 'center' },
   gateBtnText: { fontSize: 16 },
 
   row: { flexDirection: 'row', alignItems: 'flex-end', gap: 8, marginVertical: 3 },
@@ -428,6 +433,6 @@ const styles = StyleSheet.create({
   time: { fontSize: 10.5, marginTop: 3, marginHorizontal: 4 },
 
   inputBar: { alignItems: 'flex-end', gap: 10, paddingHorizontal: 12, paddingTop: 10, borderTopWidth: 1 },
-  input: { flex: 1, maxHeight: 120, minHeight: 44, borderRadius: 22, paddingHorizontal: 16, paddingTop: 11, paddingBottom: 11, fontSize: 14.5 },
-  sendBtn: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
+  input: { flex: 1, maxHeight: 120, minHeight: 48, borderRadius: 24, paddingHorizontal: 16, paddingTop: 13, paddingBottom: 13, fontSize: 14.5 },
+  sendBtn: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
 });

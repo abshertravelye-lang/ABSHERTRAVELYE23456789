@@ -10,24 +10,30 @@
  *     relatedEntityType 'support_conversation' → /support-chat
  *     url                                    → router.push(url)
  *
- * Everything is guarded so it never crashes on web / Expo Go.
+ * expo-notifications is loaded lazily via getNotifications() so this module
+ * never crashes web or Expo Go on Android (where the import itself errors on
+ * SDK 53+).
  */
 import { useEffect, useRef } from 'react';
 import { Platform } from 'react-native';
 import { router } from 'expo-router';
-import * as Notifications from 'expo-notifications';
+import { getNotifications } from '@/lib/notificationsModule';
 
-// Foreground display: show a banner/alert with sound. Set once.
+// Foreground display: show a banner/alert with sound and keep the app-icon
+// badge in sync (the push payload carries the server-computed unread count).
 try {
-  Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-      shouldShowAlert: true,
-      shouldShowBanner: true,
-      shouldShowList: true,
-      shouldPlaySound: true,
-      shouldSetBadge: false,
-    }),
-  });
+  const Notifications = getNotifications();
+  if (Notifications) {
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldShowBanner: true,
+        shouldShowList: true,
+        shouldPlaySound: true,
+        shouldSetBadge: true,
+      }),
+    });
+  }
 } catch {
   // ignore — unsupported in some environments
 }
@@ -68,7 +74,10 @@ export function useNotificationObserver() {
   useEffect(() => {
     if (Platform.OS === 'web') return;
 
-    let subscription: Notifications.EventSubscription | undefined;
+    const Notifications = getNotifications();
+    if (!Notifications) return; // Unsupported runtime (e.g. Expo Go on Android).
+
+    let subscription: { remove: () => void } | undefined;
 
     // Cold-start: opened from a notification while the app was killed.
     (async () => {

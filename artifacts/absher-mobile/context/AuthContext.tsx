@@ -1,9 +1,15 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { setAuthTokenGetter, setAuthRefreshHandler } from '@workspace/api-client-react';
 import type { SafeUser } from '@workspace/api-client-react';
 import { setImageAuthToken } from '../hooks/useImageUrl';
 import { registerForPush, unregisterPush } from '../lib/pushNotifications';
+import {
+  clearSession,
+  loadSession,
+  saveSession,
+  updateStoredTokens,
+  updateStoredUser,
+} from '../lib/secureAuthStorage';
 
 type AuthState = {
   user: SafeUser | null;
@@ -28,7 +34,6 @@ const AuthContext = createContext<AuthContextValue>({
   logout: async () => {},
 });
 
-const STORAGE_KEY = '@absher_auth';
 let mobileRefreshHandler: MobileRefreshHandler | null = null;
 
 /** Used by multipart uploads, whose FormData body cannot be replayed by customFetch. */
@@ -39,6 +44,8 @@ export async function refreshMobileAccessToken(): Promise<string | null> {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<AuthState>({ user: null, accessToken: null, isLoading: true });
   const tokenRef = useRef<string | null>(null);
+  // Refresh token lives only in SecureStore + this ref — never in AsyncStorage.
+  const refreshTokenRef = useRef<string | null>(null);
 
   // Keep the image-URL helper's token in sync so access-controlled object URLs
   // (passports, IDs, photos) render in <Image> tags, which can't send headers.
@@ -53,28 +60,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // refresh token so long-lived sessions don't start failing with 401s.
     const refreshSession: MobileRefreshHandler = async () => {
       try {
-        const raw = await AsyncStorage.getItem(STORAGE_KEY);
-        if (!raw) return null;
-        const stored = JSON.parse(raw);
-        if (!stored.refreshToken) return null;
+        const refreshToken = refreshTokenRef.current;
+        if (!refreshToken) return null;
         const res = await fetch(`https://${process.env.EXPO_PUBLIC_DOMAIN}/api/auth/refresh`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ refreshToken: stored.refreshToken }),
+          body: JSON.stringify({ refreshToken }),
         });
         if (!res.ok) {
           // Refresh token invalid/expired — clear the stale session
           tokenRef.current = null;
-          await AsyncStorage.removeItem(STORAGE_KEY);
+          refreshTokenRef.current = null;
+          await clearSession();
           setState({ user: null, accessToken: null, isLoading: false });
           return null;
         }
         const data = await res.json();
         tokenRef.current = data.accessToken;
-        await AsyncStorage.setItem(
-          STORAGE_KEY,
-          JSON.stringify({ ...stored, accessToken: data.accessToken, refreshToken: data.refreshToken }),
-        );
+        refreshTokenRef.current = data.refreshToken;
+        await updateStoredTokens({ accessToken: data.accessToken, refreshToken: data.refreshToken });
         setState((s) => ({ ...s, accessToken: data.accessToken }));
         return data.accessToken as string;
       } catch {
@@ -90,43 +94,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  // Load persisted auth on startup
+  // Load persisted auth on startup (SecureStore, with transparent migration
+  // from the legacy AsyncStorage blob).
   useEffect(() => {
-    AsyncStorage.getItem(STORAGE_KEY).then((raw) => {
-      if (raw) {
-        try {
-          const { user, accessToken } = JSON.parse(raw);
-          tokenRef.current = accessToken;
-          setState({ user, accessToken, isLoading: false });
+    loadSession()
+      .then((session) => {
+        if (session?.accessToken) {
+          tokenRef.current = session.accessToken;
+          refreshTokenRef.current = session.refreshToken;
+          setState({ user: session.user, accessToken: session.accessToken, isLoading: false });
           // Register this device for push after restoring an existing session.
-          if (accessToken) void registerForPush();
-        } catch {
+          void registerForPush();
+        } else {
           setState((s) => ({ ...s, isLoading: false }));
         }
-      } else {
+      })
+      .catch(() => {
         setState((s) => ({ ...s, isLoading: false }));
-      }
-    });
+      });
   }, []);
 
   const setAuth = useCallback(async (auth: { user: SafeUser; accessToken: string; refreshToken: string }) => {
     tokenRef.current = auth.accessToken;
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(auth));
+    refreshTokenRef.current = auth.refreshToken;
+    await saveSession(auth);
     setState({ user: auth.user, accessToken: auth.accessToken, isLoading: false });
     // Register this device for push after a successful login.
     void registerForPush();
   }, []);
 
   const updateUser = useCallback(async (user: SafeUser) => {
-    const raw = await AsyncStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      try {
-        const parsed = JSON.parse(raw);
-        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ ...parsed, user }));
-      } catch {
-        // keep going — in-memory state still updates
-      }
-    }
+    await updateStoredUser(user);
     setState((s) => ({ ...s, user }));
   }, []);
 
@@ -138,21 +136,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // tokens. The endpoint requires auth + accepts the refresh token to revoke
     // the matching session row (see api-server/src/routes/auth.ts POST /auth/logout).
     try {
-      const raw = await AsyncStorage.getItem(STORAGE_KEY);
-      const stored = raw ? JSON.parse(raw) : null;
       const token = tokenRef.current;
       if (token) {
         await fetch(`https://${process.env.EXPO_PUBLIC_DOMAIN}/api/auth/logout`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ refreshToken: stored?.refreshToken }),
+          body: JSON.stringify({ refreshToken: refreshTokenRef.current }),
         });
       }
     } catch {
       // Ignore network/server errors — always clear the local session below.
     }
     tokenRef.current = null;
-    await AsyncStorage.removeItem(STORAGE_KEY);
+    refreshTokenRef.current = null;
+    await clearSession();
     setState({ user: null, accessToken: null, isLoading: false });
   }, []);
 

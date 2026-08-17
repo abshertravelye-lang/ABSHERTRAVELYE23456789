@@ -538,11 +538,22 @@ router.get("/visa-applications", requireAuth, async (req, res) => {
     }
     if (!seesAll) conditions.push(eq(visaApplicationSubmissionsTable.userId, req.user!.sub));
     const rows = await db
-      .select()
+      .select({
+        app: visaApplicationSubmissionsTable,
+        visaType: visasTable.visaType,
+        countryAr: visasTable.countryAr,
+        countryEn: visasTable.countryEn,
+      })
       .from(visaApplicationSubmissionsTable)
+      .leftJoin(visasTable, eq(visasTable.id, visaApplicationSubmissionsTable.visaId))
       .where(conditions.length ? and(...conditions) : undefined)
       .orderBy(desc(visaApplicationSubmissionsTable.createdAt));
-    res.json(rows.map(toResponse));
+    res.json(rows.map(({ app, visaType, countryAr, countryEn }) => ({
+      ...toResponse(app),
+      visaType: visaType ?? "",
+      countryAr: countryAr ?? "",
+      countryEn: countryEn ?? "",
+    })));
   } catch (e) {
     req.log.error(e);
     res.status(500).json({ error: "Internal server error" });
@@ -690,13 +701,27 @@ router.post("/visa-applications", requireAuth, async (req, res) => {
 router.get("/visa-applications/:id", requireAuth, async (req, res) => {
   try {
     const { id } = GetVisaApplicationParams.parse({ id: Number(req.params.id) });
-    const [row] = await db.select().from(visaApplicationSubmissionsTable).where(eq(visaApplicationSubmissionsTable.id, id));
+    const [row] = await db
+      .select({
+        app: visaApplicationSubmissionsTable,
+        visaType: visasTable.visaType,
+        countryAr: visasTable.countryAr,
+        countryEn: visasTable.countryEn,
+      })
+      .from(visaApplicationSubmissionsTable)
+      .leftJoin(visasTable, eq(visasTable.id, visaApplicationSubmissionsTable.visaId))
+      .where(eq(visaApplicationSubmissionsTable.id, id));
     if (!row) return res.status(404).json({ error: "Not found" });
     // Owner, or staff with the visa_applications permission (DB-checked).
-    if (row.userId !== req.user!.sub && !(await hasStaffPermission(req.user!.sub, "visa_applications"))) {
+    if (row.app.userId !== req.user!.sub && !(await hasStaffPermission(req.user!.sub, "visa_applications"))) {
       return res.status(403).json({ error: "Forbidden" });
     }
-    res.json(toResponse(row));
+    res.json({
+      ...toResponse(row.app),
+      visaType: row.visaType ?? "",
+      countryAr: row.countryAr ?? "",
+      countryEn: row.countryEn ?? "",
+    });
   } catch (e) {
     req.log.error(e);
     res.status(500).json({ error: "Internal server error" });

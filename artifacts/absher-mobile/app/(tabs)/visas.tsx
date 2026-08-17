@@ -9,7 +9,9 @@ import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '@/context/LanguageContext';
 import { useColors } from '@/hooks/useColors';
-import { useListVisas } from '@workspace/api-client-react';
+import { useListVisas, useGetCurrentUser, getGetCurrentUserQueryKey } from '@workspace/api-client-react';
+import { isSameCountry } from '@workspace/countries';
+import { useAuth } from '@/context/AuthContext';
 import { VisaCard, VisaCardHorizontal } from '@/components/VisaCard';
 import { EmptyState, SkeletonRow } from '@/components/EmptyState';
 import { VisaCategories, VisaCategory } from '@/components/visas/VisaCategories';
@@ -71,7 +73,27 @@ export default function VisasScreen() {
 
   const { data: visas, isLoading, error, refetch, isRefetching } = useListVisas();
 
-  const active = useMemo(() => (visas || []).filter(v => v.isActive && v.status === 'available'), [visas]);
+  // Profile-driven eligibility: signed-in users with a stored nationality only
+  // see visas they qualify for. The server re-checks on application; this is a
+  // UX filter, not security.
+  const { user: authUser } = useAuth();
+  const { data: currentUser } = useGetCurrentUser({
+    query: { staleTime: 30000, queryKey: getGetCurrentUserQueryKey(), enabled: !!authUser },
+  });
+  const nationality = (currentUser as any)?.nationality || (authUser as any)?.nationality || '';
+
+  const active = useMemo(() => {
+    let list = (visas || []).filter(v => v.isActive && v.status === 'available');
+    if (nationality) {
+      list = list.filter(v => {
+        if ((v.blockedNationalities ?? []).some(n => isSameCountry(n, nationality))) return false;
+        const allowed = v.allowedNationalities ?? [];
+        if (allowed.length > 0 && !allowed.some(n => isSameCountry(n, nationality))) return false;
+        return true;
+      });
+    }
+    return list;
+  }, [visas, nationality]);
 
   const filtered = useMemo(() => {
     return active.filter((v) => {
@@ -378,6 +400,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center',
     borderRadius: 14, borderWidth: 1,
     paddingHorizontal: 14, paddingVertical: 11, gap: 10,
+    minHeight: 48,
     marginBottom: 14,
   },
   searchInput: { flex: 1, fontSize: 14, textAlign: 'right' },

@@ -210,6 +210,150 @@ export const DeleteOfferResponse = zod.void()
 
 
 /**
+ * @summary List active app images within their schedule window, ordered by sortOrder
+ */
+export const ListAppImagesQueryParams = zod.object({
+  "category": zod.coerce.string().optional()
+})
+
+export const ListAppImagesResponseItem = zod.object({
+  "id": zod.number(),
+  "category": zod.string(),
+  "titleAr": zod.string().nullish(),
+  "titleEn": zod.string().nullish(),
+  "imageUrl": zod.string(),
+  "linkUrl": zod.string().nullish(),
+  "relatedEntityType": zod.string().nullish(),
+  "relatedEntityId": zod.string().nullish(),
+  "sortOrder": zod.number(),
+  "startDate": zod.string().nullish(),
+  "endDate": zod.string().nullish(),
+  "isActive": zod.boolean(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+export const ListAppImagesResponse = zod.array(ListAppImagesResponseItem)
+
+
+/**
+ * @summary Create an app image (admin)
+ */
+
+
+
+
+export const CreateAppImageBody = zod.object({
+  "category": zod.string().min(1),
+  "titleAr": zod.string().nullish(),
+  "titleEn": zod.string().nullish(),
+  "imageUrl": zod.string().min(1),
+  "linkUrl": zod.string().nullish(),
+  "relatedEntityType": zod.string().nullish(),
+  "relatedEntityId": zod.string().nullish(),
+  "sortOrder": zod.number().optional(),
+  "startDate": zod.string().nullish(),
+  "endDate": zod.string().nullish(),
+  "isActive": zod.boolean().optional()
+})
+
+export const CreateAppImageResponse = zod.object({
+  "id": zod.number(),
+  "category": zod.string(),
+  "titleAr": zod.string().nullish(),
+  "titleEn": zod.string().nullish(),
+  "imageUrl": zod.string(),
+  "linkUrl": zod.string().nullish(),
+  "relatedEntityType": zod.string().nullish(),
+  "relatedEntityId": zod.string().nullish(),
+  "sortOrder": zod.number(),
+  "startDate": zod.string().nullish(),
+  "endDate": zod.string().nullish(),
+  "isActive": zod.boolean(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary List all app images (admin, includes inactive/out-of-window)
+ */
+export const ListAppImagesAdminQueryParams = zod.object({
+  "category": zod.coerce.string().optional()
+})
+
+export const ListAppImagesAdminResponseItem = zod.object({
+  "id": zod.number(),
+  "category": zod.string(),
+  "titleAr": zod.string().nullish(),
+  "titleEn": zod.string().nullish(),
+  "imageUrl": zod.string(),
+  "linkUrl": zod.string().nullish(),
+  "relatedEntityType": zod.string().nullish(),
+  "relatedEntityId": zod.string().nullish(),
+  "sortOrder": zod.number(),
+  "startDate": zod.string().nullish(),
+  "endDate": zod.string().nullish(),
+  "isActive": zod.boolean(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+export const ListAppImagesAdminResponse = zod.array(ListAppImagesAdminResponseItem)
+
+
+/**
+ * @summary Update an app image (admin)
+ */
+export const UpdateAppImageParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+
+
+
+export const UpdateAppImageBody = zod.object({
+  "category": zod.string().min(1).optional(),
+  "titleAr": zod.string().nullish(),
+  "titleEn": zod.string().nullish(),
+  "imageUrl": zod.string().min(1).optional(),
+  "linkUrl": zod.string().nullish(),
+  "relatedEntityType": zod.string().nullish(),
+  "relatedEntityId": zod.string().nullish(),
+  "sortOrder": zod.number().optional(),
+  "startDate": zod.string().nullish(),
+  "endDate": zod.string().nullish(),
+  "isActive": zod.boolean().optional()
+})
+
+export const UpdateAppImageResponse = zod.object({
+  "id": zod.number(),
+  "category": zod.string(),
+  "titleAr": zod.string().nullish(),
+  "titleEn": zod.string().nullish(),
+  "imageUrl": zod.string(),
+  "linkUrl": zod.string().nullish(),
+  "relatedEntityType": zod.string().nullish(),
+  "relatedEntityId": zod.string().nullish(),
+  "sortOrder": zod.number(),
+  "startDate": zod.string().nullish(),
+  "endDate": zod.string().nullish(),
+  "isActive": zod.boolean(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Delete an app image (admin)
+ */
+export const DeleteAppImageParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteAppImageResponse = zod.void()
+
+
+/**
  * @summary List all destinations
  */
 export const ListDestinationsResponseItem = zod.object({
@@ -353,6 +497,13 @@ export const ListProgramsResponseItem = zod.object({
   "bookingTerms": zod.string().nullish(),
   "cancellationPolicy": zod.string().nullish(),
   "destination": zod.string().nullish(),
+  "roomTypes": zod.array(zod.string()).optional(),
+  "meals": zod.string().nullish(),
+  "transport": zod.string().nullish(),
+  "tours": zod.array(zod.string()).optional(),
+  "programDate": zod.string().nullish(),
+  "notesAr": zod.string().nullish(),
+  "notesEn": zod.string().nullish(),
   "status": zod.enum(['active', 'featured', 'new', 'special_offer', 'expired', 'hidden']),
   "featured": zod.boolean(),
   "isActive": zod.boolean(),
@@ -398,6 +549,13 @@ export const CreateProgramBody = zod.object({
   "bookingTerms": zod.string().optional(),
   "cancellationPolicy": zod.string().optional(),
   "destination": zod.string().optional(),
+  "roomTypes": zod.array(zod.string()).optional(),
+  "meals": zod.string().optional(),
+  "transport": zod.string().optional(),
+  "tours": zod.array(zod.string()).optional(),
+  "programDate": zod.string().optional(),
+  "notesAr": zod.string().optional(),
+  "notesEn": zod.string().optional(),
   "status": zod.enum(['active', 'featured', 'new', 'special_offer', 'expired', 'hidden']).optional(),
   "featured": zod.boolean().optional(),
   "isActive": zod.boolean().optional()
@@ -437,6 +595,13 @@ export const CreateProgramResponse = zod.object({
   "bookingTerms": zod.string().nullish(),
   "cancellationPolicy": zod.string().nullish(),
   "destination": zod.string().nullish(),
+  "roomTypes": zod.array(zod.string()).optional(),
+  "meals": zod.string().nullish(),
+  "transport": zod.string().nullish(),
+  "tours": zod.array(zod.string()).optional(),
+  "programDate": zod.string().nullish(),
+  "notesAr": zod.string().nullish(),
+  "notesEn": zod.string().nullish(),
   "status": zod.enum(['active', 'featured', 'new', 'special_offer', 'expired', 'hidden']),
   "featured": zod.boolean(),
   "isActive": zod.boolean(),
@@ -486,6 +651,13 @@ export const GetProgramResponse = zod.object({
   "bookingTerms": zod.string().nullish(),
   "cancellationPolicy": zod.string().nullish(),
   "destination": zod.string().nullish(),
+  "roomTypes": zod.array(zod.string()).optional(),
+  "meals": zod.string().nullish(),
+  "transport": zod.string().nullish(),
+  "tours": zod.array(zod.string()).optional(),
+  "programDate": zod.string().nullish(),
+  "notesAr": zod.string().nullish(),
+  "notesEn": zod.string().nullish(),
   "status": zod.enum(['active', 'featured', 'new', 'special_offer', 'expired', 'hidden']),
   "featured": zod.boolean(),
   "isActive": zod.boolean(),
@@ -534,6 +706,13 @@ export const UpdateProgramBody = zod.object({
   "bookingTerms": zod.string().optional(),
   "cancellationPolicy": zod.string().optional(),
   "destination": zod.string().optional(),
+  "roomTypes": zod.array(zod.string()).optional(),
+  "meals": zod.string().optional(),
+  "transport": zod.string().optional(),
+  "tours": zod.array(zod.string()).optional(),
+  "programDate": zod.string().optional(),
+  "notesAr": zod.string().optional(),
+  "notesEn": zod.string().optional(),
   "status": zod.enum(['active', 'featured', 'new', 'special_offer', 'expired', 'hidden']).optional(),
   "featured": zod.boolean().optional(),
   "isActive": zod.boolean().optional()
@@ -573,6 +752,13 @@ export const UpdateProgramResponse = zod.object({
   "bookingTerms": zod.string().nullish(),
   "cancellationPolicy": zod.string().nullish(),
   "destination": zod.string().nullish(),
+  "roomTypes": zod.array(zod.string()).optional(),
+  "meals": zod.string().nullish(),
+  "transport": zod.string().nullish(),
+  "tours": zod.array(zod.string()).optional(),
+  "programDate": zod.string().nullish(),
+  "notesAr": zod.string().nullish(),
+  "notesEn": zod.string().nullish(),
   "status": zod.enum(['active', 'featured', 'new', 'special_offer', 'expired', 'hidden']),
   "featured": zod.boolean(),
   "isActive": zod.boolean(),
@@ -589,6 +775,303 @@ export const DeleteProgramParams = zod.object({
 })
 
 export const DeleteProgramResponse = zod.void()
+
+
+/**
+ * @summary List the authenticated customer's program booking requests
+ */
+export const ListMyProgramBookingsResponseItem = zod.object({
+  "id": zod.string(),
+  "requestNumber": zod.string(),
+  "userId": zod.string(),
+  "programId": zod.number(),
+  "programTitleAr": zod.string(),
+  "programTitleEn": zod.string(),
+  "programDestination": zod.string().nullish(),
+  "programPrice": zod.number(),
+  "programCurrency": zod.string(),
+  "fullName": zod.string(),
+  "email": zod.string(),
+  "phone": zod.string(),
+  "nationality": zod.string(),
+  "nationalityCode": zod.string(),
+  "adults": zod.number(),
+  "children": zod.number(),
+  "infants": zod.number(),
+  "travelDate": zod.string(),
+  "returnDate": zod.string().nullish(),
+  "rooms": zod.number(),
+  "roomType": zod.string().nullish(),
+  "specialRequirements": zod.string().nullish(),
+  "customerNotes": zod.string().nullish(),
+  "status": zod.enum(['draft', 'submitted', 'under_review', 'awaiting_availability', 'awaiting_payment', 'paid', 'confirmed', 'completed', 'rejected', 'cancelled']),
+  "statusHistory": zod.array(zod.object({
+  "status": zod.string(),
+  "at": zod.string(),
+  "note": zod.string().nullish(),
+  "by": zod.string().optional()
+})),
+  "adminNotes": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+export const ListMyProgramBookingsResponse = zod.array(ListMyProgramBookingsResponseItem)
+
+
+/**
+ * @summary Submit a program booking request (auth required)
+ */
+export const createProgramBookingBodyFullNameMin = 3;
+
+export const createProgramBookingBodyPhoneMin = 6;
+
+export const createProgramBookingBodyAdultsMax = 50;
+
+export const createProgramBookingBodyChildrenMin = 0;
+export const createProgramBookingBodyChildrenMax = 50;
+
+export const createProgramBookingBodyInfantsMin = 0;
+export const createProgramBookingBodyInfantsMax = 20;
+
+export const createProgramBookingBodyRoomsMax = 50;
+
+
+
+export const CreateProgramBookingBody = zod.object({
+  "programId": zod.number(),
+  "fullName": zod.string().min(createProgramBookingBodyFullNameMin),
+  "email": zod.string().email(),
+  "phone": zod.string().min(createProgramBookingBodyPhoneMin),
+  "nationality": zod.string().describe('ISO alpha-2 code or canonical country name (resolved server-side against the master list)'),
+  "adults": zod.number().min(1).max(createProgramBookingBodyAdultsMax),
+  "children": zod.number().min(createProgramBookingBodyChildrenMin).max(createProgramBookingBodyChildrenMax).optional(),
+  "infants": zod.number().min(createProgramBookingBodyInfantsMin).max(createProgramBookingBodyInfantsMax).optional(),
+  "travelDate": zod.string().describe('YYYY-MM-DD'),
+  "returnDate": zod.string().optional(),
+  "rooms": zod.number().min(1).max(createProgramBookingBodyRoomsMax),
+  "roomType": zod.string().optional(),
+  "specialRequirements": zod.string().optional(),
+  "customerNotes": zod.string().optional()
+})
+
+export const CreateProgramBookingResponse = zod.object({
+  "id": zod.string(),
+  "requestNumber": zod.string(),
+  "userId": zod.string(),
+  "programId": zod.number(),
+  "programTitleAr": zod.string(),
+  "programTitleEn": zod.string(),
+  "programDestination": zod.string().nullish(),
+  "programPrice": zod.number(),
+  "programCurrency": zod.string(),
+  "fullName": zod.string(),
+  "email": zod.string(),
+  "phone": zod.string(),
+  "nationality": zod.string(),
+  "nationalityCode": zod.string(),
+  "adults": zod.number(),
+  "children": zod.number(),
+  "infants": zod.number(),
+  "travelDate": zod.string(),
+  "returnDate": zod.string().nullish(),
+  "rooms": zod.number(),
+  "roomType": zod.string().nullish(),
+  "specialRequirements": zod.string().nullish(),
+  "customerNotes": zod.string().nullish(),
+  "status": zod.enum(['draft', 'submitted', 'under_review', 'awaiting_availability', 'awaiting_payment', 'paid', 'confirmed', 'completed', 'rejected', 'cancelled']),
+  "statusHistory": zod.array(zod.object({
+  "status": zod.string(),
+  "at": zod.string(),
+  "note": zod.string().nullish(),
+  "by": zod.string().optional()
+})),
+  "adminNotes": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Get one booking request (owner or staff)
+ */
+export const GetProgramBookingParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const GetProgramBookingResponse = zod.object({
+  "id": zod.string(),
+  "requestNumber": zod.string(),
+  "userId": zod.string(),
+  "programId": zod.number(),
+  "programTitleAr": zod.string(),
+  "programTitleEn": zod.string(),
+  "programDestination": zod.string().nullish(),
+  "programPrice": zod.number(),
+  "programCurrency": zod.string(),
+  "fullName": zod.string(),
+  "email": zod.string(),
+  "phone": zod.string(),
+  "nationality": zod.string(),
+  "nationalityCode": zod.string(),
+  "adults": zod.number(),
+  "children": zod.number(),
+  "infants": zod.number(),
+  "travelDate": zod.string(),
+  "returnDate": zod.string().nullish(),
+  "rooms": zod.number(),
+  "roomType": zod.string().nullish(),
+  "specialRequirements": zod.string().nullish(),
+  "customerNotes": zod.string().nullish(),
+  "status": zod.enum(['draft', 'submitted', 'under_review', 'awaiting_availability', 'awaiting_payment', 'paid', 'confirmed', 'completed', 'rejected', 'cancelled']),
+  "statusHistory": zod.array(zod.object({
+  "status": zod.string(),
+  "at": zod.string(),
+  "note": zod.string().nullish(),
+  "by": zod.string().optional()
+})),
+  "adminNotes": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Customer cancels their own booking request (only before confirmation)
+ */
+export const CancelProgramBookingParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const CancelProgramBookingResponse = zod.object({
+  "id": zod.string(),
+  "requestNumber": zod.string(),
+  "userId": zod.string(),
+  "programId": zod.number(),
+  "programTitleAr": zod.string(),
+  "programTitleEn": zod.string(),
+  "programDestination": zod.string().nullish(),
+  "programPrice": zod.number(),
+  "programCurrency": zod.string(),
+  "fullName": zod.string(),
+  "email": zod.string(),
+  "phone": zod.string(),
+  "nationality": zod.string(),
+  "nationalityCode": zod.string(),
+  "adults": zod.number(),
+  "children": zod.number(),
+  "infants": zod.number(),
+  "travelDate": zod.string(),
+  "returnDate": zod.string().nullish(),
+  "rooms": zod.number(),
+  "roomType": zod.string().nullish(),
+  "specialRequirements": zod.string().nullish(),
+  "customerNotes": zod.string().nullish(),
+  "status": zod.enum(['draft', 'submitted', 'under_review', 'awaiting_availability', 'awaiting_payment', 'paid', 'confirmed', 'completed', 'rejected', 'cancelled']),
+  "statusHistory": zod.array(zod.object({
+  "status": zod.string(),
+  "at": zod.string(),
+  "note": zod.string().nullish(),
+  "by": zod.string().optional()
+})),
+  "adminNotes": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary List all program booking requests (staff with bookings permission)
+ */
+export const ListProgramBookingsAdminQueryParams = zod.object({
+  "status": zod.enum(['draft', 'submitted', 'under_review', 'awaiting_availability', 'awaiting_payment', 'paid', 'confirmed', 'completed', 'rejected', 'cancelled']).optional()
+})
+
+export const ListProgramBookingsAdminResponseItem = zod.object({
+  "id": zod.string(),
+  "requestNumber": zod.string(),
+  "userId": zod.string(),
+  "programId": zod.number(),
+  "programTitleAr": zod.string(),
+  "programTitleEn": zod.string(),
+  "programDestination": zod.string().nullish(),
+  "programPrice": zod.number(),
+  "programCurrency": zod.string(),
+  "fullName": zod.string(),
+  "email": zod.string(),
+  "phone": zod.string(),
+  "nationality": zod.string(),
+  "nationalityCode": zod.string(),
+  "adults": zod.number(),
+  "children": zod.number(),
+  "infants": zod.number(),
+  "travelDate": zod.string(),
+  "returnDate": zod.string().nullish(),
+  "rooms": zod.number(),
+  "roomType": zod.string().nullish(),
+  "specialRequirements": zod.string().nullish(),
+  "customerNotes": zod.string().nullish(),
+  "status": zod.enum(['draft', 'submitted', 'under_review', 'awaiting_availability', 'awaiting_payment', 'paid', 'confirmed', 'completed', 'rejected', 'cancelled']),
+  "statusHistory": zod.array(zod.object({
+  "status": zod.string(),
+  "at": zod.string(),
+  "note": zod.string().nullish(),
+  "by": zod.string().optional()
+})),
+  "adminNotes": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+export const ListProgramBookingsAdminResponse = zod.array(ListProgramBookingsAdminResponseItem)
+
+
+/**
+ * @summary Update a booking request status (staff); notifies the customer
+ */
+export const UpdateProgramBookingStatusParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const UpdateProgramBookingStatusBody = zod.object({
+  "status": zod.enum(['draft', 'submitted', 'under_review', 'awaiting_availability', 'awaiting_payment', 'paid', 'confirmed', 'completed', 'rejected', 'cancelled']),
+  "note": zod.string().optional().describe('Optional message to the customer recorded on the timeline and included in the notification'),
+  "adminNotes": zod.string().optional()
+})
+
+export const UpdateProgramBookingStatusResponse = zod.object({
+  "id": zod.string(),
+  "requestNumber": zod.string(),
+  "userId": zod.string(),
+  "programId": zod.number(),
+  "programTitleAr": zod.string(),
+  "programTitleEn": zod.string(),
+  "programDestination": zod.string().nullish(),
+  "programPrice": zod.number(),
+  "programCurrency": zod.string(),
+  "fullName": zod.string(),
+  "email": zod.string(),
+  "phone": zod.string(),
+  "nationality": zod.string(),
+  "nationalityCode": zod.string(),
+  "adults": zod.number(),
+  "children": zod.number(),
+  "infants": zod.number(),
+  "travelDate": zod.string(),
+  "returnDate": zod.string().nullish(),
+  "rooms": zod.number(),
+  "roomType": zod.string().nullish(),
+  "specialRequirements": zod.string().nullish(),
+  "customerNotes": zod.string().nullish(),
+  "status": zod.enum(['draft', 'submitted', 'under_review', 'awaiting_availability', 'awaiting_payment', 'paid', 'confirmed', 'completed', 'rejected', 'cancelled']),
+  "statusHistory": zod.array(zod.object({
+  "status": zod.string(),
+  "at": zod.string(),
+  "note": zod.string().nullish(),
+  "by": zod.string().optional()
+})),
+  "adminNotes": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
 
 
 /**
@@ -1224,6 +1707,9 @@ export const ListVisaApplicationsResponseItem = zod.object({
   "id": zod.number(),
   "trackingNumber": zod.string().nullish(),
   "visaId": zod.number(),
+  "visaType": zod.string().nullish(),
+  "countryAr": zod.string().nullish(),
+  "countryEn": zod.string().nullish(),
   "userId": zod.string().nullish(),
   "eligibilityPath": zod.enum(['gcc', 'alternative', 'direct']),
   "gccCountry": zod.string().nullish(),
@@ -1293,6 +1779,9 @@ export const CreateVisaApplicationResponse = zod.object({
   "id": zod.number(),
   "trackingNumber": zod.string().nullish(),
   "visaId": zod.number(),
+  "visaType": zod.string().nullish(),
+  "countryAr": zod.string().nullish(),
+  "countryEn": zod.string().nullish(),
   "userId": zod.string().nullish(),
   "eligibilityPath": zod.enum(['gcc', 'alternative', 'direct']),
   "gccCountry": zod.string().nullish(),
@@ -1337,6 +1826,9 @@ export const GetVisaApplicationResponse = zod.object({
   "id": zod.number(),
   "trackingNumber": zod.string().nullish(),
   "visaId": zod.number(),
+  "visaType": zod.string().nullish(),
+  "countryAr": zod.string().nullish(),
+  "countryEn": zod.string().nullish(),
   "userId": zod.string().nullish(),
   "eligibilityPath": zod.enum(['gcc', 'alternative', 'direct']),
   "gccCountry": zod.string().nullish(),
@@ -1387,6 +1879,9 @@ export const UpdateVisaApplicationResponse = zod.object({
   "id": zod.number(),
   "trackingNumber": zod.string().nullish(),
   "visaId": zod.number(),
+  "visaType": zod.string().nullish(),
+  "countryAr": zod.string().nullish(),
+  "countryEn": zod.string().nullish(),
   "userId": zod.string().nullish(),
   "eligibilityPath": zod.enum(['gcc', 'alternative', 'direct']),
   "gccCountry": zod.string().nullish(),
@@ -2745,6 +3240,7 @@ export const ListNotificationsResponseItem = zod.object({
   "relatedEntityType": zod.string().nullish(),
   "relatedEntityId": zod.string().nullish(),
   "url": zod.string().nullish(),
+  "imageUrl": zod.string().nullish(),
   "isRead": zod.boolean(),
   "sentBy": zod.string().nullish(),
   "createdAt": zod.string()
@@ -2770,6 +3266,7 @@ export const MarkNotificationReadResponse = zod.object({
   "relatedEntityType": zod.string().nullish(),
   "relatedEntityId": zod.string().nullish(),
   "url": zod.string().nullish(),
+  "imageUrl": zod.string().nullish(),
   "isRead": zod.boolean(),
   "sentBy": zod.string().nullish(),
   "createdAt": zod.string()
@@ -2785,6 +3282,26 @@ export const MarkAllNotificationsReadResponse = zod.object({
 
 
 /**
+ * @summary Count of the authenticated user's unread notifications (app-icon badge)
+ */
+export const GetUnreadNotificationCountResponse = zod.object({
+  "unread": zod.number()
+})
+
+
+/**
+ * @summary Delete one of the authenticated user's notifications
+ */
+export const DeleteNotificationParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const DeleteNotificationResponse = zod.object({
+  "deleted": zod.number()
+})
+
+
+/**
  * @summary Admin — create and push a notification to users (requires 'notifications' permission)
  */
 export const SendNotificationBody = zod.object({
@@ -2792,9 +3309,11 @@ export const SendNotificationBody = zod.object({
   "titleEn": zod.string(),
   "messageAr": zod.string(),
   "messageEn": zod.string(),
-  "audience": zod.enum(['all', 'users']),
+  "audience": zod.enum(['all', 'users', 'group']),
   "userIds": zod.array(zod.string()).optional(),
-  "url": zod.string().optional()
+  "roles": zod.array(zod.enum(['customer', 'agent', 'admin', 'super_admin'])).optional(),
+  "url": zod.string().optional(),
+  "imageUrl": zod.string().optional()
 })
 
 export const SendNotificationResponse = zod.object({
@@ -2816,6 +3335,7 @@ export const ListAdminNotificationHistoryResponseItem = zod.object({
   "relatedEntityType": zod.string().nullish(),
   "relatedEntityId": zod.string().nullish(),
   "url": zod.string().nullish(),
+  "imageUrl": zod.string().nullish(),
   "isRead": zod.boolean(),
   "sentBy": zod.string().nullish(),
   "createdAt": zod.string()
@@ -2849,6 +3369,40 @@ export const DeletePushTokenBody = zod.object({
 
 export const DeletePushTokenResponse = zod.object({
   "deleted": zod.number()
+})
+
+
+/**
+ * @summary Get the authenticated user's notification preferences
+ */
+export const GetNotificationPreferencesResponse = zod.object({
+  "notifyBooking": zod.boolean(),
+  "notifyVisa": zod.boolean(),
+  "notifyPromo": zod.boolean(),
+  "notifySystem": zod.boolean(),
+  "pushEnabled": zod.boolean(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Update (upsert) the authenticated user's notification preferences
+ */
+export const UpdateNotificationPreferencesBody = zod.object({
+  "notifyBooking": zod.boolean().optional(),
+  "notifyVisa": zod.boolean().optional(),
+  "notifyPromo": zod.boolean().optional(),
+  "notifySystem": zod.boolean().optional(),
+  "pushEnabled": zod.boolean().optional()
+})
+
+export const UpdateNotificationPreferencesResponse = zod.object({
+  "notifyBooking": zod.boolean(),
+  "notifyVisa": zod.boolean(),
+  "notifyPromo": zod.boolean(),
+  "notifySystem": zod.boolean(),
+  "pushEnabled": zod.boolean(),
+  "updatedAt": zod.string()
 })
 
 
@@ -3187,7 +3741,13 @@ export const CreateAgencyBody = zod.object({
   "contactPhone": zod.string().optional(),
   "address": zod.string().optional(),
   "notes": zod.string().optional(),
-  "status": zod.enum(['active', 'suspended', 'pending']).optional()
+  "status": zod.enum(['active', 'suspended', 'pending']).optional(),
+  "agentAccount": zod.object({
+  "email": zod.string(),
+  "password": zod.string(),
+  "firstName": zod.string().optional(),
+  "lastName": zod.string().optional()
+}).optional().describe('Optional primary portal login created atomically with the agency.')
 })
 
 export const CreateAgencyResponse = zod.object({
@@ -3679,7 +4239,14 @@ export const SubmitAgentApplicationBody = zod.object({
   "residencyBackImageUrl": zod.string().optional(),
   "visaImageUrl": zod.string().optional(),
   "customFieldResponses": zod.record(zod.string(), zod.unknown()).optional(),
-  "agreedToTerms": zod.boolean().optional()
+  "agreedToTerms": zod.boolean().optional(),
+  "documents": zod.array(zod.object({
+  "documentKey": zod.string().optional(),
+  "nameAr": zod.string().optional(),
+  "nameEn": zod.string().optional(),
+  "description": zod.string().optional(),
+  "storagePath": zod.string()
+})).optional().describe('Dynamic document uploads. Entries with a documentKey matching the visa\'s required-documents config attach to that slot; entries without a matching key create an ad-hoc slot named by nameAr\/nameEn.')
 })
 
 export const SubmitAgentApplicationResponse = zod.object({
@@ -3764,6 +4331,191 @@ export const GetMyAgentApplicationResponse = zod.object({
   "countryAr": zod.string().nullish(),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Public payment config — wallet flag + active payment methods (sorted)
+ */
+export const GetPaymentConfigResponse = zod.object({
+  "walletEnabled": zod.boolean(),
+  "paymentMethods": zod.array(zod.object({
+  "id": zod.number(),
+  "nameAr": zod.string(),
+  "nameEn": zod.string(),
+  "descriptionAr": zod.string().nullish(),
+  "descriptionEn": zod.string().nullish(),
+  "logoUrl": zod.string().nullish(),
+  "feePercent": zod.number(),
+  "feeFixed": zod.number(),
+  "isActive": zod.boolean(),
+  "sortOrder": zod.number(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+}))
+})
+
+
+/**
+ * @summary Authenticated user's wallet (balance + recent transactions)
+ */
+export const GetMyWalletResponse = zod.object({
+  "enabled": zod.boolean(),
+  "balance": zod.number(),
+  "currency": zod.string(),
+  "transactions": zod.array(zod.object({
+  "id": zod.string(),
+  "type": zod.enum(['credit', 'debit']),
+  "amount": zod.number(),
+  "titleAr": zod.string(),
+  "titleEn": zod.string(),
+  "status": zod.enum(['completed', 'pending', 'failed']),
+  "reference": zod.string().nullish(),
+  "createdAt": zod.string()
+}))
+})
+
+
+/**
+ * @summary All payment methods including inactive (staff, payments permission)
+ */
+export const ListAdminPaymentMethodsResponseItem = zod.object({
+  "id": zod.number(),
+  "nameAr": zod.string(),
+  "nameEn": zod.string(),
+  "descriptionAr": zod.string().nullish(),
+  "descriptionEn": zod.string().nullish(),
+  "logoUrl": zod.string().nullish(),
+  "feePercent": zod.number(),
+  "feeFixed": zod.number(),
+  "isActive": zod.boolean(),
+  "sortOrder": zod.number(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+export const ListAdminPaymentMethodsResponse = zod.array(ListAdminPaymentMethodsResponseItem)
+
+
+/**
+ * @summary Create a payment method
+ */
+export const CreatePaymentMethodBody = zod.object({
+  "nameAr": zod.string(),
+  "nameEn": zod.string(),
+  "descriptionAr": zod.string().nullish(),
+  "descriptionEn": zod.string().nullish(),
+  "logoUrl": zod.string().nullish(),
+  "feePercent": zod.number().optional(),
+  "feeFixed": zod.number().optional(),
+  "isActive": zod.boolean().optional(),
+  "sortOrder": zod.number().optional()
+})
+
+export const CreatePaymentMethodResponse = zod.object({
+  "id": zod.number(),
+  "nameAr": zod.string(),
+  "nameEn": zod.string(),
+  "descriptionAr": zod.string().nullish(),
+  "descriptionEn": zod.string().nullish(),
+  "logoUrl": zod.string().nullish(),
+  "feePercent": zod.number(),
+  "feeFixed": zod.number(),
+  "isActive": zod.boolean(),
+  "sortOrder": zod.number(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Bulk reorder payment methods
+ */
+export const ReorderPaymentMethodsBody = zod.object({
+  "order": zod.array(zod.object({
+  "id": zod.number(),
+  "sortOrder": zod.number()
+}))
+})
+
+export const ReorderPaymentMethodsResponseItem = zod.object({
+  "id": zod.number(),
+  "nameAr": zod.string(),
+  "nameEn": zod.string(),
+  "descriptionAr": zod.string().nullish(),
+  "descriptionEn": zod.string().nullish(),
+  "logoUrl": zod.string().nullish(),
+  "feePercent": zod.number(),
+  "feeFixed": zod.number(),
+  "isActive": zod.boolean(),
+  "sortOrder": zod.number(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+export const ReorderPaymentMethodsResponse = zod.array(ReorderPaymentMethodsResponseItem)
+
+
+/**
+ * @summary Update a payment method (partial)
+ */
+export const UpdatePaymentMethodParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdatePaymentMethodBody = zod.object({
+  "nameAr": zod.string().optional(),
+  "nameEn": zod.string().optional(),
+  "descriptionAr": zod.string().nullish(),
+  "descriptionEn": zod.string().nullish(),
+  "logoUrl": zod.string().nullish(),
+  "feePercent": zod.number().optional(),
+  "feeFixed": zod.number().optional(),
+  "isActive": zod.boolean().optional(),
+  "sortOrder": zod.number().optional()
+})
+
+export const UpdatePaymentMethodResponse = zod.object({
+  "id": zod.number(),
+  "nameAr": zod.string(),
+  "nameEn": zod.string(),
+  "descriptionAr": zod.string().nullish(),
+  "descriptionEn": zod.string().nullish(),
+  "logoUrl": zod.string().nullish(),
+  "feePercent": zod.number(),
+  "feeFixed": zod.number(),
+  "isActive": zod.boolean(),
+  "sortOrder": zod.number(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Delete a payment method
+ */
+export const DeletePaymentMethodParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeletePaymentMethodResponse = zod.unknown()
+
+
+/**
+ * @summary Wallet feature flag (staff)
+ */
+export const GetWalletSettingsResponse = zod.object({
+  "walletEnabled": zod.boolean()
+})
+
+
+/**
+ * @summary Enable/disable the wallet feature globally
+ */
+export const UpdateWalletSettingsBody = zod.object({
+  "walletEnabled": zod.boolean()
+})
+
+export const UpdateWalletSettingsResponse = zod.object({
+  "walletEnabled": zod.boolean()
 })
 
 

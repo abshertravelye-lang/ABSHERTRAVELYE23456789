@@ -7,3 +7,17 @@ uri = "file://attached_assets/debug-logs-bundle.zip"
 type = "unspecified"
 title = "ملف سجلات التصحيح الكامل"
 description = "يحتوي على ملفات debug-logs الأربعة المرفوعة، مجمعة في ملف ZIP واحد لإرساله إلى دعم Replit."
+
+[[outputs]]
+id = "gj53nybYaeXq1tnY3wcBE"
+uri = "file://artifacts/absher-mobile/build-output/abshertravel-preview.apk"
+type = "unspecified"
+title = "ABSHER TRAVEL — Android APK"
+description = "نسخة أندرويد قابلة للتثبيت (preview) مربوطة بالخادم الإنتاجي abshertravel.com"
+
+[[outputs]]
+id = "DWggblFIri06oz7dZH0_P"
+uri = "file://absher-travel.apk"
+type = "unspecified"
+title = "ABSHER TRAVEL — Android APK"
+description = "نسخة Android Preview v1.0.0 — جاهزة للتثبيت على أي جهاز Android"

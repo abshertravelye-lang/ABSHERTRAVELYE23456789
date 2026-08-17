@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React from 'react';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,7 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { useColors } from '@/hooks/useColors';
 import { useLanguage } from '@/context/LanguageContext';
-import { useGetProgram, useCreateBooking } from '@workspace/api-client-react';
+import { useGetProgram } from '@workspace/api-client-react';
 import { getImageUrl } from '@/hooks/useImageUrl';
 
 export default function ProgramDetailScreen() {
@@ -18,45 +18,11 @@ export default function ProgramDetailScreen() {
   const insets = useSafeAreaInsets();
 
   const { data: program, isLoading } = useGetProgram(Number(id));
-  const createBooking = useCreateBooking();
-  const [booked, setBooked] = useState(false);
 
+  // Opens the full booking-request form (dates, travelers, rooms, notes)
   const handleBook = () => {
-    Alert.prompt
-      ? Alert.prompt(t('programDetail.bookNow'), t('programDetail.bookPromptBody'), [
-          { text: t('flow.cancel'), style: 'cancel' },
-          {
-            text: t('programDetail.confirmBooking'),
-            onPress: (name?: string) => confirmBook(name || t('programDetail.defaultClient')),
-          },
-        ])
-      : Alert.alert(t('programDetail.bookNow'), t('programDetail.bookConfirmBody'), [
-          { text: t('flow.cancel'), style: 'cancel' },
-          { text: t('flow.confirm'), onPress: () => confirmBook(t('programDetail.defaultClient')) },
-        ]);
-  };
-
-  const confirmBook = (name: string) => {
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    createBooking.mutate(
-      {
-        data: {
-          type: 'program',
-          clientName: name,
-          clientPhone: '0500000000',
-          destination: program?.country,
-          notes: `${t('programDetail.notePrefix')} ${program?.titleAr}`,
-          totalPrice: program?.price,
-        },
-      },
-      {
-        onSuccess: () => {
-          setBooked(true);
-          Alert.alert(t('programDetail.bookedTitle'), t('programDetail.bookedBody'));
-        },
-        onError: () => Alert.alert(t('flow.error'), t('programDetail.bookError')),
-      }
-    );
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    router.push(`/program-book/${id}`);
   };
 
   if (isLoading) {
@@ -169,21 +135,14 @@ export default function ProgramDetailScreen() {
         <Pressable
           style={({ pressed }) => [
             styles.bookBtn,
-            { backgroundColor: booked ? '#16A34A' : '#052B5B', opacity: pressed ? 0.9 : 1 },
+            { backgroundColor: '#052B5B', opacity: pressed ? 0.9 : 1 },
           ]}
           onPress={handleBook}
-          disabled={booked || createBooking.isPending}
         >
-          {createBooking.isPending ? (
-            <ActivityIndicator color="#FFFFFF" />
-          ) : (
-            <>
-              <Ionicons name={booked ? 'checkmark-circle' : 'calendar-outline'} size={20} color="#FFFFFF" />
-              <Text style={[styles.bookBtnText, { fontFamily: 'Cairo_700Bold' }]}>
-                {booked ? t('programDetail.booked') : t('programDetail.bookNow')}
-              </Text>
-            </>
-          )}
+          <Ionicons name="calendar-outline" size={20} color="#FFFFFF" />
+          <Text style={[styles.bookBtnText, { fontFamily: 'Cairo_700Bold' }]}>
+            {t('programDetail.bookNow')}
+          </Text>
         </Pressable>
       </View>
     </View>

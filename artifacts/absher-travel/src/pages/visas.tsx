@@ -1,13 +1,19 @@
 import { useState, useMemo } from "react";
 import { Link } from "wouter";
 import { useTranslation } from "@/hooks/use-translation";
-import { useListVisas, useListVisaCountries, type Visa } from "@workspace/api-client-react";
+import { useAuth } from "@/hooks/use-auth";
+import {
+  useListVisas, useListVisaCountries, useGetCurrentUser, getGetCurrentUserQueryKey,
+  type Visa,
+} from "@workspace/api-client-react";
+import { isSameCountry } from "@workspace/countries";
 import {
   Search, Globe, Clock, ChevronRight, Zap, Star, TrendingUp, Sparkles,
   Filter, X, ChevronDown, DollarSign, Calendar, BadgeCheck, Plane
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { AppImage } from "@/components/app-image";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -99,14 +105,11 @@ function VisaCenterCard({ visa, ar, compact }: { visa: Visa; ar: boolean; compac
     <div className={`group bg-white rounded-2xl overflow-hidden border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col ${compact ? "" : ""}`}>
       {/* Image Header */}
       <div className="relative h-44 overflow-hidden">
-        <img
+        <AppImage
           src={img}
+          fallback="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800"
           alt={ar ? visa.countryAr : visa.countryEn}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-          loading="lazy"
-          onError={(e) => {
-            (e.currentTarget as HTMLImageElement).src = "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800";
-          }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
 
@@ -226,6 +229,15 @@ export default function Visas() {
   const { data: visas, isLoading } = useListVisas();
   const { data: countries } = useListVisaCountries({});
 
+  // Profile-driven eligibility: for signed-in users with a stored nationality,
+  // only show visas their nationality qualifies for. The server re-checks
+  // eligibility on every application, so this is a UX filter, not security.
+  const { user: authUser, isAuthenticated } = useAuth();
+  const { data: currentUser } = useGetCurrentUser({
+    query: { staleTime: 30000, queryKey: getGetCurrentUserQueryKey(), enabled: isAuthenticated },
+  });
+  const nationality = (currentUser as any)?.nationality || (authUser as any)?.nationality || "";
+
   // Allow deep-linking to a pre-selected category, e.g. /visas?category=umrah
   const initialCategory = (() => {
     if (typeof window === "undefined") return "";
@@ -241,7 +253,22 @@ export default function Visas() {
   const [showAllFilters, setShowAllFilters] = useState(false);
   const [showAll, setShowAll] = useState(false);
 
-  const active = useMemo(() => (visas || []).filter(v => v.isActive && v.status === "available"), [visas]);
+  const active = useMemo(() => {
+    let list = (visas || []).filter(v => v.isActive && v.status === "available");
+    // Nationality-based eligibility filter (mirrors the server's first two
+    // eligibility rules: blocked list always wins; non-empty allowed list must
+    // contain the user's nationality). Residency-based rules are left to the
+    // detail page + server, since they depend on more profile fields.
+    if (nationality) {
+      list = list.filter(v => {
+        if ((v.blockedNationalities ?? []).some(n => isSameCountry(n, nationality))) return false;
+        const allowed = v.allowedNationalities ?? [];
+        if (allowed.length > 0 && !allowed.some(n => isSameCountry(n, nationality))) return false;
+        return true;
+      });
+    }
+    return list;
+  }, [visas, nationality]);
 
   const filtered = useMemo(() => {
     let list = active.filter(v => {

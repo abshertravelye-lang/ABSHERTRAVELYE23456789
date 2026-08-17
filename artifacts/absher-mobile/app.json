@@ -1,7 +1,8 @@
 {
   "expo": {
     "name": "ABSHER TRAVEL",
-    "slug": "abshertravel",
+    "slug": "absher",
+    "owner": "abshertravel",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -15,11 +16,13 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.abshertravel.app"
+      "bundleIdentifier": "com.abshertravel.app",
+      "infoPlist": {
+        "NSFaceIDUsageDescription": "يستخدم التطبيق Face ID لتأمين حسابك وتسجيل الدخول السريع."
+      }
     },
     "android": {
       "package": "com.abshertravel.app",
-      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#0A2342"
@@ -28,7 +31,9 @@
         "android.permission.INTERNET",
         "android.permission.RECEIVE_BOOT_COMPLETED",
         "android.permission.VIBRATE",
-        "android.permission.POST_NOTIFICATIONS"
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.USE_FINGERPRINT"
       ]
     },
     "web": {
@@ -43,6 +48,13 @@
       ],
       "expo-font",
       "expo-web-browser",
+      "expo-secure-store",
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "يستخدم التطبيق Face ID لتأمين حسابك وتسجيل الدخول السريع."
+        }
+      ],
       [
         "expo-notifications",
         {

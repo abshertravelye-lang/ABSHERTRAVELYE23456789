@@ -9,6 +9,7 @@
 - [Visa Center production rules](visa-center-rules.md) — auth gate, profile completeness, server-side eligibility, AT-YYYY-NNNNNN tracking format, Coming Soon for flights/hotels.
 - [Storage object URL conventions](storage-url-conventions.md) — always rewrite /objects/... → /api/storage/objects/... when displaying; AI image endpoints accept only internal paths, auth-gated, fail closed.
 - [GCS in task envs](gcs-task-env-limitation.md) — object storage sidecar 401s in isolated task envs; prod storage routes hard-fail instead of local fallback.
+- [Bucket lost authorization](object-storage-bucket-reauth.md) — sidecar 401 "no allowed resources" in MAIN workspace = bucket unowned; wipe stale storage env vars + re-provision new bucket, then republish.
 - [Auth token refresh](auth-token-refresh.md) — 15-min tokens need the shared 401-refresh-retry; refresh JWTs need jti; AI-check outages are 503, never "rejected".
 - [Country canonicalization](country-canonicalization.md) — all country fields store canonical English names from @workspace/countries; compare with isSameCountry, never substring.
 - [OpenAI proxy setup](openai-proxy-setup.md) — user's OpenAI key has no credits; server uses Replit AI Integrations proxy (both env vars required) with key fallback.
@@ -19,3 +20,11 @@
 - [Dark mode fix pattern](dark-mode-fix-pattern.md) — StyleSheet backgroundColor must be moved inline with colors.card; logos need tintColor={colors.primary}.
 - [Vite config env guards](vite-config-env-guards.md) — vite.config must default PORT/BASE_PATH, never throw; production builds run without workflow-injected env.
 - [Nix store corruption blocking publish](nix-store-corruption-publish.md) — "self-healing corrupt nix store paths" publish loop → repair the named store path in the shell (remove stray .lock dir first), don't republish repeatedly.
+- [Expo Go compat guards](expo-go-compat.md) — never statically import expo-notifications or use SymbolView; lazy-load via getNotifications(), Ionicons only, no dangling googleServicesFile.
+- [EAS Android builds](eas-apk-builds.md) — APKs build via EAS cloud only (`pnpm dlx eas-cli`); app.json slug must match EAS project slug, buildType `app-bundle` not `aab`, bake EXPO_PUBLIC_DOMAIN via profile env.
+- [Orval query options](orval-query-options.md) — generated hooks with custom query options must pass the generated queryKey helper explicitly.
+- [GitHub push sanitization](github-push-sanitization.md) — public pushes need history rewrites: debug ZIPs out, old `.replit` secrets scrubbed, all `.github/workflows` removed (token lacks workflow scope); token via connectors API.
+- [Audit log entity_id UUID-only](audit-log-entity-id.md) — audit_logs.entity_id is uuid; integer entity ids go in the JSON payload or the write silently fails.
+- [Admin API base-path pitfall](admin-api-base-path.md) — API is mounted at root /api/...; never prefix admin/web fetches with the artifact BASE_URL (causes /absher-admin/api 404s).
+- [i18n coverage check](i18n-coverage-check.md) — every mobile t() key must exist in @workspace/i18n; run the i18n-coverage validation after adding keys; translate() warns on unknown keys in dev.
+- [Mobile keyboard handling](keyboard-handling-pattern.md) — new form screens use KeyboardAwareForm (keyboard-controller), never raw KeyboardAvoidingView; web needs a fallback; fields chain focus via forwardRef.

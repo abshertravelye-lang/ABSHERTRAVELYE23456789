@@ -13,7 +13,7 @@ import { db, objectUploadsTable } from '@workspace/db';
 
 import { ObjectStorageService, objectStorageClient } from '../lib/objectStorage';
 import { ObjectNotFoundError } from '../lib/objectStorage';
-import { requireAuth } from '../middleware/auth';
+import { requireAuth, requirePermission } from '../middleware/auth';
 import { verifyAccessToken } from '../lib/jwt';
 import { isAuthorizedForObject } from '../lib/objectAccess';
 import {
@@ -21,6 +21,8 @@ import {
   verifyObjectSignature,
   SIGNED_URL_TTL_SEC,
 } from '../lib/signedObjectUrl';
+import { isAcceptedImageType, compressImage, ACCEPTED_IMAGE_LABEL } from '../lib/imageCompression';
+import { sniffMimeType } from '../lib/fileSignature';
 
 const router: IRouter = Router();
 const objectStorageService = new ObjectStorageService();
@@ -140,7 +142,27 @@ router.post(
     const ownerUserId = req.user!.sub;
     const objectId = randomUUID();
     const objectPath = `/objects/uploads/${objectId}`;
-    const mimeType = file.mimetype || 'application/octet-stream';
+
+    // Content-verified MIME type (magic bytes). The client-declared multipart
+    // mimetype is attacker-controlled and is NEVER persisted or served:
+    //  • a declared image/PDF whose bytes don't match is rejected outright,
+    //  • otherwise the sniffed type (or octet-stream) is what gets stored.
+    const declaredMime = (file.mimetype || '').toLowerCase();
+    const sniffedMime = sniffMimeType(file.buffer);
+    const declaresDocType = declaredMime.startsWith('image/') || declaredMime === 'application/pdf';
+    if (declaresDocType && sniffedMime !== declaredMime) {
+      // Allow benign image-subtype mismatches (e.g. declared image/jpg): the
+      // requirement is that the CONTENT class matches the declared class.
+      const declaredClass = declaredMime === 'application/pdf' ? 'pdf' : 'image';
+      const sniffedClass = sniffedMime === 'application/pdf' ? 'pdf' : sniffedMime?.startsWith('image/') ? 'image' : null;
+      if (sniffedClass !== declaredClass) {
+        res.status(400).json({
+          error: `File content does not match the declared type "${file.mimetype}".`,
+        });
+        return;
+      }
+    }
+    const mimeType = sniffedMime ?? (declaresDocType ? declaredMime : 'application/octet-stream');
 
     // Record ownership FIRST so the object is never orphaned/unowned. This row
     // is the sole source of truth for who may later read the object.
@@ -186,6 +208,193 @@ router.post(
       res.json({ objectPath, _local: true });
     } catch (localError) {
       req.log.error({ err: localError }, 'Local upload also failed');
+      res.status(500).json({ error: 'Failed to upload file' });
+    }
+  },
+);
+
+/**
+ * POST /storage/uploads/images
+ *
+ * Staff upload of a PUBLIC app-catalog image (banners, service cards, promos).
+ * Accepts common image types, compresses to WEBP, and stores under the public
+ * object search path (`app-images/<id>`). Returns { imageUrl } servable via
+ * GET /storage/public-objects/*. Dev-local fallback keys use `app-img-<id>`.
+ */
+router.post(
+  '/storage/uploads/images',
+  requireAuth,
+  requirePermission('visa_config'),
+  upload.single('file'),
+  async (req: Request, res: Response) => {
+    const file = req.file;
+    if (!file) {
+      res.status(400).json({ error: 'No file provided' });
+      return;
+    }
+    const mimeType = (file.mimetype || '').toLowerCase();
+    if (!isAcceptedImageType(mimeType)) {
+      res.status(400).json({
+        error: `Unsupported file type "${file.mimetype}". Only ${ACCEPTED_IMAGE_LABEL} images are accepted.`,
+      });
+      return;
+    }
+
+    // Compress/resize before storing (best effort — keep original on failure).
+    let finalBuffer = file.buffer;
+    let finalMime = mimeType;
+    try {
+      const compressed = await compressImage(file.buffer);
+      finalBuffer = compressed.buffer;
+      finalMime = compressed.mimeType;
+    } catch (compressErr) {
+      req.log.warn({ err: compressErr }, 'Image compression failed — storing original');
+    }
+
+    const objectId = randomUUID();
+    const publicPath = `app-images/${objectId}`;
+    const imageUrl = `/api/storage/public-objects/${publicPath}`;
+
+    // --- Try GCS first ---
+    try {
+      const searchPaths = objectStorageService.getPublicObjectSearchPaths();
+      const fullPath = `${searchPaths[0]}/${publicPath}`;
+      const { bucketName, objectName } = parseObjectPath(fullPath);
+      const gcsFile = objectStorageClient.bucket(bucketName).file(objectName);
+      await gcsFile.save(finalBuffer, { contentType: finalMime, resumable: false });
+      res.json({ imageUrl });
+      return;
+    } catch (gcsError) {
+      if (IS_PRODUCTION) {
+        req.log.error({ err: gcsError }, 'GCS app image upload failed in production');
+        res.status(500).json({ error: 'Failed to upload file to object storage' });
+        return;
+      }
+      req.log.warn({ err: gcsError }, 'GCS app image upload failed — falling back to local filesystem (dev only)');
+    }
+
+    // --- Local filesystem fallback (development only) ---
+    try {
+      await saveLocally(`app-img-${objectId}`, finalBuffer, finalMime);
+      res.json({ imageUrl, _local: true });
+    } catch (localError) {
+      req.log.error({ err: localError }, 'Local app image upload also failed');
+      res.status(500).json({ error: 'Failed to upload file' });
+    }
+  },
+);
+
+/**
+ * POST /storage/uploads/public
+ *
+ * Admin-only upload of a PUBLIC image (e.g. a notification broadcast image).
+ * Stored under the public object search path so every recipient can load it
+ * without ownership checks. Only image mime types are accepted.
+ * Returns { imageUrl } — a path servable via GET /storage/public-objects/*.
+ */
+router.post(
+  '/storage/uploads/public',
+  requireAuth,
+  requirePermission('notifications'),
+  upload.single('file'),
+  async (req: Request, res: Response) => {
+    const file = req.file;
+    if (!file) {
+      res.status(400).json({ error: 'No file provided' });
+      return;
+    }
+    const mimeType = (file.mimetype || '').toLowerCase();
+    if (!/^image\/(jpeg|jpg|png|webp|gif)$/.test(mimeType)) {
+      res.status(400).json({ error: 'Only JPG, PNG, WEBP or GIF images are allowed' });
+      return;
+    }
+
+    const objectId = randomUUID();
+    const publicPath = `notifications/${objectId}`;
+    const imageUrl = `/api/storage/public-objects/${publicPath}`;
+
+    // --- Try GCS first ---
+    try {
+      const searchPaths = objectStorageService.getPublicObjectSearchPaths();
+      const fullPath = `${searchPaths[0]}/${publicPath}`;
+      const { bucketName, objectName } = parseObjectPath(fullPath);
+      const gcsFile = objectStorageClient.bucket(bucketName).file(objectName);
+      await gcsFile.save(file.buffer, { contentType: mimeType, resumable: false });
+      res.json({ imageUrl });
+      return;
+    } catch (gcsError) {
+      if (IS_PRODUCTION) {
+        req.log.error({ err: gcsError }, 'GCS public upload failed in production');
+        res.status(500).json({ error: 'Failed to upload file to object storage' });
+        return;
+      }
+      req.log.warn({ err: gcsError }, 'GCS public upload failed — falling back to local filesystem (dev only)');
+    }
+
+    // --- Local filesystem fallback (development only) ---
+    try {
+      await saveLocally(`public-${objectId}`, file.buffer, mimeType);
+      res.json({ imageUrl, _local: true });
+    } catch (localError) {
+      req.log.error({ err: localError }, 'Local public upload also failed');
+      res.status(500).json({ error: 'Failed to upload file' });
+    }
+  },
+);
+
+/**
+ * POST /storage/uploads/public-payment-logo
+ *
+ * Staff upload (payments permission) of a PUBLIC payment-method logo. Stored
+ * under the public object search path so the mobile app and web can render it
+ * without authentication. Returns { imageUrl } servable via
+ * GET /storage/public-objects/*.
+ */
+router.post(
+  '/storage/uploads/public-payment-logo',
+  requireAuth,
+  requirePermission('payments'),
+  upload.single('file'),
+  async (req: Request, res: Response) => {
+    const file = req.file;
+    if (!file) {
+      res.status(400).json({ error: 'No file provided' });
+      return;
+    }
+    const mimeType = (file.mimetype || '').toLowerCase();
+    if (!/^image\/(jpeg|jpg|png|webp|gif|svg\+xml)$/.test(mimeType)) {
+      res.status(400).json({ error: 'Only JPG, PNG, WEBP, GIF or SVG images are allowed' });
+      return;
+    }
+
+    const objectId = randomUUID();
+    const publicPath = `payment-methods/${objectId}`;
+    const imageUrl = `/api/storage/public-objects/${publicPath}`;
+
+    // --- Try GCS first ---
+    try {
+      const searchPaths = objectStorageService.getPublicObjectSearchPaths();
+      const fullPath = `${searchPaths[0]}/${publicPath}`;
+      const { bucketName, objectName } = parseObjectPath(fullPath);
+      const gcsFile = objectStorageClient.bucket(bucketName).file(objectName);
+      await gcsFile.save(file.buffer, { contentType: mimeType, resumable: false });
+      res.json({ imageUrl });
+      return;
+    } catch (gcsError) {
+      if (IS_PRODUCTION) {
+        req.log.error({ err: gcsError }, 'GCS payment logo upload failed in production');
+        res.status(500).json({ error: 'Failed to upload file to object storage' });
+        return;
+      }
+      req.log.warn({ err: gcsError }, 'GCS payment logo upload failed — falling back to local filesystem (dev only)');
+    }
+
+    // --- Local filesystem fallback (development only) ---
+    try {
+      await saveLocally(`public-${objectId}`, file.buffer, mimeType);
+      res.json({ imageUrl, _local: true });
+    } catch (localError) {
+      req.log.error({ err: localError }, 'Local payment logo upload also failed');
       res.status(500).json({ error: 'Failed to upload file' });
     }
   },
@@ -251,6 +460,28 @@ router.get(
       const filePath = Array.isArray(raw) ? raw.join('/') : raw;
       const file = await objectStorageService.searchPublicObject(filePath);
       if (!file) {
+        // Dev-only local fallback for public uploads (notification images,
+        // payment-method logos, and app catalog images uploaded while GCS is
+        // unavailable). Never used in production. Local keys mirror the upload
+        // routes: notifications/payment-methods are saved as `public-<id>`,
+        // app images as `app-img-<id>`.
+        if (!IS_PRODUCTION) {
+          let localId: string | null = null;
+          if (filePath.startsWith('notifications/') || filePath.startsWith('payment-methods/')) {
+            localId = `public-${filePath.split('/').pop()}`;
+          } else if (filePath.startsWith('app-images/')) {
+            localId = `app-img-${filePath.split('/').pop()}`;
+          }
+          if (localId) {
+            const local = await readLocally(localId);
+            if (local) {
+              res.set('Content-Type', local.mimeType);
+              res.set('Cache-Control', 'public, max-age=3600');
+              res.send(local.buffer);
+              return;
+            }
+          }
+        }
         res.status(404).json({ error: 'File not found' });
         return;
       }

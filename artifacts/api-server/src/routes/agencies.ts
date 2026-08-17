@@ -73,6 +73,13 @@ const createAgencySchema = z.object({
   address: z.string().optional(),
   notes: z.string().optional(),
   status: z.enum(["active", "suspended", "pending"]).optional(),
+  // Optional primary portal login, created atomically with the agency.
+  agentAccount: z.object({
+    email: z.string().email(),
+    password: z.string().min(8),
+    firstName: z.string().min(1).optional(),
+    lastName: z.string().optional(),
+  }).optional(),
 });
 
 const updateAgencySchema = z.object({
@@ -128,23 +135,53 @@ router.get("/agencies/:id", requireAuth, requirePermission("employees"), async (
   res.json(agencyToResponse(row));
 });
 
-// POST /api/agencies — create agency
+// POST /api/agencies — create agency (optionally with its primary portal login,
+// atomically: if the account can't be created the agency isn't either).
 router.post("/agencies", requireAuth, requirePermission("employees"), async (req, res) => {
   try {
     const body = createAgencySchema.parse(req.body);
-    const [row] = await db.insert(agenciesTable).values({
-      name: body.name,
-      contactEmail: body.contactEmail,
-      contactPhone: body.contactPhone,
-      address: body.address,
-      notes: body.notes,
-      status: (body.status ?? "pending") as any,
-    } as any).returning();
-    logAudit(req, "agency.created", { entityType: "agency", entityId: String(row.id), newValue: { name: row.name, status: row.status } });
+
+    // Pre-check duplicate email OUTSIDE the transaction for a clean 409 (the
+    // unique index inside the tx is the authoritative backstop).
+    if (body.agentAccount) {
+      const [dupe] = await db.select({ id: usersTable.id }).from(usersTable)
+        .where(and(eq(usersTable.email, body.agentAccount.email), isNull(usersTable.deletedAt)));
+      if (dupe) return res.status(409).json({ error: "Email already registered" });
+    }
+    const passwordHash = body.agentAccount ? await bcrypt.hash(body.agentAccount.password, 12) : null;
+
+    const row = await db.transaction(async (tx) => {
+      const [agency] = await tx.insert(agenciesTable).values({
+        name: body.name,
+        contactEmail: body.contactEmail,
+        contactPhone: body.contactPhone,
+        address: body.address,
+        notes: body.notes,
+        status: (body.status ?? "pending") as any,
+      } as any).returning();
+
+      if (body.agentAccount && passwordHash) {
+        await tx.insert(usersTable).values({
+          email: body.agentAccount.email,
+          passwordHash,
+          firstName: body.agentAccount.firstName ?? body.name,
+          lastName: body.agentAccount.lastName,
+          role: "agent" as any,
+          agencyId: agency.id,
+          // Portal accounts hold NO admin permissions.
+          permissions: [],
+        } as any);
+      }
+      return agency;
+    });
+
+    logAudit(req, "agency.created", { entityType: "agency", entityId: String(row.id), newValue: { name: row.name, status: row.status, withAccount: !!body.agentAccount } });
     res.status(201).json(agencyToResponse(row));
-  } catch (e) {
+  } catch (e: any) {
     req.log.error(e);
     if (e instanceof z.ZodError) return res.status(400).json({ error: "Invalid input", details: e.issues });
+    // Unique-violation race on the email → 409 rather than generic 400.
+    if (e?.code === "23505") return res.status(409).json({ error: "Email already registered" });
     res.status(400).json({ error: "Invalid input" });
   }
 });

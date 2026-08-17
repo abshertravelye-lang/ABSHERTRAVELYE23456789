@@ -13,13 +13,16 @@ import { Search, Eye, CheckCircle, X, Clock, FileText, Send, Award, Stamp, Alert
 import { Button } from "@/components/ui/button";
 
 // ── Storage upload helper (matches visas-admin conventions) ────────────────
+// IMPORTANT: API routes (/api/...) must NEVER be prefixed with BASE_URL.
+// BASE_URL is the artifact base path (/absher-admin/) and prepending it would
+// route requests to the admin SPA instead of the API server. Use root-absolute
+// paths (/api/...) — the shared proxy handles routing at the root level.
 async function uploadFile(file: File): Promise<string | null> {
-  const base = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
   const fd = new FormData();
   fd.append("file", file);
   try {
     const token = localStorage.getItem(ADMIN_ACCESS_TOKEN_KEY);
-    const res = await fetch(`${base}/api/storage/uploads`, {
+    const res = await fetch(`/api/storage/uploads`, {
       method: "POST",
       body: fd,
       headers: token ? { Authorization: `Bearer ${token}` } : undefined,
@@ -36,19 +39,24 @@ async function uploadFile(file: File): Promise<string | null> {
  * Open a private storage object in a new tab. Objects require auth, so we
  * first exchange the path for a short-lived signed URL (an <a href> cannot
  * carry the Authorization header).
+ *
+ * Uses root-absolute paths (/api/...) — NOT prefixed with BASE_URL.
  */
 async function openObjectInNewTab(path: string): Promise<void> {
-  const base = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
   if (/^https?:\/\//.test(path)) { window.open(path, "_blank", "noopener"); return; }
-  if (!path.startsWith("/objects/")) { window.open(`${base}${path.startsWith("/") ? "" : "/"}${path}`, "_blank", "noopener"); return; }
+  if (!path.startsWith("/objects/")) {
+    window.open(path.startsWith("/") ? path : `/${path}`, "_blank", "noopener");
+    return;
+  }
   try {
     const token = localStorage.getItem(ADMIN_ACCESS_TOKEN_KEY);
-    const res = await fetch(`${base}/api/storage/sign?path=${encodeURIComponent(path)}`, {
+    const res = await fetch(`/api/storage/sign?path=${encodeURIComponent(path)}`, {
       headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     });
     if (!res.ok) throw new Error(String(res.status));
     const { url } = await res.json();
-    window.open(`${base}${url}`, "_blank", "noopener");
+    // url is root-absolute (/api/storage/objects/...?exp=&sig=); open directly.
+    window.open(url, "_blank", "noopener");
   } catch {
     toast.error("تعذر فتح الملف");
   }
@@ -141,7 +149,7 @@ async function downloadObject(objectPath: string, ar: boolean): Promise<void> {
   }
 }
 
-interface ViewerTarget { path: string; label: string; }
+export interface ViewerTarget { path: string; label: string; }
 
 /** A profile-document entry read directly off the application row. */
 interface LegacyDoc { key: string; labelAr: string; labelEn: string; path: string; }
@@ -182,7 +190,7 @@ function collectLegacyDocuments(app: Record<string, unknown> | null | undefined)
 }
 
 /** Full-screen image viewer with zoom + rotate; PDFs render via a signed-URL iframe. */
-function DocumentViewer({ path, label, ar, onClose }: { path: string; label: string; ar: boolean; onClose: () => void }) {
+export function DocumentViewer({ path, label, ar, onClose }: { path: string; label: string; ar: boolean; onClose: () => void }) {
   const [scale, setScale] = useState(1);
   const [rotate, setRotate] = useState(0);
   const [src, setSrc] = useState<string | null>(null);
@@ -559,7 +567,7 @@ function LegacyDocumentCard({ doc, ar, onView }: { doc: LegacyDoc; ar: boolean; 
 }
 
 /** The Documents section inside the application detail modal. */
-function ApplicationDocumentsSection({ app, appId, ar, canRequest, canReview, onView }: {
+export function ApplicationDocumentsSection({ app, appId, ar, canRequest, canReview, onView }: {
   app: Record<string, unknown> | null | undefined; appId: number; ar: boolean; canRequest: boolean; canReview: boolean;
   onView: (t: ViewerTarget) => void;
 }) {
@@ -657,6 +665,27 @@ function DetailModal({ app, onClose, onUpdate, updating, ar, canViewDocs, canReq
         </div>
 
         <div className="p-6 space-y-6 max-h-[65vh] overflow-y-auto">
+           {/* Visa selection — keep the requested visa visible before the documents. */}
+           <div className="rounded-2xl border border-[#d4af37]/50 bg-[#fffaf0] p-5">
+             <div className="flex items-start gap-3">
+               <div className="mt-0.5 rounded-xl bg-[#d4af37]/20 p-2 text-[#8a6d14]">
+                 <Stamp className="h-5 w-5" />
+               </div>
+               <div className="min-w-0 flex-1">
+                 <h3 className="text-sm font-semibold text-[#6f5710]">
+                   {ar ? "بيانات التأشيرة المطلوبة" : "Requested visa"}
+                 </h3>
+                 <p className="mt-1 text-lg font-bold text-[#0d2351] break-words">
+                   {String(app.visaType || (ar ? "نوع التأشيرة غير محدد" : "Visa type not specified"))}
+                 </p>
+                 <p className="mt-1 text-sm text-slate-600">
+                   {ar ? "الدولة" : "Destination"}:{" "}
+                   {String(app[ar ? "countryAr" : "countryEn"] || app.countryAr || app.countryEn || "-")}
+                 </p>
+               </div>
+             </div>
+           </div>
+
           {/* Personal Info */}
           <div>
             <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">{ar ? "البيانات الشخصية" : "Personal Information"}</h3>

@@ -200,7 +200,7 @@ const s = StyleSheet.create({
   modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingBottom: 16, paddingHorizontal: 16 },
   modalTitle: { color: '#FFFFFF', fontSize: 18, flex: 1, textAlign: 'center' },
   closeBtn: { position: 'absolute', right: 16, bottom: 16 },
-  searchBar: { flexDirection: 'row', alignItems: 'center', margin: 12, borderRadius: 12, borderWidth: 1, paddingHorizontal: 14, paddingVertical: 12, gap: 10 },
+  searchBar: { flexDirection: 'row', alignItems: 'center', margin: 12, borderRadius: 12, borderWidth: 1, paddingHorizontal: 14, paddingVertical: 12, gap: 10, minHeight: 48 },
   searchInput: { flex: 1, fontSize: 15, textAlign: 'right' },
   list: { paddingBottom: 40 },
   result: { flexDirection: 'row', padding: 16, gap: 12, alignItems: 'center' },

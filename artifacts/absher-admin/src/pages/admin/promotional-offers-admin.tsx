@@ -9,26 +9,15 @@ import {
   type Offer,
 } from "@workspace/api-client-react";
 import { useTranslation } from "@/hooks/use-translation";
-import { ADMIN_ACCESS_TOKEN_KEY } from "@/hooks/use-admin-auth";
 import { Plus, Edit2, Trash2, X, AlertCircle, Megaphone, UploadCloud, ImageOff, Link2, Calendar, ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { uploadImageFile, resolveImageSrc } from "@/components/image-upload";
 
-// ── Storage upload helper (matches other admin pages) ───────────────────────
+// ── Storage upload helper — unified compressed-image endpoint ────────────────
 async function uploadFile(file: File): Promise<string | null> {
-  const base = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
-  const fd = new FormData();
-  fd.append("file", file);
   try {
-    const token = localStorage.getItem(ADMIN_ACCESS_TOKEN_KEY);
-    const res = await fetch(`${base}/api/storage/uploads`, {
-      method: "POST",
-      body: fd,
-      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-    });
-    if (!res.ok) return null;
-    const json = await res.json();
-    return json.objectPath ?? json.url ?? null;
+    return await uploadImageFile(file);
   } catch {
     return null;
   }
@@ -80,7 +69,7 @@ function ImageUpload({ value, onChange, ar }: { value: string; onChange: (v: str
   if (value) {
     return (
       <div className="border-2 border-slate-200 rounded-xl overflow-hidden">
-        <img src={value} alt="" className="w-full h-40 object-cover" onError={e => (e.currentTarget.style.display = "none")} />
+        <img src={resolveImageSrc(value)} alt="" className="w-full h-40 object-cover" onError={e => (e.currentTarget.style.display = "none")} />
         <div className="flex gap-2 p-2 bg-slate-50">
           <button type="button" onClick={() => inputRef.current?.click()} className="flex-1 text-xs text-[#0d2351] hover:underline font-medium">
             {ar ? "استبدال الصورة" : "Replace image"}
@@ -308,7 +297,7 @@ export default function PromotionalOffersAdmin() {
             <div key={o.id} className="bg-card rounded-3xl border border-card-border shadow-sm overflow-hidden flex flex-col">
               <div className="relative h-40 bg-slate-100">
                 {o.imageUrl ? (
-                  <img src={o.imageUrl} alt="" className="w-full h-full object-cover" onError={e => (e.currentTarget.style.display = "none")} />
+                  <img src={resolveImageSrc(o.imageUrl)} alt="" className="w-full h-full object-cover" loading="lazy" onError={e => (e.currentTarget.style.display = "none")} />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-slate-300"><ImageOff className="w-8 h-8" /></div>
                 )}

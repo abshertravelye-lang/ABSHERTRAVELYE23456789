@@ -16,11 +16,15 @@
       "distribution": "internal",
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_DOMAIN": "abshertravel.com",
+        "EAS_PROJECT_ID": "70de7b6b-af73-4294-9201-cb384fa08caf"
       }
     },
     "production": {
       "android": {
-        "buildType": "aab"
+        "buildType": "app-bundle"
       }
     }
   },

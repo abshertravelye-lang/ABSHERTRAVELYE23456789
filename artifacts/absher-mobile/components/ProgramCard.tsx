@@ -1,82 +1,169 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from 'react-native-reanimated';
+import * as Haptics from 'expo-haptics';
 import { useColors } from '@/hooks/useColors';
+import { useLanguage } from '@/context/LanguageContext';
 import { getImageUrl } from '@/hooks/useImageUrl';
+import colors from '@/constants/colors';
 import type { Program } from '@workspace/api-client-react';
 
 type Props = { program: Program; onPress?: () => void; wide?: boolean };
 
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
 export function ProgramCard({ program, onPress, wide }: Props) {
-  const colors = useColors();
+  const c = useColors();
+  const { lang } = useLanguage();
   const imageUri = getImageUrl(program.imageUrl);
   const cardWidth = wide ? '100%' : 220;
 
+  const scale = useSharedValue(1);
+  const lastPress = useRef(0);
+
+  const animStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const handlePress = () => {
+    const now = Date.now();
+    if (now - lastPress.current < 500) return;
+    lastPress.current = now;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onPress?.();
+  };
+
+  const formattedPrice = program.price.toLocaleString(lang === 'ar' ? 'ar-SA' : 'en-US');
+
   return (
-    <Pressable
-      style={({ pressed }) => [
+    <AnimatedPressable
+      style={[
         styles.card,
-        { backgroundColor: colors.card, shadowColor: colors.primary, width: cardWidth, opacity: pressed ? 0.92 : 1 },
+        { backgroundColor: c.card, shadowColor: c.primary, width: cardWidth as any },
+        animStyle,
       ]}
-      onPress={onPress}
+      onPress={handlePress}
+      onPressIn={() => {
+        scale.value = withSpring(0.97, { damping: 20, stiffness: 300 });
+      }}
+      onPressOut={() => {
+        scale.value = withSpring(1, { damping: 18, stiffness: 260 });
+      }}
     >
-      <Image
-        source={imageUri ? { uri: imageUri } : require('@/assets/images/hero.jpg')}
-        style={[styles.image, wide && { height: 180 }]}
-        contentFit="cover"
-      />
+      {/* Image */}
+      <View style={styles.imgWrap}>
+        <Image
+          source={imageUri ? { uri: imageUri } : require('@/assets/images/hero.jpg')}
+          style={[styles.image, wide && { height: 190 }]}
+          contentFit="cover"
+          transition={300}
+        />
+        {/* Price badge overlay */}
+        <View style={styles.priceBadge}>
+          <Text style={[styles.priceText, { fontFamily: 'Cairo_700Bold' }]}>
+            {formattedPrice} {program.currency || (lang === 'ar' ? 'ريال' : 'SAR')}
+          </Text>
+        </View>
+      </View>
+
+      {/* Body */}
       <View style={styles.body}>
-        <Text style={[styles.title, { color: colors.foreground, fontFamily: 'Cairo_700Bold' }]} numberOfLines={2}>
+        <Text
+          style={[styles.title, { color: c.foreground, fontFamily: 'Cairo_700Bold' }]}
+          numberOfLines={2}
+        >
           {program.titleAr}
         </Text>
+
+        {/* Meta */}
         <View style={styles.meta}>
-          <View style={styles.metaItem}>
-            <Ionicons name="time-outline" size={13} color={colors.mutedForeground} />
-            <Text style={[styles.metaText, { color: colors.mutedForeground, fontFamily: 'Cairo_400Regular' }]}>
-              {program.days} يوم
-            </Text>
-          </View>
-          {program.country && (
-            <View style={styles.metaItem}>
-              <Ionicons name="location-outline" size={13} color={colors.mutedForeground} />
-              <Text style={[styles.metaText, { color: colors.mutedForeground, fontFamily: 'Cairo_400Regular' }]}>
+          {program.country ? (
+            <View style={styles.metaChip}>
+              <Ionicons name="location-outline" size={12} color={c.textSecondary} />
+              <Text style={[styles.metaText, { color: c.textSecondary, fontFamily: 'Cairo_400Regular' }]}>
                 {program.country}
               </Text>
             </View>
-          )}
+          ) : null}
+          <View style={styles.metaChip}>
+            <Ionicons name="time-outline" size={12} color={c.textSecondary} />
+            <Text style={[styles.metaText, { color: c.textSecondary, fontFamily: 'Cairo_400Regular' }]}>
+              {program.days} {lang === 'ar' ? 'يوم' : 'days'}
+            </Text>
+          </View>
         </View>
-        <View style={[styles.footer, { borderTopColor: colors.border }]}>
-          <Text style={[styles.price, { color: '#052B5B', fontFamily: 'Cairo_700Bold' }]}>
-            {program.price.toLocaleString('ar-SA')} {program.currency || 'ريال'}
-          </Text>
-          <View style={[styles.bookBtn, { backgroundColor: '#052B5B' }]}>
-            <Text style={[styles.bookBtnText, { fontFamily: 'Cairo_600SemiBold' }]}>احجز</Text>
+
+        {/* Footer */}
+        <View style={[styles.footer, { borderTopColor: c.border }]}>
+          <View style={[styles.bookBtn, { backgroundColor: c.primary }]}>
+            <Ionicons name="arrow-back" size={14} color={colors.static.premiumGold} />
+            <Text style={[styles.bookBtnText, { fontFamily: 'Cairo_700Bold' }]}>
+              {lang === 'ar' ? 'التفاصيل' : 'Details'}
+            </Text>
           </View>
         </View>
       </View>
-    </Pressable>
+    </AnimatedPressable>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 16,
+    borderRadius: 18,
     overflow: 'hidden',
     marginLeft: 12,
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowRadius: 12,
+    elevation: 4,
   },
-  image: { width: '100%', height: 140 },
-  body: { padding: 12 },
-  title: { fontSize: 14, marginBottom: 8, textAlign: 'right' },
-  meta: { flexDirection: 'row', justifyContent: 'flex-end', gap: 10, marginBottom: 10 },
-  metaItem: { flexDirection: 'row', alignItems: 'center', gap: 3 },
-  metaText: { fontSize: 12 },
-  footer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, paddingTop: 10 },
-  price: { fontSize: 15 },
-  bookBtn: { borderRadius: 8, paddingHorizontal: 12, paddingVertical: 5 },
-  bookBtnText: { color: '#FFFFFF', fontSize: 12 },
+  imgWrap: { position: 'relative' },
+  image: { width: '100%', height: 148 },
+  priceBadge: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    backgroundColor: colors.static.premiumGold,
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  priceText: {
+    color: colors.static.primaryNavy,
+    fontSize: 12,
+  },
+  body: { padding: 14 },
+  title: { fontSize: 14, marginBottom: 10, textAlign: 'right', lineHeight: 22 },
+  meta: {
+    flexDirection: 'row-reverse',
+    gap: 8,
+    marginBottom: 12,
+    flexWrap: 'wrap',
+  },
+  metaChip: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    gap: 3,
+  },
+  metaText: { fontSize: 11 },
+  footer: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingTop: 10,
+    alignItems: 'flex-end',
+  },
+  bookBtn: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    gap: 6,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  bookBtnText: { color: colors.static.premiumGold, fontSize: 13 },
 });

@@ -11,6 +11,7 @@ import {
 import { and, asc, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 import { requireAuth, requirePermission, requireSuperAdmin, hasStaffPermission } from "../middleware/auth";
 import { logAudit } from "../lib/audit";
+import { sniffStoredObjectMime } from "../lib/fileSignature";
 import { notifyUser, notifyManyUsers } from "../lib/notify";
 import {
   RequestApplicationDocumentBody,
@@ -201,6 +202,68 @@ async function loadApplication(id: number) {
   return row ?? null;
 }
 
+/**
+ * B2B agent access check: TRUE iff the caller is an active travel-portal agent
+ * (role "agent" with a non-null agency_id) AND the application belongs to the
+ * caller's own agency. Used to extend the customer-only document routes to
+ * agency applications (which have userId = null, agencyId set) with strict
+ * per-agency isolation.
+ */
+async function agentOwnsApplication(
+  callerId: string,
+  application: { agencyId: number | null },
+): Promise<boolean> {
+  if (application.agencyId == null) return false;
+  const [user] = await db
+    .select({ role: usersTable.role, isActive: usersTable.isActive, agencyId: usersTable.agencyId })
+    .from(usersTable)
+    .where(and(eq(usersTable.id, callerId), isNull(usersTable.deletedAt)));
+  return !!user && user.isActive && user.role === "agent" && user.agencyId === application.agencyId;
+}
+
+/** Notify every active agent of an agency (used for agency-owned applications). */
+async function notifyAgencyAgents(
+  agencyId: number,
+  copy: { titleAr: string; titleEn: string; messageAr: string; messageEn: string },
+  applicationId: number,
+  extraMessage?: string,
+) {
+  const agents = await db
+    .select({ id: usersTable.id })
+    .from(usersTable)
+    .where(and(
+      eq(usersTable.agencyId, agencyId),
+      eq(usersTable.role, "agent" as any),
+      eq(usersTable.isActive, true),
+      isNull(usersTable.deletedAt),
+    ));
+  if (agents.length === 0) return;
+  await notifyManyUsers(agents.map((a) => a.id), {
+    titleAr: copy.titleAr,
+    titleEn: copy.titleEn,
+    messageAr: extraMessage ? `${copy.messageAr}\n${extraMessage}` : copy.messageAr,
+    messageEn: extraMessage ? `${copy.messageEn}\n${extraMessage}` : copy.messageEn,
+    relatedEntityType: "agent_application",
+    relatedEntityId: String(applicationId),
+  });
+}
+
+/**
+ * Route the "document event" notification to the right party:
+ * customer-owned applications → the customer; agency-owned → the agency agents.
+ */
+async function notifyApplicant(
+  application: { userId: string | null; agencyId: number | null; id: number },
+  copy: { titleAr: string; titleEn: string; messageAr: string; messageEn: string },
+  extraMessage?: string,
+) {
+  if (application.userId) {
+    await notifyCustomer(application.userId, copy, application.id, extraMessage);
+  } else if (application.agencyId != null) {
+    await notifyAgencyAgents(application.agencyId, copy, application.id, extraMessage);
+  }
+}
+
 /** Load documents + versions for an application. */
 async function loadDocsWithVersions(applicationId: number) {
   const docs = await db
@@ -279,8 +342,14 @@ router.get("/visa-applications/:id/documents", requireAuth, async (req, res) => 
     const application = await loadApplication(id);
     if (!application) return res.status(404).json({ error: "Application not found" });
 
-    // Owner, or staff with the visa_applications permission (DB-checked).
-    if (application.userId !== req.user!.sub && !(await hasStaffPermission(req.user!.sub, "visa_applications"))) {
+    // Owner customer, owning-agency agent, or staff with the visa_applications
+    // permission (DB-checked).
+    const isOwnerCustomer = application.userId != null && application.userId === req.user!.sub;
+    if (
+      !isOwnerCustomer &&
+      !(await agentOwnsApplication(req.user!.sub, application)) &&
+      !(await hasStaffPermission(req.user!.sub, "visa_applications"))
+    ) {
       return res.status(403).json({ error: "Forbidden" });
     }
 
@@ -365,9 +434,10 @@ router.post(
         .from(applicationDocumentsTable)
         .where(eq(applicationDocumentsTable.id, docRowId!));
 
-      // Notify the customer only when a fresh request is raised.
+      // Notify the applicant party (customer or agency agents) only when a
+      // fresh request is raised.
       if (created) {
-        await notifyCustomer(application.userId, DOC_NOTIFICATIONS.requested, id);
+        await notifyApplicant(application, DOC_NOTIFICATIONS.requested, req.body?.description ?? undefined);
       }
 
       logAudit(req, "application_document.requested", {
@@ -405,8 +475,9 @@ router.post(
 
       const application = await loadApplication(id);
       if (!application) return res.status(404).json({ error: "Application not found" });
-      // Only the owning customer may upload.
-      if (application.userId !== req.user!.sub) {
+      // Owning customer, or (for agency applications) an agent of the owning agency.
+      const isOwnerCustomer = application.userId != null && application.userId === req.user!.sub;
+      if (!isOwnerCustomer && !(await agentOwnsApplication(req.user!.sub, application))) {
         return res.status(403).json({ error: "Forbidden" });
       }
 
@@ -426,8 +497,11 @@ router.post(
         return res.status(403).json({ error: "You do not own the referenced document" });
       }
 
-      // Validate mime type vs allowedFileType.
-      const mime = (upload.mimeType ?? "").toLowerCase();
+      // Validate the CONTENT-verified mime type vs allowedFileType. The
+      // recorded upload.mimeType can be client-declared (presigned-URL path),
+      // so the actual stored bytes are sniffed — fail closed on unreadable or
+      // unrecognized content.
+      const mime = (await sniffStoredObjectMime(body.storagePath)) ?? "";
       const isImage = mime.startsWith("image/");
       const isPdf = mime === "application/pdf";
       const allowed = doc.allowedFileType;
@@ -437,7 +511,7 @@ router.post(
         (allowed === "image_pdf" && (isImage || isPdf));
       if (!typeOk) {
         return res.status(400).json({
-          error: `File type not allowed. Expected ${allowed}, got ${mime || "unknown"}.`,
+          error: `File type not allowed. Expected ${allowed}, got ${mime || "unrecognized content"}.`,
         });
       }
 
@@ -586,7 +660,7 @@ router.post(
         .set({ status: "approved", rejectionReason: null })
         .where(eq(applicationDocumentVersionsTable.id, doc.currentVersionId));
 
-      await notifyCustomer(application.userId, DOC_NOTIFICATIONS.approved, id);
+      await notifyApplicant(application, DOC_NOTIFICATIONS.approved);
 
       logAudit(req, "application_document.approved", {
         entityType: "application_document",
@@ -651,7 +725,7 @@ router.post(
         .set({ status: "rejected", rejectionReason: reason })
         .where(eq(applicationDocumentVersionsTable.id, doc.currentVersionId));
 
-      await notifyCustomer(application.userId, DOC_NOTIFICATIONS.rejected, id, reason);
+      await notifyApplicant(application, DOC_NOTIFICATIONS.rejected, reason);
 
       logAudit(req, "application_document.rejected", {
         entityType: "application_document",

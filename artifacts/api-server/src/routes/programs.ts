@@ -27,6 +27,8 @@ const toResponse = (r: typeof programsTable.$inferSelect) => ({
   excludedServices: r.excludedServices ?? [],
   dailyItinerary: r.dailyItinerary ?? [],
   hotels: r.hotels ?? [],
+  roomTypes: r.roomTypes ?? [],
+  tours: r.tours ?? [],
 });
 
 router.get("/programs", async (req, res) => {

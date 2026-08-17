@@ -1,11 +1,11 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { notificationsTable } from "@workspace/db";
-import { and, desc, eq, isNotNull } from "drizzle-orm";
+import { and, count, desc, eq, isNotNull } from "drizzle-orm";
 import { z } from "zod";
 import { requireAuth, requirePermission } from "../middleware/auth";
 import { ListNotificationsQueryParams, MarkNotificationReadParams } from "@workspace/api-zod";
-import { notifyManyUsers, notifyAllActiveUsers } from "../lib/notify";
+import { notifyManyUsers, notifyAllActiveUsers, notifyUsersByRole } from "../lib/notify";
 
 const router = Router();
 
@@ -14,9 +14,13 @@ const sendNotificationSchema = z.object({
   titleEn: z.string().min(1),
   messageAr: z.string().min(1),
   messageEn: z.string().min(1),
-  audience: z.enum(["all", "users"]),
+  audience: z.enum(["all", "users", "group"]),
   userIds: z.array(z.string()).optional(),
+  /** Role groups for audience="group" (e.g. all customers, all agents). */
+  roles: z.array(z.enum(["customer", "agent", "admin", "super_admin"])).optional(),
   url: z.string().optional(),
+  /** Public image path uploaded via /storage/uploads/public (or absolute URL). */
+  imageUrl: z.string().optional(),
 });
 
 const toResponse = (r: typeof notificationsTable.$inferSelect) => ({
@@ -71,6 +75,36 @@ router.post("/notifications/read-all", requireAuth, async (req, res) => {
   }
 });
 
+// ── Unread count (for the app-icon badge and tab badge) ─────────────────────
+router.get("/notifications/unread-count", requireAuth, async (req, res) => {
+  try {
+    const [row] = await db
+      .select({ unread: count() })
+      .from(notificationsTable)
+      .where(and(eq(notificationsTable.userId, req.user!.sub), eq(notificationsTable.isRead, false)));
+    res.json({ unread: Number(row?.unread ?? 0) });
+  } catch (e) {
+    req.log.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// ── Delete one of the caller's own notifications ────────────────────────────
+router.delete("/notifications/:id", requireAuth, async (req, res) => {
+  try {
+    const { id } = MarkNotificationReadParams.parse({ id: req.params.id });
+    const rows = await db
+      .delete(notificationsTable)
+      .where(and(eq(notificationsTable.id, id), eq(notificationsTable.userId, req.user!.sub)))
+      .returning();
+    if (rows.length === 0) return res.status(404).json({ error: "Not found" });
+    res.json({ deleted: rows.length });
+  } catch (e) {
+    req.log.error(e);
+    res.status(400).json({ error: "Invalid input" });
+  }
+});
+
 // ── Admin: send a broadcast/targeted notification ──────────────────────────
 router.post(
   "/notifications/send",
@@ -83,6 +117,9 @@ router.post(
       if (body.audience === "users" && (!body.userIds || body.userIds.length === 0)) {
         return res.status(400).json({ error: "userIds is required when audience is 'users'" });
       }
+      if (body.audience === "group" && (!body.roles || body.roles.length === 0)) {
+        return res.status(400).json({ error: "roles is required when audience is 'group'" });
+      }
 
       const payload = {
         titleAr: body.titleAr,
@@ -90,13 +127,16 @@ router.post(
         messageAr: body.messageAr,
         messageEn: body.messageEn,
         url: body.url ?? null,
+        imageUrl: body.imageUrl ?? null,
         sentBy: req.user!.sub,
       };
 
       const sentCount =
         body.audience === "all"
           ? await notifyAllActiveUsers(payload)
-          : await notifyManyUsers(body.userIds!, payload);
+          : body.audience === "group"
+            ? await notifyUsersByRole(body.roles!, payload)
+            : await notifyManyUsers(body.userIds!, payload);
 
       res.json({ sentCount });
     } catch (e) {

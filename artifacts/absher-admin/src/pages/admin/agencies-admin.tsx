@@ -9,13 +9,14 @@ import {
   useListAgencies, useCreateAgency, useUpdateAgency, getListAgenciesQueryKey,
   useListAgencyAgents, useCreateAgencyAgent, useResetAgentPassword, useUpdateAgentAccount, getListAgencyAgentsQueryKey,
   useListAgencyVisaServices, usePutAgencyVisaServices, getListAgencyVisaServicesQueryKey,
-  useListVisas,
-  type Agency, type AgentAccount,
+  useListVisas, useListAgentApplications, getListAgentApplicationsQueryKey,
+  type Agency, type AgentAccount, type AgentApplication, type ListAgentApplicationsParams,
 } from "@workspace/api-client-react";
 import { useTranslation } from "@/hooks/use-translation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Building2, Plus, KeyRound, Loader2, UserPlus, BadgeCheck, PauseCircle, Clock } from "lucide-react";
+import { Building2, Plus, KeyRound, Loader2, UserPlus, BadgeCheck, PauseCircle, Clock, Search, Users, Briefcase, Eye, EyeOff, RefreshCw } from "lucide-react";
+import { Pill, DetailPanel, STATUSES, STATUS_META as APP_STATUS_META } from "./agent-applications-admin";
 
 const STATUS_META: Record<string, { ar: string; en: string; cls: string; icon: React.ReactNode }> = {
   active:    { ar: "نشطة", en: "Active", cls: "bg-emerald-100 text-emerald-800", icon: <BadgeCheck className="w-3.5 h-3.5" /> },
@@ -47,13 +48,55 @@ function AgencyForm({ agency, onClose }: { agency: Agency | null; onClose: () =>
     notes: agency?.notes ?? "",
     status: agency?.status ?? "pending",
   });
+  // Primary portal login (create-mode only).
+  const [withAccount, setWithAccount] = useState(false);
+  const [acc, setAcc] = useState({ email: "", password: "" });
+  const [showPw, setShowPw] = useState(false);
+  const pwStrength = useMemo(() => {
+    const p = acc.password;
+    if (!p) return 0;
+    let s = 0;
+    if (p.length >= 8) s++;
+    if (p.length >= 12) s++;
+    if (/[A-Z]/.test(p) && /[a-z]/.test(p)) s++;
+    if (/\d/.test(p)) s++;
+    if (/[^A-Za-z0-9]/.test(p)) s++;
+    return Math.min(s, 4);
+  }, [acc.password]);
+  const genPassword = () => {
+    const upper = "ABCDEFGHJKLMNPQRSTUVWXYZ", lower = "abcdefghijkmnopqrstuvwxyz", digits = "23456789", special = "!@#$%&*";
+    const all = upper + lower + digits + special;
+    const pick = (set: string) => set[Math.floor(Math.random() * set.length)];
+    let pw = pick(upper) + pick(lower) + pick(digits) + pick(special);
+    for (let i = 0; i < 10; i++) pw += pick(all);
+    pw = pw.split("").sort(() => Math.random() - 0.5).join("");
+    setAcc((a) => ({ ...a, password: pw }));
+    setShowPw(true);
+  };
   const busy = create.isPending || update.isPending;
   const save = () => {
     if (!f.name.trim()) { toast.error(ar ? "اسم الوكالة مطلوب" : "Agency name is required"); return; }
+    if (!agency && withAccount) {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(acc.email.trim())) {
+        toast.error(ar ? "بريد الدخول غير صالح" : "Login email is invalid"); return;
+      }
+      if (acc.password.length < 8) {
+        toast.error(ar ? "كلمة المرور يجب أن تكون 8 أحرف على الأقل" : "Password must be at least 8 characters"); return;
+      }
+    }
     const done = () => { qc.invalidateQueries({ queryKey: getListAgenciesQueryKey() }); onClose(); toast.success(ar ? "تم الحفظ" : "Saved"); };
-    const fail = () => toast.error(ar ? "تعذر الحفظ" : "Save failed");
+    const fail = (e: unknown) => {
+      const msg = (e as { data?: { error?: string } })?.data?.error;
+      if (msg === "Email already registered") toast.error(ar ? "البريد الإلكتروني مسجل مسبقاً" : "Email already registered");
+      else toast.error(ar ? "تعذر الحفظ" : "Save failed");
+    };
     if (agency) update.mutate({ id: agency.id, data: f as never }, { onSuccess: done, onError: fail });
-    else create.mutate({ data: f as never }, { onSuccess: done, onError: fail });
+    else {
+      const payload = withAccount
+        ? { ...f, agentAccount: { email: acc.email.trim(), password: acc.password, firstName: f.name.trim() } }
+        : f;
+      create.mutate({ data: payload as never }, { onSuccess: done, onError: fail });
+    }
   };
   return (
     <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={onClose}>
@@ -83,6 +126,53 @@ function AgencyForm({ agency, onClose }: { agency: Agency | null; onClose: () =>
             ))}
           </div>
         </div>
+        {!agency && (
+          <div className="border rounded-xl p-3 space-y-3 bg-slate-50">
+            <label className="flex items-center gap-2 text-sm font-medium cursor-pointer">
+              <input type="checkbox" checked={withAccount} onChange={(e) => setWithAccount(e.target.checked)} className="rounded" />
+              {ar ? "إنشاء حساب دخول لبوابة الوكالة" : "Create a portal login for this agency"}
+            </label>
+            {withAccount && (
+              <>
+                <div>
+                  <label className="text-sm text-muted-foreground">{ar ? "بريد الدخول *" : "Login email *"}</label>
+                  <input dir="ltr" type="email" autoComplete="off" className="w-full border rounded-xl px-3 py-2 text-sm mt-1"
+                    value={acc.email} onChange={(e) => setAcc({ ...acc, email: e.target.value })} />
+                </div>
+                <div>
+                  <label className="text-sm text-muted-foreground">{ar ? "كلمة المرور *" : "Password *"}</label>
+                  <div className="flex gap-2 mt-1">
+                    <div className="relative flex-1">
+                      <input dir="ltr" type={showPw ? "text" : "password"} autoComplete="new-password"
+                        className="w-full border rounded-xl px-3 py-2 text-sm pe-9"
+                        value={acc.password} onChange={(e) => setAcc({ ...acc, password: e.target.value })} />
+                      <button type="button" onClick={() => setShowPw(!showPw)}
+                        className="absolute end-2 top-1/2 -translate-y-1/2 text-muted-foreground"
+                        aria-label={showPw ? (ar ? "إخفاء" : "Hide") : (ar ? "إظهار" : "Show")}>
+                        {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                    <Button type="button" variant="outline" size="sm" className="shrink-0" onClick={genPassword}>
+                      <RefreshCw className="w-3.5 h-3.5 me-1" />{ar ? "توليد" : "Generate"}
+                    </Button>
+                  </div>
+                  {acc.password && (
+                    <div className="flex items-center gap-2 mt-2">
+                      <div className="flex-1 flex gap-1">
+                        {[0, 1, 2, 3].map((i) => (
+                          <div key={i} className={`h-1.5 flex-1 rounded-full ${i < pwStrength ? (pwStrength <= 1 ? "bg-red-400" : pwStrength === 2 ? "bg-amber-400" : "bg-emerald-500") : "bg-slate-200"}`} />
+                        ))}
+                      </div>
+                      <span className="text-xs text-muted-foreground">
+                        {pwStrength <= 1 ? (ar ? "ضعيفة" : "Weak") : pwStrength === 2 ? (ar ? "متوسطة" : "Fair") : pwStrength === 3 ? (ar ? "جيدة" : "Good") : (ar ? "قوية" : "Strong")}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        )}
         <div className="flex gap-2 justify-end pt-2">
           <Button variant="outline" onClick={onClose}>{ar ? "إلغاء" : "Cancel"}</Button>
           <Button className="bg-[#0d2351] text-white" disabled={busy} onClick={save}>
@@ -239,6 +329,106 @@ function ServicesPanel({ agency }: { agency: Agency }) {
   );
 }
 
+// ── Applications panel (per-agency) ─────────────────────────────────────────
+function ApplicationsPanel({ agency }: { agency: Agency }) {
+  const { language } = useTranslation();
+  const ar = language === "ar";
+  const [status, setStatus] = useState<string>("");
+  const params = useMemo<ListAgentApplicationsParams>(() => {
+    const p: ListAgentApplicationsParams = { agencyId: agency.id };
+    if (status) p.status = status;
+    return p;
+  }, [agency.id, status]);
+  const { data = [], isLoading } = useListAgentApplications(params, {
+    query: { queryKey: [...getListAgentApplicationsQueryKey(params)] },
+  });
+  const [openId, setOpenId] = useState<number | null>(null);
+  const rows = data as AgentApplication[];
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between gap-2">
+        <p className="font-semibold text-sm">
+          {ar ? "طلبات الوكالة" : "Agency applications"}
+          <span className="text-muted-foreground font-normal ms-2">({rows.length})</span>
+        </p>
+        <select className="border rounded-xl px-3 py-1.5 text-xs bg-white" value={status} onChange={(e) => setStatus(e.target.value)}>
+          <option value="">{ar ? "كل الحالات" : "All statuses"}</option>
+          {STATUSES.map((s) => <option key={s} value={s}>{ar ? APP_STATUS_META[s].ar : APP_STATUS_META[s].en}</option>)}
+        </select>
+      </div>
+      {isLoading ? <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" /> : rows.length === 0 ? (
+        <p className="text-sm text-muted-foreground">{ar ? "لا توجد طلبات لهذه الوكالة." : "No applications for this agency."}</p>
+      ) : (
+        <div className="rounded-xl border divide-y max-h-96 overflow-y-auto">
+          {rows.map((r) => (
+            <button key={r.id} className="w-full flex items-center justify-between gap-3 px-3 py-2.5 text-sm text-start hover:bg-slate-50"
+              onClick={() => setOpenId(r.id)}>
+              <div className="min-w-0">
+                <p className="font-mono font-medium text-[#0d2351] text-xs">{r.trackingNumber}</p>
+                <p className="font-medium truncate">{r.fullName}</p>
+                <p className="text-xs text-muted-foreground truncate">{ar ? r.countryAr : r.countryEn} · {r.visaType}</p>
+              </div>
+              <div className="flex flex-col items-end gap-1 shrink-0">
+                <Pill status={r.status} ar={ar} />
+                <span className="text-xs text-muted-foreground">{new Date(r.createdAt).toLocaleDateString(ar ? "ar-SA" : "en-GB")}</span>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+      {openId !== null && <DetailPanel id={openId} ar={ar} onClose={() => setOpenId(null)} />}
+    </div>
+  );
+}
+
+// ── Agency card (stats + expandable tabs) ────────────────────────────────────
+function AgencyCard({ a, ar, open, onToggle, onEdit }: {
+  a: Agency; ar: boolean; open: boolean; onToggle: () => void; onEdit: () => void;
+}) {
+  const [tab, setTab] = useState<"agents" | "services" | "applications">("agents");
+  const { data: agents = [] } = useListAgencyAgents(a.id);
+  const appParams = useMemo<ListAgentApplicationsParams>(() => ({ agencyId: a.id }), [a.id]);
+  const { data: apps = [] } = useListAgentApplications(appParams, {
+    query: { queryKey: [...getListAgentApplicationsQueryKey(appParams)] },
+  });
+
+  return (
+    <div className="rounded-2xl border bg-white">
+      <div role="button" tabIndex={0} className="w-full flex items-center justify-between px-4 py-3 text-start cursor-pointer"
+        onClick={onToggle} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onToggle(); } }}>
+        <div>
+          <p className="font-bold">{a.name}</p>
+          <p className="text-xs text-muted-foreground" dir="ltr">{a.contactEmail ?? ""} {a.contactPhone ? `· ${a.contactPhone}` : ""}</p>
+          <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground">
+            <span className="inline-flex items-center gap-1"><Users className="w-3.5 h-3.5" />{(agents as AgentAccount[]).length} {ar ? "وكيل" : "agents"}</span>
+            <span className="inline-flex items-center gap-1"><Briefcase className="w-3.5 h-3.5" />{(apps as AgentApplication[]).length} {ar ? "طلب" : "applications"}</span>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <StatusPill status={a.status} ar={ar} />
+          <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); onEdit(); }}>
+            {ar ? "تعديل" : "Edit"}
+          </Button>
+        </div>
+      </div>
+      {open && (
+        <div className="border-t px-4 py-4 space-y-4">
+          <div className="flex gap-2">
+            {(["agents", "services", "applications"] as const).map((t) => (
+              <button key={t} onClick={() => setTab(t)}
+                className={`rounded-full px-3 py-1.5 text-xs border ${tab === t ? "bg-[#0d2351] text-white border-[#0d2351]" : "bg-white"}`}>
+                {t === "agents" ? (ar ? "الوكلاء" : "Agents") : t === "services" ? (ar ? "الخدمات والأسعار" : "Services & pricing") : (ar ? "الطلبات" : "Applications")}
+              </button>
+            ))}
+          </div>
+          {tab === "agents" ? <AgentsPanel agency={a} /> : tab === "services" ? <ServicesPanel agency={a} /> : <ApplicationsPanel agency={a} />}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Page ─────────────────────────────────────────────────────────────────────
 export default function AgenciesAdmin() {
   const { language } = useTranslation();
@@ -247,11 +437,23 @@ export default function AgenciesAdmin() {
   const [editing, setEditing] = useState<Agency | null>(null);
   const [creating, setCreating] = useState(false);
   const [openId, setOpenId] = useState<number | null>(null);
-  const [tab, setTab] = useState<"agents" | "services">("agents");
+  const [q, setQ] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("");
+
+  const rows = useMemo(() => {
+    let list = agencies as Agency[];
+    if (statusFilter) list = list.filter((a) => a.status === statusFilter);
+    if (q.trim()) {
+      const s = q.trim().toLowerCase();
+      list = list.filter((a) =>
+        [a.name, a.contactEmail, a.contactPhone].some((v) => (v ?? "").toLowerCase().includes(s)));
+    }
+    return list;
+  }, [agencies, q, statusFilter]);
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold flex items-center gap-2"><Building2 className="w-5 h-5" />{ar ? "وكالات السفر" : "Travel Agencies"}</h1>
           <p className="text-sm text-muted-foreground">{ar ? "إدارة الوكالات، حسابات الوكلاء، الخدمات والأسعار" : "Manage agencies, agent accounts, services & pricing"}</p>
@@ -261,43 +463,43 @@ export default function AgenciesAdmin() {
         </Button>
       </div>
 
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="relative">
+          <Search className="w-4 h-4 absolute top-2.5 start-3 text-muted-foreground" />
+          <input className="border rounded-xl ps-9 pe-3 py-2 text-sm w-64" placeholder={ar ? "بحث بالاسم أو البريد أو الهاتف..." : "Search name, email, phone..."}
+            value={q} onChange={(e) => setQ(e.target.value)} />
+        </div>
+        <div className="flex gap-1.5">
+          <button onClick={() => setStatusFilter("")}
+            className={`rounded-full px-3 py-1.5 text-xs border ${statusFilter === "" ? "bg-[#0d2351] text-white border-[#0d2351]" : "bg-white"}`}>
+            {ar ? "الكل" : "All"}
+          </button>
+          {(["active", "suspended", "pending"] as const).map((s) => (
+            <button key={s} onClick={() => setStatusFilter(statusFilter === s ? "" : s)}
+              className={`rounded-full px-3 py-1.5 text-xs border ${statusFilter === s ? "bg-[#0d2351] text-white border-[#0d2351]" : "bg-white"}`}>
+              {ar ? STATUS_META[s].ar : STATUS_META[s].en}
+            </button>
+          ))}
+        </div>
+        <span className="text-sm text-muted-foreground ms-auto">
+          {ar ? `عدد الوكالات: ${rows.length}` : `Agencies: ${rows.length}`}
+        </span>
+      </div>
+
       {isLoading ? (
         <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
-      ) : (agencies as Agency[]).length === 0 ? (
+      ) : rows.length === 0 ? (
         <div className="rounded-2xl border bg-white p-10 text-center text-muted-foreground">
-          {ar ? "لا توجد وكالات بعد — أنشئ أول وكالة." : "No agencies yet — create the first one."}
+          {(agencies as Agency[]).length === 0
+            ? (ar ? "لا توجد وكالات بعد — أنشئ أول وكالة." : "No agencies yet — create the first one.")
+            : (ar ? "لا توجد نتائج مطابقة للبحث." : "No agencies match your search.")}
         </div>
       ) : (
         <div className="space-y-3">
-          {(agencies as Agency[]).map((a) => (
-            <div key={a.id} className="rounded-2xl border bg-white">
-              <button className="w-full flex items-center justify-between px-4 py-3 text-start"
-                onClick={() => setOpenId(openId === a.id ? null : a.id)}>
-                <div>
-                  <p className="font-bold">{a.name}</p>
-                  <p className="text-xs text-muted-foreground" dir="ltr">{a.contactEmail ?? ""} {a.contactPhone ? `· ${a.contactPhone}` : ""}</p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <StatusPill status={a.status} ar={ar} />
-                  <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); setEditing(a); }}>
-                    {ar ? "تعديل" : "Edit"}
-                  </Button>
-                </div>
-              </button>
-              {openId === a.id && (
-                <div className="border-t px-4 py-4 space-y-4">
-                  <div className="flex gap-2">
-                    {(["agents", "services"] as const).map((t) => (
-                      <button key={t} onClick={() => setTab(t)}
-                        className={`rounded-full px-3 py-1.5 text-xs border ${tab === t ? "bg-[#0d2351] text-white border-[#0d2351]" : "bg-white"}`}>
-                        {t === "agents" ? (ar ? "الوكلاء" : "Agents") : (ar ? "الخدمات والأسعار" : "Services & pricing")}
-                      </button>
-                    ))}
-                  </div>
-                  {tab === "agents" ? <AgentsPanel agency={a} /> : <ServicesPanel agency={a} />}
-                </div>
-              )}
-            </div>
+          {rows.map((a) => (
+            <AgencyCard key={a.id} a={a} ar={ar} open={openId === a.id}
+              onToggle={() => setOpenId(openId === a.id ? null : a.id)}
+              onEdit={() => setEditing(a)} />
           ))}
         </div>
       )}

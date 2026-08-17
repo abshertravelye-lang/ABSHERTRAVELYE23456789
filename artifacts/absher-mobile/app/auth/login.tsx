@@ -5,13 +5,11 @@
  * segmented tabs, clean fields (no labels, icon on right), social login row,
  * and a minimal footer.
  */
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   Alert,
-  KeyboardAvoidingView,
   Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -29,6 +27,7 @@ import { useLoginUser, useRegisterUser } from '@workspace/api-client-react';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { CountryDialPicker } from '@/components/CountryDialPicker';
+import { KeyboardAwareForm } from '@/components/KeyboardAwareForm';
 
 const NAVY = '#0A2342';
 const NAVY2 = '#163354';
@@ -72,9 +71,18 @@ export default function AuthScreen() {
   const [showRegPass, setShowRegPass] = useState(false);
   const set = (k: keyof typeof form, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
+  // Refs for field-chain navigation
+  const loginPasswordRef = useRef<TextInput>(null);
+  const regLastNameRef = useRef<TextInput>(null);
+  const regEmailRef = useRef<TextInput>(null);
+  const regPhoneRef = useRef<TextInput>(null);
+  const regPasswordRef = useRef<TextInput>(null);
+  const regConfirmRef = useRef<TextInput>(null);
+
   const topInset = Platform.OS === 'web' ? 24 : insets.top;
 
   const handleLogin = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setFormError(null);
     if (!identifier || !password) {
       setFormError(t('login.missingBody'));
@@ -109,6 +117,7 @@ export default function AuthScreen() {
   };
 
   const handleRegister = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setFormError(null);
     const fullPhone = buildFullPhone();
     if (!form.email && !fullPhone) { setFormError(t('register.missingContact')); Alert.alert(t('register.missingTitle'), t('register.missingContact')); return; }
@@ -153,7 +162,10 @@ export default function AuthScreen() {
       </View>
     ) : null;
 
-  /** Clean input field: icon on right, placeholder, no label */
+  /**
+   * Clean input field with keyboard-chain support:
+   * passes inputRef, returnKeyType, onSubmitEditing, blurOnSubmit through.
+   */
   const Field = ({
     icon,
     value,
@@ -165,6 +177,10 @@ export default function AuthScreen() {
     onToggleSecure,
     ltr,
     leftSlot,
+    inputRef,
+    returnKeyType,
+    onSubmitEditing,
+    blurOnSubmit = false,
   }: {
     icon: keyof typeof Ionicons.glyphMap;
     value: string;
@@ -176,6 +192,10 @@ export default function AuthScreen() {
     onToggleSecure?: () => void;
     ltr?: boolean;
     leftSlot?: React.ReactNode;
+    inputRef?: React.RefObject<TextInput | null>;
+    returnKeyType?: 'next' | 'done' | 'go' | 'search' | 'send';
+    onSubmitEditing?: () => void;
+    blurOnSubmit?: boolean;
   }) => (
     <View style={[styles.field, { borderColor: colors.border, backgroundColor: colors.background }]}>
       {/* Left slot (eye toggle or phone picker) */}
@@ -186,6 +206,7 @@ export default function AuthScreen() {
       ) : null)}
 
       <TextInput
+        ref={inputRef}
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
@@ -193,6 +214,9 @@ export default function AuthScreen() {
         keyboardType={keyboardType || 'default'}
         autoCapitalize="none"
         secureTextEntry={secure && !showSecure}
+        returnKeyType={returnKeyType ?? 'next'}
+        onSubmitEditing={onSubmitEditing}
+        blurOnSubmit={blurOnSubmit}
         style={[
           styles.fieldInput,
           { color: colors.foreground, fontFamily: 'Cairo_400Regular' },
@@ -208,15 +232,12 @@ export default function AuthScreen() {
   );
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: '#E8F4FD' }}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <ScrollView
+    <View style={{ flex: 1, backgroundColor: '#E8F4FD' }}>
+      <KeyboardAwareForm
         style={{ flex: 1 }}
         contentContainerStyle={{ flexGrow: 1, paddingBottom: 32 }}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
+        bottomOffset={24}
+        bottomPadding={32}
       >
         {/* ── Hero ── */}
         <View style={styles.hero}>
@@ -298,6 +319,8 @@ export default function AuthScreen() {
                 onChangeText={setIdentifier}
                 placeholder={t('auth.identifier')}
                 keyboardType="email-address"
+                returnKeyType="next"
+                onSubmitEditing={() => loginPasswordRef.current?.focus()}
               />
               <Field
                 icon="lock-closed-outline"
@@ -307,6 +330,10 @@ export default function AuthScreen() {
                 secure
                 showSecure={showPass}
                 onToggleSecure={() => setShowPass(!showPass)}
+                inputRef={loginPasswordRef}
+                returnKeyType="done"
+                onSubmitEditing={handleLogin}
+                blurOnSubmit
               />
 
               {/* Remember me + Forgot */}
@@ -390,20 +417,49 @@ export default function AuthScreen() {
           ) : (
             /* ── REGISTER FORM ── */
             <View style={styles.form}>
-              <Field icon="person-outline" value={form.firstName} onChangeText={(v) => set('firstName', v)} placeholder={t('register.firstName')} />
-              <Field icon="person-outline" value={form.lastName} onChangeText={(v) => set('lastName', v)} placeholder={t('register.lastName')} />
+              <Field
+                icon="person-outline"
+                value={form.firstName}
+                onChangeText={(v) => set('firstName', v)}
+                placeholder={t('register.firstName')}
+                returnKeyType="next"
+                onSubmitEditing={() => regLastNameRef.current?.focus()}
+              />
+              <Field
+                icon="person-outline"
+                value={form.lastName}
+                onChangeText={(v) => set('lastName', v)}
+                placeholder={t('register.lastName')}
+                inputRef={regLastNameRef}
+                returnKeyType="next"
+                onSubmitEditing={() => regEmailRef.current?.focus()}
+              />
 
-              <Field icon="mail-outline" value={form.email} onChangeText={(v) => set('email', v)} placeholder={t('register.email')} keyboardType="email-address" ltr />
+              <Field
+                icon="mail-outline"
+                value={form.email}
+                onChangeText={(v) => set('email', v)}
+                placeholder={t('register.email')}
+                keyboardType="email-address"
+                ltr
+                inputRef={regEmailRef}
+                returnKeyType="next"
+                onSubmitEditing={() => regPhoneRef.current?.focus()}
+              />
 
               {/* Phone with dial code */}
               <View style={[styles.field, { borderColor: colors.border, backgroundColor: colors.background }]}>
                 <CountryDialPicker value={dialCountry} onChange={setDialCountry} />
                 <TextInput
+                  ref={regPhoneRef}
                   value={form.phone}
                   onChangeText={(v) => set('phone', v)}
                   placeholder={t('register.phone')}
                   placeholderTextColor="#94A3B8"
                   keyboardType="phone-pad"
+                  returnKeyType="next"
+                  onSubmitEditing={() => regPasswordRef.current?.focus()}
+                  blurOnSubmit={false}
                   style={[styles.fieldInput, { color: colors.foreground, fontFamily: 'Cairo_400Regular', textAlign: 'left', writingDirection: 'ltr' }]}
                 />
                 <View style={styles.fieldRight}>
@@ -411,8 +467,31 @@ export default function AuthScreen() {
                 </View>
               </View>
 
-              <Field icon="lock-closed-outline" value={form.password} onChangeText={(v) => set('password', v)} placeholder={t('register.password')} secure showSecure={showRegPass} onToggleSecure={() => setShowRegPass(!showRegPass)} />
-              <Field icon="lock-closed-outline" value={form.confirmPassword} onChangeText={(v) => set('confirmPassword', v)} placeholder={t('register.confirmPassword')} secure showSecure={showRegPass} onToggleSecure={() => setShowRegPass(!showRegPass)} />
+              <Field
+                icon="lock-closed-outline"
+                value={form.password}
+                onChangeText={(v) => set('password', v)}
+                placeholder={t('register.password')}
+                secure
+                showSecure={showRegPass}
+                onToggleSecure={() => setShowRegPass(!showRegPass)}
+                inputRef={regPasswordRef}
+                returnKeyType="next"
+                onSubmitEditing={() => regConfirmRef.current?.focus()}
+              />
+              <Field
+                icon="lock-closed-outline"
+                value={form.confirmPassword}
+                onChangeText={(v) => set('confirmPassword', v)}
+                placeholder={t('register.confirmPassword')}
+                secure
+                showSecure={showRegPass}
+                onToggleSecure={() => setShowRegPass(!showRegPass)}
+                inputRef={regConfirmRef}
+                returnKeyType="done"
+                onSubmitEditing={handleRegister}
+                blurOnSubmit
+              />
 
               <ErrorBanner />
 
@@ -455,8 +534,8 @@ export default function AuthScreen() {
             </View>
           </Pressable>
         </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+      </KeyboardAwareForm>
+    </View>
   );
 }
 
@@ -544,7 +623,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   fieldLeft: { paddingHorizontal: 2 },
-  fieldInput: { flex: 1, fontSize: 14, minHeight: 40 },
+  fieldInput: { flex: 1, fontSize: 14, minHeight: 48 },
   fieldRight: { paddingHorizontal: 2 },
 
   // Remember me
@@ -611,6 +690,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 12,
     paddingVertical: 13,
+    minHeight: 48,
   },
   socialText: { fontSize: 12 },
 

@@ -1,15 +1,23 @@
 import React, { useState } from 'react';
-import { FlatList, Platform, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import { Alert, FlatList, Platform, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
+import { useQueryClient } from '@tanstack/react-query';
 import { useColors } from '@/hooks/useColors';
 import { useLanguage } from '@/context/LanguageContext';
-import { useListNotifications, useMarkNotificationRead, useMarkAllNotificationsRead } from '@workspace/api-client-react';
+import {
+  useListNotifications,
+  useMarkNotificationRead,
+  useMarkAllNotificationsRead,
+  useDeleteNotification,
+  getGetUnreadNotificationCountQueryKey,
+} from '@workspace/api-client-react';
 import type { Notification } from '@workspace/api-client-react';
 import { EmptyState } from '@/components/EmptyState';
+import { getImageUrl } from '@/hooks/useImageUrl';
 
 function getNotifIcon(type?: string | null): keyof typeof Ionicons.glyphMap {
   if (!type) return 'notifications-outline';
@@ -55,7 +63,15 @@ function formatNotifDate(iso: string, lang: string): string {
   }
 }
 
-function NotifItem({ notification, onMarkRead }: { notification: Notification; onMarkRead: (id: string) => void }) {
+function NotifItem({
+  notification,
+  onMarkRead,
+  onDelete,
+}: {
+  notification: Notification;
+  onMarkRead: (id: string) => void;
+  onDelete: (id: string) => void;
+}) {
   const colors = useColors();
   const { lang, isRTL } = useLanguage();
   const icon = getNotifIcon(notification.relatedEntityType);
@@ -63,6 +79,23 @@ function NotifItem({ notification, onMarkRead }: { notification: Notification; o
   const isUnread = !notification.isRead;
   const title = lang === 'ar' ? notification.titleAr : (notification.titleEn || notification.titleAr);
   const message = lang === 'ar' ? notification.messageAr : (notification.messageEn || notification.messageAr);
+  const imageUri = notification.imageUrl ? getImageUrl(notification.imageUrl) : undefined;
+
+  const confirmDelete = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    Alert.alert(
+      lang === 'ar' ? 'حذف الإشعار' : 'Delete notification',
+      lang === 'ar' ? 'هل تريد حذف هذا الإشعار؟' : 'Do you want to delete this notification?',
+      [
+        { text: lang === 'ar' ? 'إلغاء' : 'Cancel', style: 'cancel' },
+        {
+          text: lang === 'ar' ? 'حذف' : 'Delete',
+          style: 'destructive',
+          onPress: () => onDelete(notification.id),
+        },
+      ],
+    );
+  };
 
   return (
     <Pressable
@@ -70,10 +103,10 @@ function NotifItem({ notification, onMarkRead }: { notification: Notification; o
         styles.card,
         {
           backgroundColor: colors.card,
-          flexDirection: isRTL ? 'row-reverse' : 'row',
           opacity: pressed ? 0.7 : 1,
         },
       ]}
+      onLongPress={confirmDelete}
       onPress={() => {
         if (isUnread) {
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -88,35 +121,51 @@ function NotifItem({ notification, onMarkRead }: { notification: Notification; o
           router.push(`/umrah-tracking/${entityId}` as never);
           return;
         }
+        if (notification.relatedEntityType === 'support_conversation') {
+          router.push('/support-chat' as never);
+          return;
+        }
         const url = (notification as any).url;
         if (typeof url === 'string' && url.length > 0) {
           router.push(url as never);
         }
       }}
     >
-      {/* Unread dot - positioned at the start edge */}
-      <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: isUnread ? '#0A2342' : 'transparent', marginTop: 8 }} />
+      <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', gap: 12, alignItems: 'flex-start' }}>
+        {/* Unread dot - positioned at the start edge */}
+        <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: isUnread ? '#0A2342' : 'transparent', marginTop: 8 }} />
 
-      <View style={[styles.cardContent, { alignItems: isRTL ? 'flex-end' : 'flex-start' }]}>
-        <Text style={[styles.cardTitle, { color: colors.text, fontFamily: 'Cairo_700Bold' }]}>{title}</Text>
-        <Text style={[styles.cardMessage, { color: colors.textSecondary, fontFamily: 'Cairo_400Regular', textAlign: isRTL ? 'right' : 'left' }]} numberOfLines={2}>
-          {message}
-        </Text>
-      </View>
-
-      <View style={styles.cardRight}>
-        <View style={[styles.iconWrap, { backgroundColor: `${iconColor}15` }]}>
-          <Ionicons name={icon} size={24} color={iconColor} />
-          {isUnread && (
-            <View style={styles.statusCheck}>
-              <Ionicons name="checkmark-circle" size={14} color="#3B82F6" />
-            </View>
-          )}
+        <View style={[styles.cardContent, { alignItems: isRTL ? 'flex-end' : 'flex-start' }]}>
+          <Text style={[styles.cardTitle, { color: colors.text, fontFamily: 'Cairo_700Bold' }]}>{title}</Text>
+          <Text style={[styles.cardMessage, { color: colors.textSecondary, fontFamily: 'Cairo_400Regular', textAlign: isRTL ? 'right' : 'left' }]} numberOfLines={2}>
+            {message}
+          </Text>
         </View>
-        <Text style={[styles.dateText, { color: colors.textSecondary, fontFamily: 'Cairo_400Regular' }]}>
-          {formatNotifDate(notification.createdAt, lang)}
-        </Text>
+
+        <View style={styles.cardRight}>
+          <View style={[styles.iconWrap, { backgroundColor: `${iconColor}15` }]}>
+            <Ionicons name={icon} size={24} color={iconColor} />
+            {isUnread && (
+              <View style={styles.statusCheck}>
+                <Ionicons name="checkmark-circle" size={14} color="#3B82F6" />
+              </View>
+            )}
+          </View>
+          <Text style={[styles.dateText, { color: colors.textSecondary, fontFamily: 'Cairo_400Regular' }]}>
+            {formatNotifDate(notification.createdAt, lang)}
+          </Text>
+        </View>
       </View>
+
+      {/* Optional broadcast image */}
+      {imageUri ? (
+        <Image
+          source={{ uri: imageUri }}
+          style={styles.notifImage}
+          contentFit="cover"
+          transition={150}
+        />
+      ) : null}
     </Pressable>
   );
 }
@@ -126,9 +175,18 @@ export default function NotificationsTab() {
   const { t, lang, isRTL, toggle } = useLanguage();
   const insets = useSafeAreaInsets();
   
+  const queryClient = useQueryClient();
   const { data, isLoading, error, refetch, isRefetching } = useListNotifications();
   const markRead = useMarkNotificationRead();
+  const markAllRead = useMarkAllNotificationsRead();
+  const deleteNotif = useDeleteNotification();
   const notifications: Notification[] = Array.isArray(data) ? data : [];
+  const hasUnread = notifications.some((n) => !n.isRead);
+
+  const refreshAll = () => {
+    refetch();
+    queryClient.invalidateQueries({ queryKey: getGetUnreadNotificationCountQueryKey() });
+  };
 
   const [activeFilter, setActiveFilter] = useState('all');
 
@@ -208,6 +266,23 @@ export default function NotificationsTab() {
                 </Pressable>
               ))}
             </View>
+
+            {/* Mark all as read */}
+            {hasUnread ? (
+              <Pressable
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  markAllRead.mutate(undefined, { onSuccess: refreshAll });
+                }}
+                disabled={markAllRead.isPending}
+                style={[styles.readAllBtn, { alignSelf: isRTL ? 'flex-start' : 'flex-end', opacity: markAllRead.isPending ? 0.5 : 1 }]}
+              >
+                <Ionicons name="checkmark-done-outline" size={16} color={colors.accent} />
+                <Text style={[styles.readAllText, { color: colors.accent, fontFamily: 'Cairo_600SemiBold' }]}>
+                  {lang === 'ar' ? 'تعليم الكل كمقروء' : 'Mark all as read'}
+                </Text>
+              </Pressable>
+            ) : null}
           </View>
         }
         ListEmptyComponent={
@@ -220,7 +295,11 @@ export default function NotificationsTab() {
           ) : null
         }
         renderItem={({ item }) => (
-          <NotifItem notification={item} onMarkRead={(id) => markRead.mutate({ id }, { onSuccess: () => refetch() })} />
+          <NotifItem
+            notification={item}
+            onMarkRead={(id) => markRead.mutate({ id }, { onSuccess: refreshAll })}
+            onDelete={(id) => deleteNotif.mutate({ id }, { onSuccess: refreshAll })}
+          />
         )}
       />
     </View>
@@ -251,10 +330,15 @@ const styles = StyleSheet.create({
   filtersRow: { marginTop: 24, gap: 8, flexWrap: 'wrap' },
   filterChip: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20 },
   filterText: { fontSize: 13 },
+  readAllBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 12, paddingVertical: 4, paddingHorizontal: 6 },
+  readAllText: { fontSize: 12 },
   card: {
     marginHorizontal: 20, marginBottom: 12, padding: 16,
-    borderRadius: 16, alignItems: 'flex-start', gap: 12,
+    borderRadius: 16, gap: 12,
     shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.03, shadowRadius: 12, elevation: 2
+  },
+  notifImage: {
+    width: '100%', height: 160, borderRadius: 12, marginTop: 4,
   },
   cardContent: { flex: 1, gap: 4 },
   cardTitle: { fontSize: 14 },

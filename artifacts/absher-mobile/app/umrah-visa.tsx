@@ -24,7 +24,6 @@ import {
   Animated,
   BackHandler,
   Easing,
-  KeyboardAvoidingView,
   Platform,
   Pressable,
   ScrollView,
@@ -33,6 +32,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { useToast } from '@/components/ui/Toast';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -47,7 +47,9 @@ import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { getImageSource } from '@/hooks/useImageUrl';
 import { uploadFile } from '@/lib/uploadFile';
+import { KeyboardAwareForm } from '@/components/KeyboardAwareForm';
 import WizardStepper from '@/components/wizard/WizardStepper';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   ApiError,
   useOcrPassport,
@@ -55,6 +57,8 @@ import {
   getGetUmrahConfigQueryKey,
   useCreateUmrahApplication,
   usePayUmrahApplication,
+  getListUmrahApplicationsQueryKey,
+  useGetPaymentConfig,
 } from '@workspace/api-client-react';
 import type {
   UmrahConfig,
@@ -105,13 +109,18 @@ async function pickPdfAsset(): Promise<DocPicked | null> {
 }
 
 // ─── Reusable field ─────────────────────────────────────────────────────────
-function Field({
-  label, value, onChangeText, placeholder, keyboardType, required, ltr, autoCapitalize,
-}: {
+// forwardRef + returnKeyType/onSubmitEditing enable focus chaining between
+// fields (keyboard stays open while moving to the next field).
+const Field = React.forwardRef<TextInput, {
   label: string; value: string; onChangeText: (v: string) => void;
   placeholder?: string; keyboardType?: 'default' | 'phone-pad' | 'email-address' | 'number-pad';
   required?: boolean; ltr?: boolean; autoCapitalize?: 'none' | 'characters' | 'sentences';
-}) {
+  returnKeyType?: 'next' | 'done';
+  onSubmitEditing?: () => void;
+}>(function Field({
+  label, value, onChangeText, placeholder, keyboardType, required, ltr, autoCapitalize,
+  returnKeyType = 'next', onSubmitEditing,
+}, ref) {
   const c = useColors();
   return (
     <View style={f.wrap}>
@@ -119,21 +128,25 @@ function Field({
         {label}{required && <Text style={{ color: c.destructive }}> *</Text>}
       </Text>
       <TextInput
+        ref={ref}
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder ?? label}
         placeholderTextColor={c.mutedForeground}
         keyboardType={keyboardType ?? 'default'}
         autoCapitalize={autoCapitalize ?? 'sentences'}
+        returnKeyType={returnKeyType}
+        blurOnSubmit={returnKeyType !== 'next'}
+        onSubmitEditing={onSubmitEditing}
         style={[f.input, { backgroundColor: c.muted, borderColor: c.border, color: c.foreground, fontFamily: 'Cairo_400Regular', textAlign: ltr ? 'left' : 'right' }]}
       />
     </View>
   );
-}
+});
 const f = StyleSheet.create({
   wrap: { gap: 6 },
   label: { fontSize: 14, textAlign: 'right' },
-  input: { borderRadius: 12, borderWidth: 1, paddingHorizontal: 14, paddingVertical: 13, fontSize: 15 },
+  input: { borderRadius: 12, borderWidth: 1, paddingHorizontal: 14, paddingVertical: 13, fontSize: 15, minHeight: 48 },
 });
 
 // ─── Document tile ─────────────────────────────────────────────────────────
@@ -262,9 +275,20 @@ export default function UmrahVisaWizard() {
   const topInset = Platform.OS === 'web' ? 67 : insets.top;
   const bottomInset = Platform.OS === 'web' ? 34 : Math.max(insets.bottom, 16);
   const scroll = useRef<ScrollView>(null);
+  const { showToast } = useToast();
+
+  // Focus-chain refs (keyboard stays open while moving between fields)
+  const passportNumberRef = useRef<TextInput>(null);
+  const nationalityRef = useRef<TextInput>(null);
+  const dobRef = useRef<TextInput>(null);
+  const issueDateRef = useRef<TextInput>(null);
+  const expiryDateRef = useRef<TextInput>(null);
+  const contactEmailRef = useRef<TextInput>(null);
+  const emergencyPhoneRef = useRef<TextInput>(null);
 
   const { user: authUser, accessToken } = useAuth();
   const navigation = useNavigation();
+  const queryClient = useQueryClient();
 
   const ocrMutation = useOcrPassport();
   const createMutation = useCreateUmrahApplication();
@@ -354,6 +378,11 @@ export default function UmrahVisaWizard() {
     { query: { enabled: !!authUser, queryKey: getGetUmrahConfigQueryKey(nationality ? { nationality } : undefined) } },
   );
 
+  // Dynamic payment methods (admin-managed) shown on the payment step.
+  const { data: paymentConfig } = useGetPaymentConfig();
+  const paymentMethods = paymentConfig?.paymentMethods ?? [];
+  const [selectedMethodId, setSelectedMethodId] = useState<number | null>(null);
+
   // ── Back-blocking after submission ──────────────────────────────────────────
   const resultRef = useRef(false);
   useEffect(() => { if (result) resultRef.current = true; }, [result]);
@@ -432,7 +461,7 @@ export default function UmrahVisaWizard() {
       objectPath = await uploadFile({ uri: a.uri, token: accessToken, fileName: a.name, mimeType: a.mimeType });
     } catch {
       setBusyDoc(null);
-      Alert.alert(tr(lang, 'خطأ في الرفع', 'Upload error'), tr(lang, 'تعذّر رفع صورة الجواز. تحقق من الملف وحاول مجدداً.', 'Could not upload the passport image. Check the file and try again.'));
+      showToast({ type: 'error', message: tr(lang, 'تعذّر رفع صورة الجواز. تحقق من الملف وحاول مجدداً.', 'Could not upload the passport image. Check the file and try again.') });
       return;
     }
     setBusyDoc(null);
@@ -452,13 +481,14 @@ export default function UmrahVisaWizard() {
         if (ocr.gender) setGender(ocr.gender === 'M' || ocr.gender.toLowerCase() === 'male' ? 'male' : 'female');
         setOcrDone(true);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        showToast({ type: 'success', message: tr(lang, 'تم قراءة بيانات الجواز تلقائياً ✓', 'Passport data extracted automatically ✓') });
       } else {
         setOcrDone(true);
-        Alert.alert(tr(lang, 'تنبيه', 'Notice'), tr(lang, 'لم نتمكن من قراءة الجواز بالكامل. يرجى مراجعة البيانات وإكمالها يدوياً.', 'Could not fully read the passport. Please review and complete the fields.'));
+        showToast({ type: 'info', message: tr(lang, 'لم نتمكن من قراءة الجواز بالكامل — يرجى مراجعة البيانات يدوياً.', 'Could not fully read the passport — please review the fields manually.') });
       }
     } catch {
       setOcrDone(true);
-      Alert.alert(tr(lang, 'تعذر المسح', 'Scan failed'), tr(lang, 'يمكنك إدخال بيانات الجواز يدوياً.', 'You can enter the passport data manually.'));
+      showToast({ type: 'info', message: tr(lang, 'تعذّر المسح التلقائي — يمكنك إدخال البيانات يدوياً.', 'Auto-scan failed — you can enter the data manually.') });
     } finally {
       setOcrRunning(false);
     }
@@ -470,8 +500,9 @@ export default function UmrahVisaWizard() {
       const objectPath = await uploadFile({ uri: a.uri, token: accessToken, fileName: a.name, mimeType: a.mimeType });
       setter(objectPath);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      showToast({ type: 'success', message: tr(lang, 'تم رفع الملف بنجاح ✓', 'File uploaded successfully ✓') });
     } catch {
-      Alert.alert(tr(lang, 'خطأ في الرفع', 'Upload error'), tr(lang, 'تعذّر رفع الملف. تحقق من الملف وحاول مجدداً.', 'Could not upload the file. Check the file and try again.'));
+      showToast({ type: 'error', message: tr(lang, 'تعذّر رفع الملف. تحقق منه وحاول مجدداً.', 'Could not upload the file. Check it and try again.') });
     } finally {
       setBusyDoc(null);
     }
@@ -482,35 +513,35 @@ export default function UmrahVisaWizard() {
     // 0) host residency (gated by the host question)
     if (s === 0) {
       if (hasHost !== true) { setNoHostModal(true); return false; }
-      if (!sponsorResidencyImageUrl) { Alert.alert(tr(lang, 'مستند مطلوب', 'Document required'), tr(lang, 'يرجى إرفاق صورة إقامة المستضيف.', 'Please upload the host residency image.')); return false; }
+      if (!sponsorResidencyImageUrl) { showToast({ type: 'warning', message: tr(lang, 'يرجى إرفاق صورة إقامة المستضيف.', 'Please upload the host residency image.') }); return false; }
       return true;
     }
     // 1) host phone
     if (s === 1) {
-      if (!/^5\d{8}$/.test(hostPhoneDigits)) { Alert.alert(tr(lang, 'رقم غير صحيح', 'Invalid number'), tr(lang, 'أدخل رقم جوال المستضيف: 9 أرقام تبدأ بـ 5.', 'Enter the host phone: 9 digits starting with 5.')); return false; }
+      if (!/^5\d{8}$/.test(hostPhoneDigits)) { showToast({ type: 'warning', message: tr(lang, 'أدخل رقم جوال المستضيف: 9 أرقام تبدأ بـ 5.', 'Enter the host phone: 9 digits starting with 5.') }); return false; }
       return true;
     }
     // 2) declaration
     if (s === 2) {
-      if (!declared) { Alert.alert(tr(lang, 'الإقرار مطلوب', 'Declaration required'), tr(lang, 'يرجى قراءة الإقرار والموافقة عليه قبل المتابعة.', 'Please read and accept the declaration to continue.')); return false; }
+      if (!declared) { showToast({ type: 'warning', message: tr(lang, 'يرجى قراءة الإقرار والموافقة عليه قبل المتابعة.', 'Please read and accept the declaration to continue.') }); return false; }
       return true;
     }
     // 3) passport image + OCR-extracted fields
     if (s === 3) {
-      if (!passportImageUrl) { Alert.alert(tr(lang, 'مستند مطلوب', 'Document required'), tr(lang, 'يرجى إرفاق صورة الجواز.', 'Please upload the passport image.')); return false; }
-      if (!fullName.trim()) { Alert.alert(tr(lang, 'بيانات ناقصة', 'Missing data'), tr(lang, 'يرجى إدخال اسم المعتمر.', 'Please enter the pilgrim name.')); return false; }
-      if (!nationality.trim()) { Alert.alert(tr(lang, 'بيانات ناقصة', 'Missing data'), tr(lang, 'يرجى إدخال الجنسية.', 'Please enter the nationality.')); return false; }
+      if (!passportImageUrl) { showToast({ type: 'warning', message: tr(lang, 'يرجى إرفاق صورة الجواز.', 'Please upload the passport image.') }); return false; }
+      if (!fullName.trim()) { showToast({ type: 'warning', message: tr(lang, 'يرجى إدخال اسم المعتمر.', 'Please enter the pilgrim name.') }); return false; }
+      if (!nationality.trim()) { showToast({ type: 'warning', message: tr(lang, 'يرجى إدخال الجنسية.', 'Please enter the nationality.') }); return false; }
       return true;
     }
     // 4) personal photo
     if (s === 4) {
-      if (!personalPhotoUrl) { Alert.alert(tr(lang, 'مستند مطلوب', 'Document required'), tr(lang, 'يرجى إرفاق الصورة الشخصية.', 'Please upload the personal photo.')); return false; }
+      if (!personalPhotoUrl) { showToast({ type: 'warning', message: tr(lang, 'يرجى إرفاق الصورة الشخصية.', 'Please upload the personal photo.') }); return false; }
       return true;
     }
     // 5) contact info
     if (s === 5) {
-      if (!phone.trim() || !/^5\d{8}$/.test(phone.trim())) { Alert.alert(tr(lang, 'رقم غير صحيح', 'Invalid number'), tr(lang, 'أدخل رقم جوال المعتمر: 9 أرقام تبدأ بـ 5.', 'Enter the pilgrim phone: 9 digits starting with 5.')); return false; }
-      if (!emergencyPhone.trim() || !/^5\d{8}$/.test(emergencyPhone.trim())) { Alert.alert(tr(lang, 'رقم غير صحيح', 'Invalid number'), tr(lang, 'أدخل رقم الطوارئ: 9 أرقام تبدأ بـ 5.', 'Enter the emergency phone: 9 digits starting with 5.')); return false; }
+      if (!phone.trim() || !/^5\d{8}$/.test(phone.trim())) { showToast({ type: 'warning', message: tr(lang, 'أدخل رقم جوال المعتمر: 9 أرقام تبدأ بـ 5.', 'Enter the pilgrim phone: 9 digits starting with 5.') }); return false; }
+      if (!emergencyPhone.trim() || !/^5\d{8}$/.test(emergencyPhone.trim())) { showToast({ type: 'warning', message: tr(lang, 'أدخل رقم الطوارئ: 9 أرقام تبدأ بـ 5.', 'Enter the emergency phone: 9 digits starting with 5.') }); return false; }
       return true;
     }
     // 6) fee display — nothing to validate before payment
@@ -551,6 +582,9 @@ export default function UmrahVisaWizard() {
         onSuccess: (res) => {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           setCreated(res);
+          // Invalidate the Umrah applications list so the tab reflects the new
+          // application immediately when the user navigates back.
+          queryClient.invalidateQueries({ queryKey: getListUmrahApplicationsQueryKey() });
         },
         onError: (err) => {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
@@ -559,7 +593,7 @@ export default function UmrahVisaWizard() {
             const data = err.data as { error?: string } | null;
             if (data?.error) message = data.error; // bilingual error surfaced by server
           }
-          Alert.alert(tr(lang, 'تعذّر التقديم', 'Submission failed'), message);
+          showToast({ type: 'error', message });
         },
       },
     );
@@ -576,6 +610,9 @@ export default function UmrahVisaWizard() {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           resultRef.current = true;
           setResult(created);
+          // Invalidate again after payment so the tab shows the updated
+          // payment status when the user returns home.
+          queryClient.invalidateQueries({ queryKey: getListUmrahApplicationsQueryKey() });
         },
         onError: (err) => {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
@@ -584,7 +621,7 @@ export default function UmrahVisaWizard() {
             const data = err.data as { error?: string } | null;
             if (data?.error) message = data.error;
           }
-          Alert.alert(tr(lang, 'فشل الدفع', 'Payment failed'), message);
+          showToast({ type: 'error', message });
         },
       },
     );
@@ -671,13 +708,14 @@ export default function UmrahVisaWizard() {
         <WizardStepper steps={STEP_LABELS} current={step} />
       </LinearGradient>
 
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
-        <ScrollView
-          ref={scroll}
-          contentContainerStyle={{ padding: 18, paddingBottom: bottomInset + 40, gap: 4 }}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
+      {/* KeyboardAwareForm handles auto-scroll to active field and keeps
+          the Next button visible above the keyboard on all steps. */}
+      <KeyboardAwareForm
+        style={{ flex: 1 }}
+        contentContainerStyle={{ padding: 18, paddingBottom: bottomInset + 40, gap: 4 }}
+        bottomOffset={24}
+        bottomPadding={bottomInset + 40}
+      >
           {/* ── STEP 0: HOST QUESTION + RESIDENCY ────────────────────────── */}
           {step === 0 && (
             <View style={styles.stepWrap}>
@@ -743,6 +781,7 @@ export default function UmrahVisaWizard() {
                       placeholderTextColor={c.mutedForeground}
                       keyboardType="number-pad"
                       maxLength={9}
+                      returnKeyType="done"
                       style={[styles.phoneInput, { color: c.foreground, fontFamily: 'Cairo_400Regular' }]}
                     />
                     <View style={[styles.phonePrefix, { borderColor: c.border }]}>
@@ -821,15 +860,15 @@ export default function UmrahVisaWizard() {
               </View>
 
               <View style={[styles.card, { backgroundColor: c.card, borderColor: c.border, gap: 14 }]}>
-                <Field label={tr(lang, 'الاسم الكامل', 'Full name')} value={fullName} onChangeText={setFullName} required />
-                <Field label={tr(lang, 'رقم الجواز', 'Passport number')} value={passportNumber} onChangeText={setPassportNumber} ltr autoCapitalize="characters" />
-                <Field label={tr(lang, 'الجنسية', 'Nationality')} value={nationality} onChangeText={setNationality} required />
+                <Field label={tr(lang, 'الاسم الكامل', 'Full name')} value={fullName} onChangeText={setFullName} required onSubmitEditing={() => passportNumberRef.current?.focus()} />
+                <Field ref={passportNumberRef} label={tr(lang, 'رقم الجواز', 'Passport number')} value={passportNumber} onChangeText={setPassportNumber} ltr autoCapitalize="characters" onSubmitEditing={() => nationalityRef.current?.focus()} />
+                <Field ref={nationalityRef} label={tr(lang, 'الجنسية', 'Nationality')} value={nationality} onChangeText={setNationality} required onSubmitEditing={() => dobRef.current?.focus()} />
                 <View style={{ flexDirection: 'row-reverse', gap: 12 }}>
-                  <View style={{ flex: 1 }}><Field label={tr(lang, 'تاريخ الميلاد', 'Date of birth')} value={dateOfBirth} onChangeText={setDateOfBirth} placeholder="YYYY-MM-DD" ltr /></View>
+                  <View style={{ flex: 1 }}><Field ref={dobRef} label={tr(lang, 'تاريخ الميلاد', 'Date of birth')} value={dateOfBirth} onChangeText={setDateOfBirth} placeholder="YYYY-MM-DD" ltr onSubmitEditing={() => issueDateRef.current?.focus()} /></View>
                 </View>
                 <View style={{ flexDirection: 'row-reverse', gap: 12 }}>
-                  <View style={{ flex: 1 }}><Field label={tr(lang, 'تاريخ الإصدار', 'Issue date')} value={passportIssueDate} onChangeText={setPassportIssueDate} placeholder="YYYY-MM-DD" ltr /></View>
-                  <View style={{ flex: 1 }}><Field label={tr(lang, 'تاريخ الانتهاء', 'Expiry date')} value={passportExpiryDate} onChangeText={setPassportExpiryDate} placeholder="YYYY-MM-DD" ltr /></View>
+                  <View style={{ flex: 1 }}><Field ref={issueDateRef} label={tr(lang, 'تاريخ الإصدار', 'Issue date')} value={passportIssueDate} onChangeText={setPassportIssueDate} placeholder="YYYY-MM-DD" ltr onSubmitEditing={() => expiryDateRef.current?.focus()} /></View>
+                  <View style={{ flex: 1 }}><Field ref={expiryDateRef} label={tr(lang, 'تاريخ الانتهاء', 'Expiry date')} value={passportExpiryDate} onChangeText={setPassportExpiryDate} placeholder="YYYY-MM-DD" ltr returnKeyType="done" /></View>
                 </View>
                 <View style={f.wrap}>
                   <Text style={[f.label, { color: c.foreground, fontFamily: 'Cairo_600SemiBold' }]}>{tr(lang, 'الجنس', 'Gender')}</Text>
@@ -893,6 +932,9 @@ export default function UmrahVisaWizard() {
                       placeholderTextColor={c.mutedForeground}
                       keyboardType="number-pad"
                       maxLength={9}
+                      returnKeyType="next"
+                      blurOnSubmit={false}
+                      onSubmitEditing={() => contactEmailRef.current?.focus()}
                       style={[styles.phoneInput, { color: c.foreground, fontFamily: 'Cairo_400Regular' }]}
                     />
                     <View style={[styles.phonePrefix, { borderColor: c.border }]}>
@@ -901,7 +943,7 @@ export default function UmrahVisaWizard() {
                   </View>
                 </View>
 
-                <Field label={tr(lang, 'بريد التواصل (اختياري)', 'Contact email (optional)')} value={contactEmail} onChangeText={setContactEmail} keyboardType="email-address" ltr autoCapitalize="none" placeholder="example@email.com" />
+                <Field ref={contactEmailRef} label={tr(lang, 'بريد التواصل (اختياري)', 'Contact email (optional)')} value={contactEmail} onChangeText={setContactEmail} keyboardType="email-address" ltr autoCapitalize="none" placeholder="example@email.com" onSubmitEditing={() => emergencyPhoneRef.current?.focus()} />
 
                 <View style={f.wrap}>
                   <Text style={[f.label, { color: c.foreground, fontFamily: 'Cairo_600SemiBold' }]}>
@@ -909,12 +951,14 @@ export default function UmrahVisaWizard() {
                   </Text>
                   <View style={[styles.phoneRow, { backgroundColor: c.muted, borderColor: c.border }]}>
                     <TextInput
+                      ref={emergencyPhoneRef}
                       value={emergencyPhone}
                       onChangeText={(v) => setEmergencyPhone(v.replace(/[^0-9]/g, '').slice(0, 9))}
                       placeholder="5XXXXXXXX"
                       placeholderTextColor={c.mutedForeground}
                       keyboardType="number-pad"
                       maxLength={9}
+                      returnKeyType="done"
                       style={[styles.phoneInput, { color: c.foreground, fontFamily: 'Cairo_400Regular' }]}
                     />
                     <View style={[styles.phonePrefix, { borderColor: c.border }]}>
@@ -974,6 +1018,67 @@ export default function UmrahVisaWizard() {
                 </Text>
               </View>
 
+              {/* Dynamic payment methods — admin-managed, appear instantly */}
+              {paymentMethods.length > 0 && (
+                <View style={{ gap: 10 }}>
+                  <Text style={[styles.stepSub, { color: c.foreground, fontFamily: 'Cairo_700Bold', textAlign: lang === 'ar' ? 'right' : 'left' }]}>
+                    {tr(lang, 'اختر وسيلة الدفع', 'Choose a payment method')}
+                  </Text>
+                  {paymentMethods.map((m) => {
+                    const selected = selectedMethodId === m.id;
+                    const logoSource = m.logoUrl ? getImageSource(m.logoUrl) : undefined;
+                    return (
+                      <Pressable
+                        key={m.id}
+                        onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setSelectedMethodId(m.id); }}
+                        style={[
+                          styles.card,
+                          {
+                            backgroundColor: selected ? c.goldTint : c.card,
+                            borderColor: selected ? colors.gold : c.border,
+                            borderWidth: selected ? 2 : 1,
+                            flexDirection: 'row-reverse',
+                            alignItems: 'center',
+                            gap: 12,
+                          },
+                        ]}
+                      >
+                        {logoSource ? (
+                          <Image source={logoSource} style={{ width: 40, height: 40, borderRadius: 8 }} contentFit="contain" />
+                        ) : (
+                          <View style={{ width: 40, height: 40, borderRadius: 8, backgroundColor: c.muted, alignItems: 'center', justifyContent: 'center' }}>
+                            <Ionicons name="card-outline" size={20} color={c.mutedForeground} />
+                          </View>
+                        )}
+                        <View style={{ flex: 1 }}>
+                          <Text style={[{ fontSize: 15, color: c.foreground, fontFamily: 'Cairo_700Bold', textAlign: lang === 'ar' ? 'right' : 'left' }]}>
+                            {lang === 'ar' ? m.nameAr : m.nameEn}
+                          </Text>
+                          {(lang === 'ar' ? m.descriptionAr : m.descriptionEn) ? (
+                            <Text style={[{ fontSize: 12, color: c.mutedForeground, fontFamily: 'Cairo_400Regular', textAlign: lang === 'ar' ? 'right' : 'left' }]} numberOfLines={1}>
+                              {lang === 'ar' ? m.descriptionAr : m.descriptionEn}
+                            </Text>
+                          ) : null}
+                          {(m.feePercent > 0 || m.feeFixed > 0) && (
+                            <Text style={[{ fontSize: 11, color: colors.gold, fontFamily: 'Cairo_600SemiBold', textAlign: lang === 'ar' ? 'right' : 'left' }]}>
+                              {tr(lang, 'رسوم: ', 'Fee: ')}
+                              {m.feePercent > 0 ? `${m.feePercent}%` : ''}
+                              {m.feePercent > 0 && m.feeFixed > 0 ? ' + ' : ''}
+                              {m.feeFixed > 0 ? `${m.feeFixed} ${tr(lang, 'ريال', 'SAR')}` : ''}
+                            </Text>
+                          )}
+                        </View>
+                        <Ionicons
+                          name={selected ? 'radio-button-on' : 'radio-button-off'}
+                          size={22}
+                          color={selected ? colors.gold : c.mutedForeground}
+                        />
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              )}
+
               {!created ? (
                 <Pressable
                   style={({ pressed }) => [styles.primaryBtn, { backgroundColor: colors.navy, opacity: pressed || createMutation.isPending ? 0.85 : 1 }]}
@@ -1002,9 +1107,17 @@ export default function UmrahVisaWizard() {
                     </View>
                   </View>
                   <Pressable
-                    style={({ pressed }) => [styles.primaryBtn, { backgroundColor: colors.umrahGreen, opacity: pressed || payMutation.isPending ? 0.85 : 1 }]}
+                    style={({ pressed }) => [
+                      styles.primaryBtn,
+                      {
+                        backgroundColor: colors.umrahGreen,
+                        opacity:
+                          (paymentMethods.length > 0 && selectedMethodId === null) ? 0.5
+                          : pressed || payMutation.isPending ? 0.85 : 1,
+                      },
+                    ]}
                     onPress={submitPay}
-                    disabled={payMutation.isPending}
+                    disabled={payMutation.isPending || (paymentMethods.length > 0 && selectedMethodId === null)}
                   >
                     {payMutation.isPending ? <ActivityIndicator color="#FFFFFF" /> : (
                       <>
@@ -1017,8 +1130,7 @@ export default function UmrahVisaWizard() {
               )}
             </View>
           )}
-        </ScrollView>
-      </KeyboardAvoidingView>
+      </KeyboardAwareForm>
 
       {/* ── NO-HOST BLOCK MODAL (spec §3) ──────────────────────────────────── */}
       {noHostModal && (
@@ -1068,14 +1180,14 @@ const styles = StyleSheet.create({
   choiceText: { fontSize: 16 },
 
   phoneRow: { flexDirection: 'row-reverse', alignItems: 'center', borderWidth: 1, borderRadius: 12, overflow: 'hidden' },
-  phoneInput: { flex: 1, paddingHorizontal: 14, paddingVertical: 13, fontSize: 16, textAlign: 'left', writingDirection: 'ltr' },
+  phoneInput: { flex: 1, paddingHorizontal: 14, paddingVertical: 13, fontSize: 16, textAlign: 'left', writingDirection: 'ltr', minHeight: 48 },
   phonePrefix: { paddingHorizontal: 14, paddingVertical: 13, borderRightWidth: 1 },
   phonePrefixText: { fontSize: 15 },
 
   ocrRow: { flexDirection: 'row-reverse', alignItems: 'center', gap: 8 },
   ocrText: { fontSize: 12.5, textAlign: 'right', flex: 1 },
 
-  genderBtn: { flex: 1, borderWidth: 1, borderRadius: 12, paddingVertical: 13, alignItems: 'center' },
+  genderBtn: { flex: 1, borderWidth: 1, borderRadius: 12, paddingVertical: 13, alignItems: 'center', justifyContent: 'center', minHeight: 48 },
   genderText: { fontSize: 15 },
 
   declarationBox: { maxHeight: 320 },

@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { MapPin, Phone, Mail, Clock, Send, MessageSquare } from "lucide-react";
+import { Mail, Clock, Send, MessageSquare } from "lucide-react";
 import { openSupportChat } from "@/components/support-chat";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -78,30 +78,6 @@ export default function Contact() {
                 <h3 className="text-xl font-bold text-primary mb-6">{language === 'ar' ? 'معلومات الاتصال' : 'Contact Information'}</h3>
                 
                 <div className="space-y-6">
-                  <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-full bg-blue-50 text-secondary flex items-center justify-center shrink-0">
-                      <MapPin size={20} />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-slate-800 mb-1">{language === 'ar' ? 'العنوان' : 'Address'}</h4>
-                      <p className="text-slate-600 text-sm">
-                        {language === 'ar' ? 'اليمن - صنعاء - شارع الزبيري - جولة كنتاكي سابقاً' : 'Yemen - Sana\'a - Zubairi St.'}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                      <Phone size={20} />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-slate-800 mb-1">{language === 'ar' ? 'الهواتف' : 'Phones'}</h4>
-                      <p className="text-slate-600 text-sm" dir="ltr">+967 779055511</p>
-                      <p className="text-slate-600 text-sm" dir="ltr">+967 784055511</p>
-                      <p className="text-slate-600 text-sm" dir="ltr">+967 783055511</p>
-                    </div>
-                  </div>
-
                   <div className="flex items-start gap-4">
                     <div className="w-10 h-10 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
                       <Clock size={20} />

@@ -4,6 +4,8 @@ import { homeTab } from "./extra-hometab";
 import { umrahUi } from "./extra-umrah-ui";
 import { extraVisas } from "./extra-visas";
 import { extraProfile } from "./extra-profile";
+import { extraFlows } from "./extra-flows";
+import { extraProfileEdit } from "./extra-profile-edit";
 
 export { BRAND } from "./brand";
 export type { Lang, Entry, Domain } from "./types";
@@ -17,7 +19,7 @@ export { DOMAINS } from "./dictionaries";
  */
 export const dictionary: Record<string, Entry> = (() => {
   const merged: Record<string, Entry> = {};
-  for (const domain of [...DOMAINS, homeTab, umrahUi, extraVisas, extraProfile]) {
+  for (const domain of [...DOMAINS, homeTab, umrahUi, extraVisas, extraProfile, extraFlows, extraProfileEdit]) {
     for (const key of Object.keys(domain)) {
       merged[key] = domain[key]!;
     }
@@ -60,8 +62,17 @@ export function translate(
   params?: FormatValues,
 ): string {
   const entry = dictionary[key];
-  const raw = entry ? (entry[lang] ?? entry.ar) : key;
-  return format(raw, params);
+  if (!entry) {
+    // Never fail at runtime, but make missing keys loud during development so
+    // raw programming keys can't silently reach users again.
+    // (globalThis is used so this pure-data package needs no node/dom types.)
+    const g = globalThis as { process?: { env?: Record<string, string> }; console?: { warn?: (msg: string) => void } };
+    if (g.process?.env?.NODE_ENV !== "production") {
+      g.console?.warn?.(`[i18n] Missing translation key: "${key}"`);
+    }
+    return format(key, params);
+  }
+  return format(entry[lang] ?? entry.ar, params);
 }
 
 /** A bound translator: `t(key, params?)` for a fixed language. */

@@ -3,9 +3,10 @@ import { useTranslation } from "@/hooks/use-translation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Plane, Building, FileText, Map, Star, ArrowRight, ArrowLeft, Calendar } from "lucide-react";
-import { useListOffers, useListDestinations } from "@workspace/api-client-react";
+import { useListOffers, useListDestinations, useListAppImages } from "@workspace/api-client-react";
 import { Link } from "wouter";
 import { AppDownloadLinks } from "@/components/app-download-links";
+import { AppImage, resolveImageSrc } from "@/components/app-image";
 
 /**
  * Offer `duration` is a single free-text DB field (usually Arabic, e.g.
@@ -29,31 +30,45 @@ export default function Home() {
 
   const { data: offers, isLoading: offersLoading } = useListOffers({ featured: true });
   const { data: destinations, isLoading: destLoading } = useListDestinations();
+  // Admin-managed images (unified catalog). Falls back to built-ins when empty.
+  const { data: appImages } = useListAppImages();
 
   const ar = language === "ar";
 
-  // Hero carousel: brand slide + featured offers (like the mobile app home).
+  const bannerImages = useMemo(() => (appImages ?? []).filter(i => i.category === "home_banner"), [appImages]);
+  const serviceImages = useMemo(() => (appImages ?? []).filter(i => i.category === "service_card"), [appImages]);
+
+  // Hero carousel: brand slide(s) + featured offers (like the mobile app home).
   const heroSlides = useMemo(() => {
-    const base = [{
-      image: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=2074&auto=format&fit=crop",
-      title: t("heroTitle"),
-      subtitle: t("heroSub"),
-      badge: null as string | null,
-      cta: t("bookNow"),
-      href: "/book",
-    }];
+    const base = bannerImages.length
+      ? bannerImages.map(b => ({
+          image: resolveImageSrc(b.imageUrl) ?? "",
+          title: (ar ? b.titleAr : b.titleEn) || t("heroTitle"),
+          subtitle: t("heroSub"),
+          badge: null as string | null,
+          cta: ar ? "اطلب تأشيرة العمرة أو اطلب تأشيرتك الإلكترونية" : "Request an Umrah or electronic visa",
+          href: b.linkUrl || "/visas",
+        }))
+      : [{
+          image: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=2074&auto=format&fit=crop",
+          title: t("heroTitle"),
+          subtitle: t("heroSub"),
+          badge: null as string | null,
+          cta: ar ? "اطلب تأشيرة العمرة أو اطلب تأشيرتك الإلكترونية" : "Request an Umrah or electronic visa",
+          href: "/visas",
+        }];
     for (const o of offers ?? []) {
       base.push({
         image: o.imageUrl || "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=1600&auto=format&fit=crop",
         title: ar ? o.titleAr : o.titleEn,
         subtitle: ar ? o.descriptionAr : o.descriptionEn,
         badge: o.discountLabel ?? (ar ? "عرض مميز" : "Featured offer"),
-        cta: ar ? "اكتشف العرض" : "View offer",
-        href: "/offers",
+         cta: ar ? "اطلب تأشيرة العمرة أو اطلب تأشيرتك الإلكترونية" : "Request an Umrah or electronic visa",
+         href: "/visas",
       });
     }
     return base;
-  }, [offers, ar, t]);
+  }, [offers, ar, t, bannerImages]);
 
   const [heroIndex, setHeroIndex] = useState(0);
   useEffect(() => {
@@ -68,8 +83,12 @@ export default function Home() {
 
   // Primary services — each links to a REAL page in the system.
   // Umrah is a dedicated standalone service at /umrah.
+  // `key` is the canonical service key shared with the admin catalog and the
+  // mobile app: a service_card image with relatedEntityId === key overrides
+  // this card's bundled image.
   const services = [
     {
+      key: "flights",
       icon: Plane,
       emoji: "✈️",
       image: "https://images.unsplash.com/photo-1556388158-158ea5ccacbd?q=80&w=800&auto=format&fit=crop",
@@ -82,6 +101,7 @@ export default function Home() {
       ring: "group-hover:ring-blue-200",
     },
     {
+      key: "hotels",
       icon: Building,
       emoji: "🏨",
       image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=800&auto=format&fit=crop",
@@ -94,6 +114,7 @@ export default function Home() {
       ring: "group-hover:ring-indigo-200",
     },
     {
+      key: "visas",
       icon: FileText,
       emoji: "🛂",
       image: "https://images.unsplash.com/photo-1578574577315-3fbeb0cecdc2?q=80&w=800&auto=format&fit=crop",
@@ -106,6 +127,7 @@ export default function Home() {
       ring: "group-hover:ring-sky-200",
     },
     {
+      key: "umrah",
       icon: Star,
       emoji: "🕋",
       image: "https://images.unsplash.com/photo-1591604129939-f1efa4d9f7fa?q=80&w=800&auto=format&fit=crop",
@@ -118,6 +140,7 @@ export default function Home() {
       ring: "group-hover:ring-amber-200",
     },
     {
+      key: "programs",
       icon: Map,
       emoji: "🌍",
       image: "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=800&auto=format&fit=crop",
@@ -138,10 +161,11 @@ export default function Home() {
         {/* Slide backgrounds (cross-fade) */}
         <div className="absolute inset-0 z-0">
           {heroSlides.map((slide, i) => (
-            <img
+            <AppImage
               key={i}
               src={slide.image}
               alt=""
+              loading={i === 0 ? "eager" : "lazy"}
               className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${i === heroIndex ? "opacity-100 scale-105" : "opacity-0"}`}
             />
           ))}
@@ -162,15 +186,10 @@ export default function Home() {
             {heroSlides[heroIndex]?.subtitle ?? t("heroSub")}
           </p>
 
-          <div className="flex flex-wrap justify-center gap-4">
+           <div className="flex justify-center">
             <Link href={heroSlides[heroIndex]?.href ?? "/book"}>
               <Button size="lg" className="bg-accent text-primary hover:bg-accent/90 text-lg px-8 py-6 rounded-xl font-bold shadow-xl shadow-accent/20 transition-all hover:-translate-y-1">
-                {heroSlides[heroIndex]?.cta ?? t("bookNow")}
-              </Button>
-            </Link>
-            <Link href="/offers">
-              <Button size="lg" variant="outline" className="bg-white/10 hover:bg-white/20 text-white border-white/20 text-lg px-8 py-6 rounded-xl backdrop-blur-md transition-all hover:-translate-y-1">
-                {t("exploreOffers")}
+                 {heroSlides[heroIndex]?.cta ?? (ar ? "اطلب تأشيرة العمرة أو اطلب تأشيرتك الإلكترونية" : "Request an Umrah or electronic visa")}
               </Button>
             </Link>
           </div>
@@ -203,15 +222,20 @@ export default function Home() {
             const Icon = service.icon;
             const title = ar ? service.titleAr : service.titleEn;
             const desc = ar ? service.descAr : service.descEn;
+            // Admin-managed override: a service_card image is assigned via the
+            // explicit service key (relatedEntityType "service" + relatedEntityId).
+            // Same convention as the mobile app.
+            const managed = serviceImages.find(s => s.relatedEntityType === "service" && s.relatedEntityId === service.key);
+            const cardImage = managed ? managed.imageUrl : service.image;
             return (
               <Link key={index} href={service.href} className="group block h-full" data-testid={`link-service-${index}`}>
                 <div className={`h-full bg-white rounded-2xl border border-slate-100 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 overflow-hidden ring-0 ring-transparent ${service.ring} group-hover:ring-4`}>
                   {/* Card image */}
                   <div className="relative h-28 md:h-32 overflow-hidden">
-                    <img
-                      src={service.image}
+                    <AppImage
+                      src={cardImage}
+                      fallback={service.image}
                       alt={title}
-                      loading="lazy"
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#052B5B]/70 via-[#052B5B]/10 to-transparent" />
@@ -259,7 +283,7 @@ export default function Home() {
               {offers.slice(0,3).map(offer => (
                 <Card key={offer.id} className="overflow-hidden group border border-slate-100 shadow-md hover:shadow-2xl transition-all duration-300 flex flex-col h-full rounded-2xl">
                   <div className="h-60 overflow-hidden relative">
-                    <img src={offer.imageUrl || 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=1000&auto=format&fit=crop'} alt={language === 'ar' ? offer.titleAr : offer.titleEn} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                    <AppImage src={offer.imageUrl} fallback='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=1000&auto=format&fit=crop' alt={language === 'ar' ? offer.titleAr : offer.titleEn} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                     <div className="absolute top-4 right-4 bg-accent text-primary font-bold px-4 py-1.5 rounded-full text-sm shadow-md tabular-nums">
                       {offer.price ?? '—'} {offer.currency || 'USD'}
                     </div>

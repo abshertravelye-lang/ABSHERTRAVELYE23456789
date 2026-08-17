@@ -1,11 +1,14 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "@/hooks/use-translation";
 import { useAuth } from "@/hooks/use-auth";
+import { PhoneDialInput, parseFullPhone, buildFullPhone } from "@/components/phone-dial-input";
 import {
   useListVisaApplications, useListNotifications, useMarkNotificationRead, useMarkAllNotificationsRead,
   useListMyBookings, useUpdateProfile, useGetCurrentUser, getGetCurrentUserQueryKey,
   VisaApplication, Notification as ApiNotification, Booking, useOcrPassport,
   customFetch, ApiError,
+  useListMyProgramBookings, useCancelProgramBooking, getListMyProgramBookingsQueryKey,
+  ProgramBooking,
 } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
 import { CountrySelect } from "@/components/country-select";
@@ -411,6 +414,131 @@ function BookingCard({ booking, language, onToast }: {
   );
 }
 
+/* ── In-platform program booking request card (TRV-… tracking) ── */
+const PROGRAM_BOOKING_STATUSES: Record<string, { ar: string; en: string; color: string; step: number }> = {
+  draft:                 { ar: "مسودة",              en: "Draft",                 color: "bg-slate-100 text-slate-600",     step: 0 },
+  submitted:             { ar: "تم الإرسال",          en: "Submitted",             color: "bg-blue-100 text-blue-700",       step: 0 },
+  under_review:          { ar: "قيد المراجعة",        en: "Under Review",          color: "bg-amber-100 text-amber-700",     step: 1 },
+  awaiting_availability: { ar: "بانتظار التوفر",      en: "Checking Availability", color: "bg-amber-100 text-amber-700",     step: 1 },
+  awaiting_payment:      { ar: "بانتظار الدفع",       en: "Awaiting Payment",      color: "bg-purple-100 text-purple-700",   step: 2 },
+  paid:                  { ar: "تم الدفع",            en: "Paid",                  color: "bg-emerald-100 text-emerald-700", step: 2 },
+  confirmed:             { ar: "مؤكد",               en: "Confirmed",             color: "bg-emerald-100 text-emerald-700", step: 3 },
+  completed:             { ar: "مكتمل",              en: "Completed",             color: "bg-emerald-100 text-emerald-700", step: 4 },
+  rejected:              { ar: "مرفوض",              en: "Rejected",              color: "bg-red-100 text-red-700",         step: -1 },
+  cancelled:             { ar: "ملغى",               en: "Cancelled",             color: "bg-red-100 text-red-700",         step: -1 },
+};
+const PROGRAM_CANCELLABLE = ["draft", "submitted", "under_review", "awaiting_availability", "awaiting_payment"];
+const PROGRAM_STEPS_AR = ["تم الإرسال", "المراجعة والتوفر", "الدفع", "التأكيد", "الاكتمال"];
+const PROGRAM_STEPS_EN = ["Submitted", "Review & Availability", "Payment", "Confirmed", "Completed"];
+
+function ProgramBookingRequestCard({ booking, language }: { booking: ProgramBooking; language: string }) {
+  const ar = language === "ar";
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const cancelMutation = useCancelProgramBooking({
+    mutation: {
+      onSuccess: () => {
+        toast({ title: ar ? "تم إلغاء طلب الحجز" : "Booking request cancelled" });
+        queryClient.invalidateQueries({ queryKey: getListMyProgramBookingsQueryKey() });
+      },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      onError: (err: any) => {
+        toast({
+          variant: "destructive",
+          title: ar ? "تعذر الإلغاء" : "Cancellation failed",
+          description: (err?.data as { error?: string } | null)?.error || (ar ? "حدث خطأ، حاول لاحقاً." : "Something went wrong, try again later."),
+        });
+      },
+    },
+  });
+  const [confirmCancel, setConfirmCancel] = useState(false);
+
+  const info = PROGRAM_BOOKING_STATUSES[booking.status] ?? PROGRAM_BOOKING_STATUSES.submitted;
+  const failed = info.step === -1;
+  const canCancel = PROGRAM_CANCELLABLE.includes(booking.status);
+
+  return (
+    <Card className={`border rounded-2xl overflow-hidden transition-all hover:shadow-md ${failed ? "border-red-200 opacity-80" : "border-slate-200 hover:border-[#0d2351]/30"}`}>
+      <CardContent className="p-0">
+        <div className="px-5 py-3 flex items-center justify-between bg-gradient-to-r from-[#0d2351]/4 to-transparent flex-wrap gap-2">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 bg-[#0d2351]/8 border border-[#0d2351]/10 rounded-xl flex items-center justify-center shrink-0">
+              <MapPin className="w-5 h-5 text-[#0d2351]" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-bold text-slate-800 text-sm">
+                  {ar ? booking.programTitleAr : booking.programTitleEn}
+                </span>
+                <Badge variant="outline" className={`border-0 text-xs px-2 py-0.5 ${info.color}`}>
+                  {ar ? info.ar : info.en}
+                </Badge>
+              </div>
+              <div className="text-xs text-slate-500 mt-0.5" dir="ltr">
+                {booking.requestNumber}
+                <span dir={ar ? "rtl" : "ltr"}>
+                  {booking.programDestination ? ` · ${booking.programDestination}` : ""} · {booking.travelDate}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div className="text-[10px] text-slate-400 text-end whitespace-nowrap">
+            {new Date(booking.createdAt).toLocaleDateString()}
+          </div>
+        </div>
+
+        {!failed && (
+          <div className="px-5 pb-3">
+            <StatusTimeline
+              steps={ar ? PROGRAM_STEPS_AR : PROGRAM_STEPS_EN}
+              currentStep={info.step}
+              ar={ar}
+            />
+          </div>
+        )}
+
+        <div className="px-5 pb-4 flex items-center justify-between gap-2 flex-wrap">
+          <div className="text-xs text-slate-500">
+            {booking.adults} {ar ? "بالغ" : "adults"}
+            {booking.children ? ` · ${booking.children} ${ar ? "طفل" : "children"}` : ""}
+            {booking.infants ? ` · ${booking.infants} ${ar ? "رضيع" : "infants"}` : ""}
+            {" · "}{booking.rooms} {ar ? "غرفة" : "rooms"}
+            {" · "}{Number(booking.programPrice).toLocaleString()} {booking.programCurrency} {ar ? "للشخص" : "/person"}
+          </div>
+          {canCancel && (
+            confirmCancel ? (
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-red-600">{ar ? "تأكيد الإلغاء؟" : "Confirm cancel?"}</span>
+                <button
+                  onClick={() => cancelMutation.mutate({ id: booking.id })}
+                  disabled={cancelMutation.isPending}
+                  className="px-3 py-1.5 rounded-xl bg-red-600 text-white text-xs font-bold hover:bg-red-700 disabled:opacity-50 transition-all"
+                >
+                  {cancelMutation.isPending ? (ar ? "جارٍ الإلغاء..." : "Cancelling...") : (ar ? "نعم، إلغاء" : "Yes, cancel")}
+                </button>
+                <button
+                  onClick={() => setConfirmCancel(false)}
+                  disabled={cancelMutation.isPending}
+                  className="px-3 py-1.5 rounded-xl border border-slate-200 text-slate-600 text-xs font-bold hover:bg-slate-50 transition-all"
+                >
+                  {ar ? "تراجع" : "Keep"}
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setConfirmCancel(true)}
+                className="px-3 py-1.5 rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-bold transition-all"
+              >
+                {ar ? "إلغاء الطلب" : "Cancel Request"}
+              </button>
+            )
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 function NotificationRow({ n, language, onRead }: { n: ApiNotification; language: string; onRead: (id: string) => void }) {
   const ar = language === "ar";
   return (
@@ -479,6 +607,7 @@ export default function Account() {
 
   const { data: applications, isLoading: appsLoading } = useListVisaApplications();
   const { data: bookings, isLoading: bookingsLoading } = useListMyBookings();
+  const { data: programBookings, isLoading: programBookingsLoading } = useListMyProgramBookings();
   const { data: notifications, isLoading: notifsLoading } = useListNotifications();
   const { data: currentUserData } = useGetCurrentUser({ query: { staleTime: 0, queryKey: getGetCurrentUserQueryKey() } });
 
@@ -490,10 +619,24 @@ export default function Account() {
   const [profile, setProfile] = useState<any>({});
   const avatarUrl = useObjectUrl(profile.profilePhotoUrl);
 
+  // Dial code state for phone + whatsapp fields (ISO country code, default SA)
+  const [phoneDialCountry, setPhoneDialCountry] = useState("SA");
+  const [phoneLocal, setPhoneLocal] = useState("");
+  const [whatsappDialCountry, setWhatsappDialCountry] = useState("SA");
+  const [whatsappLocal, setWhatsappLocal] = useState("");
+
   const authUser = currentUserData || user;
 
   useEffect(() => {
     if (authUser) {
+      // Parse stored international phone numbers into dial-code + local parts
+      const parsedPhone = parseFullPhone(authUser.phone || "");
+      const parsedWhatsapp = parseFullPhone(authUser.whatsapp || "");
+      setPhoneDialCountry(parsedPhone.dialCode);
+      setPhoneLocal(parsedPhone.local);
+      setWhatsappDialCountry(parsedWhatsapp.dialCode);
+      setWhatsappLocal(parsedWhatsapp.local);
+
       setProfile({
         firstName: authUser.firstName || "",
         lastName: authUser.lastName || "",
@@ -548,7 +691,12 @@ export default function Account() {
   const ocrMutation = useOcrPassport();
 
   const handleSaveProfile = async () => {
-    updateProfileMutation.mutate({ data: profile });
+    // Merge the dial-code + local parts back into full international numbers before saving
+    const fullPhone = buildFullPhone(phoneDialCountry, phoneLocal);
+    const fullWhatsapp = buildFullPhone(whatsappDialCountry, whatsappLocal);
+    // phone is required — keep the stored value if the field was emptied;
+    // whatsapp is optional — send "" explicitly so clearing it persists.
+    updateProfileMutation.mutate({ data: { ...profile, phone: fullPhone || profile.phone, whatsapp: fullWhatsapp } });
   };
 
   /** Upload personal photo → validate face → update profile state */
@@ -667,7 +815,8 @@ export default function Account() {
 
   const allItems = [
     ...(applications || []).map(a => ({ ...a, _itemType: 'app', date: new Date(a.createdAt).getTime() })),
-    ...(bookings || []).map(b => ({ ...b, _itemType: 'booking', date: new Date(b.createdAt).getTime() }))
+    ...(bookings || []).map(b => ({ ...b, _itemType: 'booking', date: new Date(b.createdAt).getTime() })),
+    ...(programBookings || []).map(b => ({ ...b, _itemType: 'programBooking', date: new Date(b.createdAt).getTime() }))
   ].sort((a, b) => b.date - a.date);
 
   const filteredItems = allItems.filter(item => {
@@ -677,7 +826,7 @@ export default function Account() {
     if (activeSubTab === "visas") return item._itemType === "app" || bookingType === "visa";
     if (activeSubTab === "flights") return bookingType === "flight";
     if (activeSubTab === "hotels") return bookingType === "hotel";
-    if (activeSubTab === "programs") return bookingType === "program";
+    if (activeSubTab === "programs") return item._itemType === "programBooking" || bookingType === "program";
     return true;
   });
 
@@ -689,7 +838,7 @@ export default function Account() {
     { id: "programs", ar: "برامج سياحية",   en: "Programs",     icon: MapPin },
   ];
 
-  const isLoadingRequests = appsLoading || bookingsLoading;
+  const isLoadingRequests = appsLoading || bookingsLoading || programBookingsLoading;
 
   const showToast = (msg: string) => {
     toast({ title: msg });
@@ -718,7 +867,7 @@ export default function Account() {
           {/* Stats summary */}
           <div className="hidden md:flex items-center gap-4">
             <div className="text-center px-4 border-s border-slate-100">
-              <div className="text-2xl font-black text-[#0d2351]">{(applications?.length ?? 0) + (bookings?.length ?? 0)}</div>
+              <div className="text-2xl font-black text-[#0d2351]">{(applications?.length ?? 0) + (bookings?.length ?? 0) + (programBookings?.length ?? 0)}</div>
               <div className="text-xs text-slate-400 font-medium">{ar ? "إجمالي الطلبات" : "Total Requests"}</div>
             </div>
             <div className="text-center px-4 border-s border-slate-100">
@@ -786,6 +935,8 @@ export default function Account() {
               {filteredItems.map(item =>
                 item._itemType === "app" ? (
                   <ApplicationCard key={`app-${item.id}`} app={item as VisaApplication} language={language} />
+                ) : item._itemType === "programBooking" ? (
+                  <ProgramBookingRequestCard key={`pb-${item.id}`} booking={item as unknown as ProgramBooking} language={language} />
                 ) : (
                   <BookingCard key={`booking-${item.id}`} booking={item as Booking} language={language} onToast={showToast} />
                 )
@@ -1038,11 +1189,23 @@ export default function Account() {
               <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label className="text-xs font-bold text-slate-500 uppercase tracking-wide">{ar ? "رقم الهاتف" : "Phone Number"} *</Label>
-                  <Input className="bg-slate-50 focus:bg-white" value={profile.phone || ""} onChange={e => setProfile({...profile, phone: e.target.value})} dir="ltr" placeholder="+9661234567" />
+                  <PhoneDialInput
+                    value={phoneLocal}
+                    dialCode={phoneDialCountry}
+                    onValueChange={setPhoneLocal}
+                    onDialChange={setPhoneDialCountry}
+                    ar={ar}
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs font-bold text-slate-500 uppercase tracking-wide">{ar ? "واتساب" : "WhatsApp"}</Label>
-                  <Input className="bg-slate-50 focus:bg-white" value={profile.whatsapp || ""} onChange={e => setProfile({...profile, whatsapp: e.target.value})} dir="ltr" placeholder="+9661234567" />
+                  <PhoneDialInput
+                    value={whatsappLocal}
+                    dialCode={whatsappDialCountry}
+                    onValueChange={setWhatsappLocal}
+                    onDialChange={setWhatsappDialCountry}
+                    ar={ar}
+                  />
                 </div>
                 <div className="space-y-1.5 md:col-span-2">
                   <Label className="text-xs font-bold text-slate-500 uppercase tracking-wide">{ar ? "البريد الإلكتروني" : "Email"}</Label>

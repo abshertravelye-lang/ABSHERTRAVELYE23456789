@@ -25,6 +25,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { getImageSource } from '@/hooks/useImageUrl';
 import colors from '@/constants/colors';
 import { uploadFile } from '@/lib/uploadFile';
+import { useToast } from '@/components/ui/Toast';
 
 interface Props {
   label: string;
@@ -52,9 +53,11 @@ export default function ImageUploader({
   const c = useColors();
   const { accessToken } = useAuth();
   const { t } = useLanguage();
+  const { showToast } = useToast();
   const [loading, setLoading] = useState(false);
 
   const doUpload = async (uri: string, mimeType?: string, fileName?: string) => {
+    if (loading) return; // guard against double-triggered uploads
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setLoading(true);
     try {
@@ -66,8 +69,10 @@ export default function ImageUploader({
       });
       onUpload(url);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      showToast({ type: 'success', message: t('uploader.successBody') });
     } catch {
-      Alert.alert(t('uploader.errorTitle'), t('uploader.errorBody'));
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      showToast({ type: 'error', message: t('uploader.errorBody') });
     } finally {
       setLoading(false);
     }

@@ -24,6 +24,9 @@ import supportChatRouter from "./supportChat";
 import agenciesRouter from "./agencies";
 import agentRouter from "./agent";
 import notificationPreferencesRouter from "./notificationPreferences";
+import paymentMethodsRouter from "./paymentMethods";
+import appImagesRouter from "./appImages";
+import programBookingsRouter from "./programBookings";
 
 const router: IRouter = Router();
 
@@ -31,8 +34,10 @@ router.use(healthRouter);
 router.use(authRouter);
 router.use(flightsRouter);
 router.use(offersRouter);
+router.use(appImagesRouter);
 router.use(destinationsRouter);
 router.use(programsRouter);
+router.use(programBookingsRouter);
 router.use(visaCountriesRouter);
 router.use(visaCustomFieldsRouter);
 router.use(visasRouter);
@@ -52,5 +57,6 @@ router.use(supportChatRouter);
 router.use(agenciesRouter);
 router.use(agentRouter);
 router.use(notificationPreferencesRouter);
+router.use(paymentMethodsRouter);
 
 export default router;

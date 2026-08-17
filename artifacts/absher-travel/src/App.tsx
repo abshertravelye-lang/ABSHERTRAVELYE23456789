@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { TranslationProvider } from "@/hooks/use-translation";
 import { AuthProvider } from "@/hooks/use-auth";
 import { RequireAuth } from "@/components/require-auth";
+import { PageTransition } from "@/components/page-transition";
 import NotFound from "@/pages/not-found";
 
 import Home from "@/pages/home";
@@ -31,6 +32,8 @@ import Account from "@/pages/account";
 import Admin from "@/pages/admin";
 import Umrah from "@/pages/umrah";
 import AgentPortal from "@/pages/agent-portal";
+import ProgramDetail from "@/pages/program-detail";
+import ProgramBook from "@/pages/program-book";
 
 const queryClient = new QueryClient();
 
@@ -42,6 +45,8 @@ function Router() {
       <Route path="/destinations/:id" component={DestinationDetail} />
       <Route path="/offers" component={Offers} />
       <Route path="/programs" component={Programs} />
+      <Route path="/programs/:id" component={ProgramDetail} />
+      <Route path="/programs/:id/book" component={ProgramBook} />
       
       <Route path="/visas" component={Visas} />
       <Route path="/visas/success" component={VisaSuccess} />
@@ -93,7 +98,9 @@ function App() {
           <TooltipProvider>
             <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")} hook={useGuardedLocation}>
               <Layout>
-                <Router />
+                <PageTransition>
+                  <Router />
+                </PageTransition>
               </Layout>
             </WouterRouter>
             <Toaster />

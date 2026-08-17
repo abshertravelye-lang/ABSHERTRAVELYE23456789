@@ -1,7 +1,18 @@
+/**
+ * Visa detail + application screen — profile-driven.
+ *
+ * The backend reads ALL personal data (name, nationality, passport, photos)
+ * from the stored user profile. This screen only collects:
+ *   • optional additional-doc uploads that are NOT already on the profile
+ *   • agreement to terms
+ *
+ * Nationality selection is removed entirely — the server enforces eligibility
+ * using the stored profile; the UI just confirms what we already know.
+ */
 import React, { useState } from 'react';
 import {
-  ActivityIndicator, Alert, Modal, Pressable, ScrollView,
-  StyleSheet, Text, TextInput, View, Image as RNImage
+  ActivityIndicator, Modal, Pressable, ScrollView,
+  StyleSheet, Text, TextInput, View,
 } from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
@@ -10,116 +21,134 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { useColors } from '@/hooks/useColors';
 import { useLanguage } from '@/context/LanguageContext';
-import { useGetVisa, useCreateVisaApplication } from '@workspace/api-client-react';
-import DatePickerModal, { DateField } from '@/components/DatePickerModal';
-import ImageUploader from '@/components/ImageUploader';
+import {
+  useGetVisa,
+  useCreateVisaApplication,
+  useGetCurrentUser,
+  getGetCurrentUserQueryKey,
+  useListVisaCustomFields,
+  getListVisaCustomFieldsQueryKey,
+  getListVisaApplicationsQueryKey,
+} from '@workspace/api-client-react';
 import { useAuth } from '@/context/AuthContext';
+import { useQueryClient } from '@tanstack/react-query';
+import { useToast } from '@/components/ui/Toast';
 
-const STATUS_LABEL_KEYS: Record<string, string> = {
-  available: 'visaDetail.status.available', suspended: 'visaDetail.status.suspended', closed: 'visaDetail.status.closed',
-};
+// ─────────────────────────────────────────────────────────────────────────────
+
 const STATUS_COLORS: Record<string, string> = {
   available: '#16A34A', suspended: '#EAB308', closed: '#EF4444',
 };
 
-type DatePickerKey = 'dateOfBirth' | 'passportIssueDate' | 'passportExpiryDate';
+function flagEmoji(code: string): string {
+  const c = (code || '').toUpperCase();
+  if (c.length !== 2) return '🌍';
+  return String.fromCodePoint(...[...c].map(x => 0x1F1E6 + x.charCodeAt(0) - 65));
+}
 
-const todayISO = () => {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-};
+function countryImg(visa: { imageUrl?: string | null; countryCode?: string | null }): string {
+  if (visa.imageUrl) return visa.imageUrl;
+  const DEFAULTS: Record<string, string> = {
+    SA: 'https://images.unsplash.com/photo-1586724237569-f3d0c1dee8c6?w=800',
+    AE: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=800',
+    TR: 'https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=800',
+    TH: 'https://images.unsplash.com/photo-1508009603885-50cf7c579365?w=800',
+    MY: 'https://images.unsplash.com/photo-1508050919630-b135583b29ab?w=800',
+    EG: 'https://images.unsplash.com/photo-1568322445389-f64ac2515020?w=800',
+    OM: 'https://images.unsplash.com/photo-1586686507413-3bd73a16eb01?w=800',
+    QA: 'https://images.unsplash.com/photo-1577475038887-f5b84e77d9c3?w=800',
+    JO: 'https://images.unsplash.com/photo-1580834341580-8c17a3a630ca?w=800',
+    ID: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=800',
+    SG: 'https://images.unsplash.com/photo-1525625293386-3f8f99389edd?w=800',
+    IN: 'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=800',
+    GB: 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=800',
+    FR: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800',
+    DE: 'https://images.unsplash.com/photo-1467269204594-9661b134dd2b?w=800',
+    IT: 'https://images.unsplash.com/photo-1529260830199-42c24126f198?w=800',
+    US: 'https://images.unsplash.com/photo-1485738422979-f5c462d49f74?w=800',
+    CN: 'https://images.unsplash.com/photo-1508804185872-d7badad00f7d?w=800',
+    JP: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=800',
+    AU: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800',
+  };
+  const code = (visa.countryCode || '').toUpperCase();
+  return DEFAULTS[code] || 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800';
+}
+
+/** Mirrors backend isProfileComplete() */
+function isProfileComplete(user: any): boolean {
+  if (!user) return false;
+  return !!(
+    user.firstName && user.lastName && user.phone &&
+    user.nationality && user.dateOfBirth &&
+    user.profilePhotoUrl && user.passportNumber && user.passportExpiryDate
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 export default function VisaDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const colors = useColors();
   const { t, lang } = useLanguage();
   const insets = useSafeAreaInsets();
-  const { user: authUser } = useAuth();
+  const { user: authUser, accessToken } = useAuth();
+  const queryClient = useQueryClient();
 
   const { data: visa, isLoading } = useGetVisa(Number(id));
-  const createApp = useCreateVisaApplication();
-
-  const [showForm,     setShowForm]     = useState(false);
-  const [activePicker, setActivePicker] = useState<DatePickerKey | null>(null);
-
-  const [form, setForm] = useState({
-    fullName: '', nationality: '', passportNumber: '',
-    passportIssueDate: '', passportExpiryDate: '', dateOfBirth: '',
-    gender: 'male' as 'male' | 'female',
-    email: '', phone: '',
-    agreedToTerms: false,
-    // image URLs (populated by ImageUploader after upload)
-    personalPhotoUrl: '',
-    passportImageUrl: '',
-    residencyImageUrl: '',
-    residencyBackImageUrl: '',
-    visaImageUrl: '',
-    alternativeVisaNumber: '',
-    alternativeVisaExpiry: '',
+  const { data: customFields } = useListVisaCustomFields(Number(id), {
+    query: { enabled: !!id, queryKey: getListVisaCustomFieldsQueryKey(Number(id)) },
+  });
+  const { data: currentUser } = useGetCurrentUser({
+    query: {
+      staleTime: 30000,
+      queryKey: getGetCurrentUserQueryKey(),
+      enabled: !!authUser,
+    },
   });
 
-  const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) =>
-    setForm(f => ({ ...f, [k]: v }));
+  const createApp = useCreateVisaApplication();
+  const { showToast } = useToast();
 
-  /** Auth + profile-completeness gate before opening the application form. */
-  const openApplicationForm = () => {
+  const [customResponses, setCustomResponses]       = useState<Record<string, string>>({});
+  const [agreed, setAgreed]                         = useState(false);
+  const [showApplySheet, setShowApplySheet]         = useState(false);
+
+  // ── Gate checks ────────────────────────────────────────────────────────────
+  const openApplySheet = () => {
     if (!authUser) {
-      Alert.alert(
-        'تسجيل الدخول مطلوب',
-        'يجب تسجيل الدخول للتقديم على التأشيرة',
-        [
-          { text: 'إلغاء', style: 'cancel' },
-          { text: 'تسجيل الدخول', onPress: () => router.push('/auth/login') },
-        ],
-      );
+      showToast({
+        type: 'warning',
+        message: lang === 'ar' ? 'يجب تسجيل الدخول للتقديم على التأشيرة' : 'You must log in to apply',
+        duration: 4000,
+      });
+      router.push('/auth/login');
       return;
     }
-    const profileComplete = !!(
-      authUser.firstName && authUser.lastName && authUser.phone &&
-      authUser.nationality && authUser.dateOfBirth &&
-      authUser.profilePhotoUrl && authUser.passportNumber && authUser.passportExpiryDate
-    );
-    if (!profileComplete) {
-      Alert.alert(
-        'الملف الشخصي غير مكتمل',
-        'يرجى إكمال بياناتك الشخصية قبل التقديم على التأشيرة',
-        [
-          { text: 'إلغاء', style: 'cancel' },
-          { text: 'إكمال الملف', onPress: () => router.push('/(tabs)/account') },
-        ],
-      );
+    const user = currentUser || authUser;
+    if (!isProfileComplete(user)) {
+      showToast({
+        type: 'warning',
+        message: lang === 'ar' ? 'يرجى إكمال بياناتك الشخصية أولاً' : 'Please complete your profile first',
+        duration: 4000,
+      });
+      router.push('/(tabs)/account');
       return;
     }
-    setShowForm(true);
+    setShowApplySheet(true);
   };
 
-  // Determine whether each doc section is required based on visa flags
-  const needsPersonalPhoto  = visa?.requiresPersonalPhoto  !== false; // default true
-  const needsPassportImage  = visa?.requiresPassportImage  !== false; // default true
-  const needsResidencyImage = visa?.requiresResidencyImage === true;
-  const needsAltVisa =
-    visa?.acceptsSchengenResidency || visa?.acceptsUkResidency ||
-    visa?.acceptsUsVisa || visa?.acceptsCanadaResidency || visa?.acceptsAustraliaResidency;
-
+  // ── Submit ─────────────────────────────────────────────────────────────────
   const submit = () => {
-    if (!form.fullName || !form.nationality || !form.passportNumber || !form.email || !form.phone) {
-      Alert.alert(t('visaDetail.missingDataTitle'), t('visaDetail.missingDataBody'));
+    if (!agreed) {
+      showToast({ type: 'warning', message: lang === 'ar' ? 'يجب الموافقة على الشروط والأحكام' : 'Please agree to the terms' });
       return;
     }
-    if (!form.agreedToTerms) {
-      Alert.alert(t('visaDetail.agreementRequiredTitle'), t('visaDetail.agreementRequiredBody'));
-      return;
-    }
-    if (needsPersonalPhoto && !form.personalPhotoUrl) {
-      Alert.alert(t('visaDetail.photoRequiredTitle'), t('visaDetail.uploadPersonalPhoto'));
-      return;
-    }
-    if (needsPassportImage && !form.passportImageUrl) {
-      Alert.alert(t('visaDetail.photoRequiredTitle'), t('visaDetail.uploadPassportImage'));
-      return;
-    }
-    if (needsResidencyImage && !form.residencyImageUrl) {
-      Alert.alert(t('visaDetail.photoRequiredTitle'), t('visaDetail.uploadResidencyImage'));
+    const missingRequired = (customFields || []).filter(
+      (f: any) => f.required && !(customResponses[String(f.id)] || '').trim(),
+    );
+    if (missingRequired.length > 0) {
+      const label = lang === 'ar' ? missingRequired[0].labelAr : missingRequired[0].labelEn;
+      showToast({ type: 'warning', message: `${lang === 'ar' ? 'يرجى تعبئة: ' : 'Please fill: '}${label}` });
       return;
     }
 
@@ -127,214 +156,242 @@ export default function VisaDetailScreen() {
       {
         data: {
           visaId: Number(id),
-          eligibilityPath: 'direct',
-          fullName: form.fullName,
-          nationality: form.nationality,
-          passportNumber: form.passportNumber,
-          passportIssueDate:  form.passportIssueDate  || '2020-01-01',
-          passportExpiryDate: form.passportExpiryDate || '2030-01-01',
-          dateOfBirth:        form.dateOfBirth        || '1990-01-01',
-          gender: form.gender,
-          email: form.email,
-          phone: form.phone,
           agreedToTerms: true,
-          personalPhotoUrl:     form.personalPhotoUrl     || undefined,
-          passportImageUrl:     form.passportImageUrl     || undefined,
-          residencyImageUrl:    form.residencyImageUrl    || undefined,
-          visaImageUrl:         form.visaImageUrl         || undefined,
-          alternativeVisaNumber: form.alternativeVisaNumber || undefined,
-          alternativeVisaExpiry: form.alternativeVisaExpiry || undefined,
-        },
+          // The server builds the application entirely from the stored profile;
+          // only visa-specific custom answers travel with the request.
+          customFieldResponses: customResponses,
+        } as any,
       },
       {
         onSuccess: () => {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-          setShowForm(false);
-          Alert.alert(t('visaDetail.submitSuccessTitle'), t('visaDetail.submitSuccessBody'));
+          setShowApplySheet(false);
+          // Invalidate the visa-applications list so "طلباتي" updates
+          queryClient.invalidateQueries({ queryKey: getListVisaApplicationsQueryKey() });
+          showToast({
+            type: 'success',
+            message: lang === 'ar' ? '✅ تم تقديم طلبك بنجاح! سنراجعه ونُخطرك بالحالة.' : '✅ Application submitted! We will notify you of updates.',
+            duration: 5000,
+          });
+          setTimeout(() => router.push('/(tabs)/account'), 1800);
         },
-        onError: (err: any) =>
-          Alert.alert(t('flow.error'), err?.message || t('visaDetail.submitError')),
+        onError: (err: any) => {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+          const msg = err?.data?.error || err?.message || (lang === 'ar' ? 'حدث خطأ، يرجى المحاولة مجدداً.' : 'An error occurred, please try again.');
+          showToast({ type: 'error', message: msg });
+        },
       },
     );
   };
 
+  // ── Loading / not found ───────────────────────────────────────────────────
   if (isLoading)
     return (
-      <View style={[s.loading, { backgroundColor: colors.background }]}>
+      <View style={[s.center, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.navy} />
       </View>
     );
   if (!visa)
     return (
-      <View style={[s.loading, { backgroundColor: colors.background }]}>
+      <View style={[s.center, { backgroundColor: colors.background }]}>
         <Text style={{ color: colors.mutedForeground, fontFamily: 'Cairo_400Regular' }}>
           {t('visaDetail.notFound')}
         </Text>
       </View>
     );
 
-  const statusColor = STATUS_COLORS[visa.status] || '#64748B';
-  const countryName = lang === 'ar' ? visa.countryAr : ((visa as any).countryEn || visa.countryAr);
-
-  const isGCC = ['SA', 'AE', 'QA', 'KW', 'BH', 'OM'].includes(visa.countryCode || '');
-
-  const datePickerConfigs: Record<DatePickerKey, { label: string; mode: 'birth' | 'passport'; minDate?: string; maxDate?: string }> = {
-    dateOfBirth:        { label: t('visaDetail.dateOfBirth'),          mode: 'birth',    maxDate: todayISO() },
-    passportIssueDate:  { label: t('visaDetail.passportIssueDate'),    mode: 'passport', maxDate: todayISO() },
-    passportExpiryDate: { label: t('visaDetail.passportExpiryDate'),   mode: 'passport', minDate: todayISO() },
-  };
-  const activeConfig = activePicker ? datePickerConfigs[activePicker] : null;
-
-  const allowedCountries = [
-    { name: 'الإمارات العربية المتحدة', flag: 'AE', allowed: true },
-    { name: 'المملكة العربية السعودية', flag: 'SA', allowed: true },
-    { name: 'دولة الكويت', flag: 'KW', allowed: true },
-    { name: 'دولة قطر', flag: 'QA', allowed: true },
-    { name: 'سلطنة عمان', flag: 'OM', allowed: true },
-    { name: 'مملكة البحرين', flag: 'BH', allowed: true },
-  ];
-
-  function flagEmoji(code: string): string {
-    const c = (code || '').toUpperCase();
-    if (c.length !== 2) return '🌍';
-    return String.fromCodePoint(...[...c].map(x => 0x1F1E6 + x.charCodeAt(0) - 65));
-  }
+  const statusColor  = STATUS_COLORS[visa.status] || '#64748B';
+  const countryName  = lang === 'ar' ? visa.countryAr : ((visa as any).countryEn || visa.countryAr);
+  const img          = countryImg(visa);
+  const flag         = flagEmoji(visa.countryCode || '');
+  const isAvailable  = visa.isActive && visa.status === 'available';
+  const user         = currentUser || authUser;
 
   return (
     <View style={[s.container, { backgroundColor: colors.background }]}>
+      {/* ── Top bar ─────────────────────────────────────────────────────── */}
       <View style={[s.topBar, { paddingTop: insets.top + 12 }]}>
-         <Pressable style={[s.iconBtn, { backgroundColor: colors.card }]} onPress={() => router.back()}>
-           <Ionicons name="chevron-forward" size={22} color={colors.primary} />
-         </Pressable>
-         <Image source={require('@/assets/images/absher-travel-logo-nobg.png')} style={s.logo} contentFit="contain" tintColor={colors.primary} />
-         <View style={s.headerRight}>
-            <Pressable style={[s.langPill, { backgroundColor: colors.card }]}><Text style={[s.langText, { color: colors.primary }]}>AR</Text><Ionicons name="globe-outline" size={14} color={colors.primary} /></Pressable>
-            <Pressable style={[s.iconBtn, { backgroundColor: colors.card }]}><Ionicons name="headset-outline" size={20} color={colors.primary} /></Pressable>
-         </View>
+        <Pressable style={[s.iconBtn, { backgroundColor: colors.card }]} onPress={() => router.back()}>
+          <Ionicons name="chevron-forward" size={22} color={colors.primary} />
+        </Pressable>
+        <Image
+          source={require('@/assets/images/absher-travel-logo-nobg.png')}
+          style={s.logo}
+          contentFit="contain"
+          tintColor={colors.primary}
+        />
+        <View style={s.iconBtn} />
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={s.heroSection}>
-          <Text style={[s.heroTitle, { color: colors.primary, fontFamily: 'Cairo_700Bold' }]}>
-            طلب تأشيرة {countryName}
-          </Text>
-          <Text style={[s.heroSub, { color: colors.textSecondary, fontFamily: 'Cairo_400Regular' }]}>
-            سافر بسهولة واحصل على تأشيرتك الإلكترونية في دقائق
-          </Text>
-          
-          <View style={s.heroIllustration}>
-             <View style={s.heroCircle}>
-                <Ionicons name="earth" size={80} color={colors.accent} style={{ opacity: 0.2 }} />
-             </View>
-             <View style={[s.passport, { backgroundColor: colors.primary }]}>
-                <Text style={s.passportTitle}>{isGCC ? 'GCC' : 'VISA'}</Text>
-                {isGCC && <Text style={s.passportSub}>VISA</Text>}
-                <Ionicons name="globe-outline" size={isGCC ? 30 : 40} color={colors.accent} style={{ marginTop: isGCC ? 10 : 20 }} />
-             </View>
+        {/* ── Hero image ──────────────────────────────────────────────── */}
+        <View style={s.heroWrap}>
+          <Image source={{ uri: img }} style={s.heroImg} contentFit="cover" />
+          <View style={s.heroOverlay} />
+          <View style={s.heroContent}>
+            <Text style={s.heroFlag}>{flag}</Text>
+            <Text style={[s.heroTitle, { fontFamily: 'Cairo_700Bold' }]}>
+              {lang === 'ar' ? `تأشيرة ${countryName}` : `${countryName} Visa`}
+            </Text>
+            <Text style={[s.heroSub, { fontFamily: 'Cairo_400Regular' }]}>
+              {visa.visaType}
+            </Text>
+            <View style={[s.statusBadge, { backgroundColor: statusColor + '22', borderColor: statusColor }]}>
+              <View style={[s.statusDot, { backgroundColor: statusColor }]} />
+              <Text style={[s.statusText, { color: statusColor, fontFamily: 'Cairo_700Bold' }]}>
+                {visa.status === 'available' ? 'متاحة للتقديم' : 'غير متاحة حالياً'}
+              </Text>
+            </View>
           </View>
         </View>
 
-        <View style={s.progressStrip}>
+        {/* ── Key stats ───────────────────────────────────────────────── */}
+        <View style={[s.statsRow, { backgroundColor: colors.card }]}>
           {[
-            { num: 1, label: 'البيانات الأساسية', sub: 'جنسيتك' },
-            { num: 2, label: 'بيانات الطلب', sub: 'تفاصيلك' },
-            { num: 3, label: 'المستندات', sub: 'رفع المستندات' },
-            { num: 4, label: 'مراجعة الطلب', sub: 'مراجعة وتأكيد' },
-            { num: 5, label: 'الدفع', sub: 'دفع الرسوم' },
-          ].map((step, i) => (
-            <React.Fragment key={i}>
-              <View style={s.stepItem}>
-                <View style={[s.stepNum, { backgroundColor: i === 0 ? colors.accent : colors.iconBg }]}>
-                  <Text style={[s.stepNumText, { color: i === 0 ? '#FFFFFF' : colors.textSecondary, fontFamily: 'Cairo_700Bold' }]}>{step.num}</Text>
-                </View>
-                <Text style={[s.stepLabel, { color: i === 0 ? colors.text : colors.textSecondary, fontFamily: 'Cairo_700Bold' }]}>{step.label}</Text>
-                <Text style={[s.stepSub, { color: colors.textSecondary, fontFamily: 'Cairo_400Regular' }]}>{step.sub}</Text>
-              </View>
-              {i < 4 && <View style={[s.stepLine, { backgroundColor: colors.border }]} />}
-            </React.Fragment>
+            { icon: 'time-outline', label: 'المعالجة', value: `${visa.processingDays} ${lang === 'ar' ? 'يوم' : 'days'}` },
+            { icon: 'calendar-outline', label: 'المكوث', value: visa.stayDuration ? `${visa.stayDuration} ${lang === 'ar' ? 'يوم' : 'd'}` : '—' },
+            { icon: 'earth-outline', label: 'الدخول', value: visa.entryType === 'single' ? 'مرة واحدة' : visa.entryType === 'multiple' ? 'متعدد' : 'عبور' },
+            { icon: 'shield-outline', label: 'الصلاحية', value: visa.validityDays ? `${visa.validityDays} ${lang === 'ar' ? 'يوم' : 'd'}` : '—' },
+          ].map((s2, i) => (
+            <View key={i} style={s.statItem}>
+              <Ionicons name={s2.icon as any} size={20} color={colors.accent} />
+              <Text style={[s.statLabel, { color: colors.mutedForeground, fontFamily: 'Cairo_400Regular' }]}>{s2.label}</Text>
+              <Text style={[s.statValue, { color: colors.text, fontFamily: 'Cairo_700Bold' }]}>{s2.value}</Text>
+            </View>
           ))}
         </View>
 
-        <View style={[s.contentCard, { backgroundColor: colors.card }]}>
-           <Text style={[s.cardTitle, { color: colors.primary, fontFamily: 'Cairo_700Bold' }]}>الجنسية</Text>
-           <Text style={[s.cardSub, { color: colors.textSecondary, fontFamily: 'Cairo_400Regular' }]}>اختر جنسيتك لمعرفة إمكانية التقديم</Text>
-           
-           <Pressable style={s.dropdown} onPress={openApplicationForm}>
-             <Ionicons name="chevron-down" size={20} color={colors.textSecondary} />
-             <Text style={[s.dropdownText, { color: colors.textSecondary, fontFamily: 'Cairo_400Regular' }]}>اختر جنسيتك</Text>
-             <Ionicons name="globe-outline" size={20} color={colors.primary} />
-           </Pressable>
+        {/* ── Fee card ────────────────────────────────────────────────── */}
+        <View style={[s.feeCard, { backgroundColor: colors.primary }]}>
+          <View>
+            <Text style={[s.feeLabel, { fontFamily: 'Cairo_400Regular' }]}>رسوم التأشيرة</Text>
+            <Text style={[s.feeAmount, { fontFamily: 'Cairo_700Bold' }]}>
+              {Number(visa.fee).toLocaleString()} {visa.currency}
+            </Text>
+          </View>
+          <Ionicons name="card-outline" size={32} color="rgba(255,255,255,0.4)" />
         </View>
 
-        {isGCC && (
-          <View style={[s.contentCard, { backgroundColor: colors.card, marginTop: 12 }]}>
-            <Text style={[s.cardTitle, { color: colors.primary, fontFamily: 'Cairo_700Bold' }]}>الدول المسموح لها بالتقديم</Text>
-            <Text style={[s.cardSub, { color: colors.textSecondary, fontFamily: 'Cairo_400Regular' }]}>يمكن لحاملي جوازات السفر التالية التقديم على تأشيرة دول مجلس التعاون الخليجي إلكترونياً</Text>
-            
-            <View style={s.flagsGrid}>
-              {allowedCountries.map((c, i) => (
-                <View key={i} style={s.flagCard}>
-                  <View style={s.flagCircle}>
-                    <Text style={s.flagEmoji}>{flagEmoji(c.flag)}</Text>
-                  </View>
-                  <Text style={[s.flagName, { color: colors.text, fontFamily: 'Cairo_600SemiBold' }]}>{c.name}</Text>
-                  <View style={[s.allowedChip, { backgroundColor: 'rgba(22,163,74,0.1)' }]}>
-                    <Text style={[s.allowedText, { color: colors.success, fontFamily: 'Cairo_600SemiBold' }]}>مسموح</Text>
-                  </View>
-                </View>
-              ))}
+        {/* ── Description ─────────────────────────────────────────────── */}
+        {(lang === 'ar' ? (visa as any).descriptionAr : (visa as any).descriptionEn) && (
+          <View style={[s.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <View style={s.sectionHeader}>
+              <Ionicons name="information-circle-outline" size={18} color={colors.navy} />
+              <Text style={[s.sectionTitle, { color: colors.foreground, fontFamily: 'Cairo_700Bold' }]}>نبذة عن التأشيرة</Text>
             </View>
-
-            <View style={[s.infoBanner, { backgroundColor: colors.iconBg }]}>
-              <View style={{ flex: 1, paddingRight: 12 }}>
-                <Text style={[s.infoBannerTitle, { color: colors.text, fontFamily: 'Cairo_600SemiBold' }]}>لا تجد جنسيتك في القائمة؟</Text>
-                <Text style={[s.infoBannerSub, { color: colors.textSecondary, fontFamily: 'Cairo_400Regular' }]}>
-                  حالياً لا يمكنك التقديم إلكترونياً. يرجى التواصل مع فريق الدعم لمعرفة خيارات التقديم المتاحة.
-                </Text>
-              </View>
-              <View style={[s.infoBannerIcon, { backgroundColor: colors.primary }]}>
-                 <Ionicons name="information" size={20} color="#FFFFFF" />
-              </View>
-            </View>
+            <Text style={[s.bodyText, { color: colors.textSecondary, fontFamily: 'Cairo_400Regular' }]}>
+              {lang === 'ar' ? (visa as any).descriptionAr : (visa as any).descriptionEn}
+            </Text>
           </View>
         )}
 
-        <View style={[s.trustStrip, { backgroundColor: colors.card }]}>
-          <View style={s.trustStripLeft}>
-            <View style={s.trustShield}>
-              <Ionicons name="shield-checkmark" size={24} color={colors.accent} />
+        {/* ── Required documents ──────────────────────────────────────── */}
+        <View style={[s.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <View style={s.sectionHeader}>
+            <Ionicons name="documents-outline" size={18} color={colors.navy} />
+            <Text style={[s.sectionTitle, { color: colors.foreground, fontFamily: 'Cairo_700Bold' }]}>المستندات المطلوبة</Text>
+          </View>
+          {[
+            { flag: visa.requiresPassportImage !== false,   label: 'صورة جواز السفر',      icon: 'card-outline' },
+            { flag: visa.requiresPersonalPhoto !== false,   label: 'صورة شخصية حديثة',     icon: 'person-circle-outline' },
+            { flag: visa.requiresResidencyImage === true,   label: 'بطاقة الإقامة',         icon: 'id-card-outline' },
+            { flag: visa.acceptsSchengenResidency || visa.acceptsUkResidency || visa.acceptsUsVisa || visa.acceptsCanadaResidency || visa.acceptsAustraliaResidency,
+              label: 'تأشيرة / إقامة بديلة',  icon: 'earth-outline' },
+          ].filter(d => d.flag).map((d, i) => (
+            <View key={i} style={[s.docRow, { borderColor: colors.border }]}>
+              <View style={[s.docIcon, { backgroundColor: colors.iconBg }]}>
+                <Ionicons name={d.icon as any} size={18} color={colors.navy} />
+              </View>
+              <Text style={[s.docLabel, { color: colors.foreground, fontFamily: 'Cairo_600SemiBold' }]}>{d.label}</Text>
+              <Ionicons name="checkmark-circle" size={18} color={colors.success} />
             </View>
-          </View>
-          <View style={s.trustStripRight}>
-            <Text style={[s.trustTitle, { color: colors.text, fontFamily: 'Cairo_700Bold' }]}>تجربة آمنة وموثوقة</Text>
-            <Text style={[s.trustSub, { color: colors.textSecondary, fontFamily: 'Cairo_400Regular' }]}>
-              نضمن لك حماية بياناتك وخصوصيتك وفق أعلى معايير الأمان
+          ))}
+          {visa.documents && (
+            <Text style={[s.bodyText, { color: colors.textSecondary, fontFamily: 'Cairo_400Regular', marginTop: 8 }]}>
+              {visa.documents}
             </Text>
-          </View>
+          )}
         </View>
+
+        {/* ── Eligibility info ────────────────────────────────────────── */}
+        {((visa.allowedNationalities?.length ?? 0) > 0 || (visa.blockedNationalities?.length ?? 0) > 0) && (
+          <View style={[s.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <View style={s.sectionHeader}>
+              <Ionicons name="globe-outline" size={18} color={colors.navy} />
+              <Text style={[s.sectionTitle, { color: colors.foreground, fontFamily: 'Cairo_700Bold' }]}>شروط الأهلية</Text>
+            </View>
+            {(visa.allowedNationalities?.length ?? 0) > 0 && (
+              <View style={s.tagWrap}>
+                <Text style={[s.tagGroupLabel, { color: colors.mutedForeground, fontFamily: 'Cairo_600SemiBold' }]}>الجنسيات المسموح بها:</Text>
+                <View style={s.tags}>
+                  {(visa.allowedNationalities ?? []).map(n => (
+                    <View key={n} style={[s.tag, { backgroundColor: '#DCFCE7', borderColor: '#BBF7D0' }]}>
+                      <Text style={[s.tagText, { color: '#166534', fontFamily: 'Cairo_600SemiBold' }]}>{n}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            )}
+            {(visa.blockedNationalities?.length ?? 0) > 0 && (
+              <View style={[s.tagWrap, { marginTop: 8 }]}>
+                <Text style={[s.tagGroupLabel, { color: colors.mutedForeground, fontFamily: 'Cairo_600SemiBold' }]}>الجنسيات المحظورة:</Text>
+                <View style={s.tags}>
+                  {(visa.blockedNationalities ?? []).map(n => (
+                    <View key={n} style={[s.tag, { backgroundColor: '#FEE2E2', borderColor: '#FECACA' }]}>
+                      <Text style={[s.tagText, { color: '#991B1B', fontFamily: 'Cairo_600SemiBold' }]}>{n}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            )}
+          </View>
+        )}
+
+        {/* ── Notes ───────────────────────────────────────────────────── */}
+        {visa.notes && (
+          <View style={[s.section, { backgroundColor: '#FFF7ED', borderColor: '#FED7AA' }]}>
+            <View style={s.sectionHeader}>
+              <Ionicons name="warning-outline" size={18} color="#EA580C" />
+              <Text style={[s.sectionTitle, { color: '#9A3412', fontFamily: 'Cairo_700Bold' }]}>ملاحظات مهمة</Text>
+            </View>
+            <Text style={[s.bodyText, { color: '#9A3412', fontFamily: 'Cairo_400Regular' }]}>{visa.notes}</Text>
+          </View>
+        )}
 
         <View style={{ height: 120 }} />
       </ScrollView>
 
-      {/* ── Apply Button (mocked on this screen to open form) ──────────────── */}
-      <View style={[s.footer, { paddingBottom: insets.bottom + 16, backgroundColor: colors.card, borderTopColor: colors.border }]}>
-        <Pressable
-          style={({ pressed }) => [s.applyBtn, { backgroundColor: colors.navy, opacity: pressed ? 0.9 : 1 }]}
-          onPress={openApplicationForm}
-        >
-          <Text style={[s.applyBtnText, { fontFamily: 'Cairo_700Bold' }]}>
-            {!authUser ? 'سجل دخولك للتقديم' : 'ابدأ بتقديم طلبك'}
-          </Text>
-        </Pressable>
-      </View>
+      {/* ── Sticky footer ───────────────────────────────────────────────── */}
+      {isAvailable && (
+        <View style={[s.footer, { paddingBottom: insets.bottom + 16, backgroundColor: colors.card, borderTopColor: colors.border }]}>
+          <View style={s.footerTop}>
+            <View>
+              <Text style={[s.footerFeeLabel, { color: colors.mutedForeground, fontFamily: 'Cairo_400Regular' }]}>رسوم التأشيرة</Text>
+              <Text style={[s.footerFee, { color: colors.primary, fontFamily: 'Cairo_700Bold' }]}>
+                {Number(visa.fee).toLocaleString()} {visa.currency}
+              </Text>
+            </View>
+            <Pressable
+              style={({ pressed }) => [s.applyBtn, { backgroundColor: colors.navy, opacity: pressed ? 0.9 : 1 }]}
+              onPress={openApplySheet}
+            >
+              <Ionicons name="send-outline" size={18} color="#FFF" />
+              <Text style={[s.applyBtnText, { fontFamily: 'Cairo_700Bold' }]}>
+                {!authUser ? 'سجّل دخولك للتقديم' : 'ابدأ التقديم'}
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+      )}
 
-      {/* ═══════════════════════════════════════════════════════════════════
-          Application Form Modal (Kept fully intact)
-          ═══════════════════════════════════════════════════════════════════ */}
-      <Modal visible={showForm} animationType="slide" presentationStyle="pageSheet">
+      {/* ══════════════════════════════════════════════════════════════════
+          Application sheet — profile-driven, no re-entry of saved data
+          ══════════════════════════════════════════════════════════════════ */}
+      <Modal visible={showApplySheet} animationType="slide" presentationStyle="pageSheet">
         <View style={[s.modal, { backgroundColor: colors.background }]}>
+          {/* Modal header */}
           <View style={[s.modalHeader, { borderBottomColor: colors.border, backgroundColor: colors.card }]}>
-            <Pressable onPress={() => setShowForm(false)} hitSlop={10}>
+            <Pressable onPress={() => setShowApplySheet(false)} hitSlop={10}>
               <Ionicons name="close" size={24} color={colors.foreground} />
             </Pressable>
             <Text style={[s.modalTitle, { color: colors.foreground, fontFamily: 'Cairo_700Bold' }]}>
@@ -343,221 +400,162 @@ export default function VisaDetailScreen() {
             <View style={{ width: 24 }} />
           </View>
 
-          <ScrollView contentContainerStyle={s.formContent} keyboardShouldPersistTaps="handled">
-            {/* ── Personal Info ──────────────────────────────────────────── */}
-            <View style={[s.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
-              <View style={s.sectionHeader}>
-                <Ionicons name="person-outline" size={18} color={colors.navy} />
-                <Text style={[s.sectionHeaderText, { color: colors.foreground, fontFamily: 'Cairo_700Bold' }]}>
-                  البيانات الشخصية
+          <ScrollView contentContainerStyle={s.modalContent} keyboardShouldPersistTaps="handled">
+
+            {/* ── Profile summary (read-only) ─────────────────────────── */}
+            <View style={[s.profileCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <View style={[s.profileCardHeader, { backgroundColor: colors.primary }]}>
+                <Ionicons name="person-circle-outline" size={20} color="#FFF" />
+                <Text style={[s.profileCardHeaderText, { fontFamily: 'Cairo_700Bold' }]}>بياناتك الشخصية (محفوظة تلقائياً)</Text>
+              </View>
+              <View style={s.profileCardBody}>
+                <Text style={[s.profileCardNote, { color: colors.mutedForeground, fontFamily: 'Cairo_400Regular' }]}>
+                  يستخدم النظام بياناتك المحفوظة تلقائياً — لا حاجة لإعادة إدخال أي شيء.
                 </Text>
-              </View>
-
-              {([
-                { key: 'fullName',    label: 'الاسم الكامل',       placeholder: 'محمد أحمد السعيد',  keyboard: 'default' },
-                { key: 'nationality', label: 'الجنسية',             placeholder: 'سعودي',              keyboard: 'default' },
-                { key: 'email',       label: 'البريد الإلكتروني',   placeholder: 'example@email.com',  keyboard: 'email-address' },
-                { key: 'phone',       label: 'رقم الهاتف',          placeholder: '+966 50 000 0000',   keyboard: 'phone-pad' },
-              ] as { key: keyof typeof form; label: string; placeholder: string; keyboard: any }[]).map(f => (
-                <View key={String(f.key)} style={s.field}>
-                  <Text style={[s.fieldLabel, { color: colors.foreground, fontFamily: 'Cairo_600SemiBold' }]}>{f.label}</Text>
-                  <TextInput
-                    value={String(form[f.key])}
-                    onChangeText={v => set(f.key as any, v)}
-                    placeholder={f.placeholder}
-                    placeholderTextColor={colors.mutedForeground}
-                    keyboardType={f.keyboard}
-                    style={[s.fieldInput, { backgroundColor: colors.muted, borderColor: colors.border, color: colors.foreground, fontFamily: 'Cairo_400Regular' }]}
-                    textAlign="right"
-                  />
-                </View>
-              ))}
-
-              <View style={s.field}>
-                <Text style={[s.fieldLabel, { color: colors.foreground, fontFamily: 'Cairo_600SemiBold' }]}>تاريخ الميلاد</Text>
-                <DateField
-                  value={form.dateOfBirth}
-                  placeholder="اختر تاريخ الميلاد"
-                  onPress={() => setActivePicker('dateOfBirth')}
-                  colors={colors}
-                />
-              </View>
-
-              <View style={s.field}>
-                <Text style={[s.fieldLabel, { color: colors.foreground, fontFamily: 'Cairo_600SemiBold' }]}>الجنس</Text>
-                <View style={s.genderRow}>
-                  {(['male', 'female'] as const).map(g => (
-                    <Pressable
-                      key={g}
-                      style={[s.genderBtn, { backgroundColor: form.gender === g ? colors.navy : colors.muted, borderColor: colors.border }]}
-                      onPress={() => set('gender', g)}
-                    >
-                      <Text style={[s.genderText, { color: form.gender === g ? '#FFFFFF' : colors.foreground, fontFamily: 'Cairo_600SemiBold' }]}>
-                        {g === 'male' ? '👨  ذكر' : '👩  أنثى'}
-                      </Text>
-                    </Pressable>
-                  ))}
-                </View>
-              </View>
-            </View>
-
-            {/* ── Passport ──────────────────────────────────────────────── */}
-            <View style={[s.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
-              <View style={s.sectionHeader}>
-                <Ionicons name="card-outline" size={18} color={colors.navy} />
-                <Text style={[s.sectionHeaderText, { color: colors.foreground, fontFamily: 'Cairo_700Bold' }]}>
-                  بيانات جواز السفر
-                </Text>
-              </View>
-
-              <View style={s.field}>
-                <Text style={[s.fieldLabel, { color: colors.foreground, fontFamily: 'Cairo_600SemiBold' }]}>رقم الجواز</Text>
-                <TextInput
-                  value={form.passportNumber}
-                  onChangeText={v => set('passportNumber', v)}
-                  placeholder="رقم الجواز"
-                  placeholderTextColor={colors.mutedForeground}
-                  autoCapitalize="characters"
-                  style={[s.fieldInput, { backgroundColor: colors.muted, borderColor: colors.border, color: colors.foreground, fontFamily: 'Cairo_400Regular' }]}
-                  textAlign="right"
-                />
-              </View>
-
-              <View style={s.twoCol}>
-                <View style={{ flex: 1 }}>
-                  <Text style={[s.fieldLabel, { color: colors.foreground, fontFamily: 'Cairo_600SemiBold' }]}>تاريخ الإصدار</Text>
-                  <DateField
-                    value={form.passportIssueDate}
-                    placeholder="اختر التاريخ"
-                    onPress={() => setActivePicker('passportIssueDate')}
-                    colors={colors}
-                  />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={[s.fieldLabel, { color: colors.foreground, fontFamily: 'Cairo_600SemiBold' }]}>تاريخ الانتهاء</Text>
-                  <DateField
-                    value={form.passportExpiryDate}
-                    placeholder="اختر التاريخ"
-                    onPress={() => setActivePicker('passportExpiryDate')}
-                    colors={colors}
-                  />
-                  {form.passportExpiryDate && form.passportExpiryDate < todayISO() && (
-                    <Text style={[s.warn, { fontFamily: 'Cairo_400Regular' }]}>⚠️ الجواز منتهٍ</Text>
-                  )}
-                </View>
-              </View>
-            </View>
-
-            {/* ── Documents ─────────────────────────────────────────────── */}
-            <View style={[s.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
-              <View style={s.sectionHeader}>
-                <Ionicons name="documents-outline" size={18} color={colors.navy} />
-                <Text style={[s.sectionHeaderText, { color: colors.foreground, fontFamily: 'Cairo_700Bold' }]}>
-                  المستندات المطلوبة
-                </Text>
-              </View>
-
-              {needsPersonalPhoto && (
-                <ImageUploader
-                  label="الصورة الشخصية"
-                  sublabel="صورة حديثة بخلفية بيضاء"
-                  icon="person-circle-outline"
-                  required
-                  value={form.personalPhotoUrl}
-                  onUpload={url => set('personalPhotoUrl', url)}
-                  onRemove={() => set('personalPhotoUrl', '')}
-                />
-              )}
-
-              {needsPassportImage && (
-                <ImageUploader
-                  label="صورة الجواز"
-                  sublabel="الصفحة الأولى مع البيانات الشخصية"
-                  icon="card-outline"
-                  required
-                  value={form.passportImageUrl}
-                  onUpload={url => set('passportImageUrl', url)}
-                  onRemove={() => set('passportImageUrl', '')}
-                />
-              )}
-
-              {needsResidencyImage && (
-                <>
-                  <ImageUploader
-                    label="صورة الإقامة (وجه)"
-                    sublabel="الجهة الأمامية للإقامة"
-                    icon="id-card-outline"
-                    required
-                    value={form.residencyImageUrl}
-                    onUpload={url => set('residencyImageUrl', url)}
-                    onRemove={() => set('residencyImageUrl', '')}
-                  />
-                  <ImageUploader
-                    label="صورة الإقامة (ظهر)"
-                    sublabel="الجهة الخلفية للإقامة"
-                    icon="id-card-outline"
-                    value={form.residencyBackImageUrl}
-                    onUpload={url => set('residencyBackImageUrl', url)}
-                    onRemove={() => set('residencyBackImageUrl', '')}
-                  />
-                </>
-              )}
-
-              {needsAltVisa && (
-                <>
-                  <ImageUploader
-                    label="صورة التأشيرة البديلة"
-                    sublabel={
-                      [
-                        visa?.acceptsSchengenResidency && 'شنغن',
-                        visa?.acceptsUkResidency        && 'بريطانيا',
-                        visa?.acceptsUsVisa             && 'أمريكا',
-                        visa?.acceptsCanadaResidency    && 'كندا',
-                        visa?.acceptsAustraliaResidency && 'أستراليا',
-                      ]
-                        .filter(Boolean)
-                        .join(' · ') || 'تأشيرة بديلة'
-                    }
-                    icon="earth-outline"
-                    value={form.visaImageUrl}
-                    onUpload={url => set('visaImageUrl', url)}
-                    onRemove={() => set('visaImageUrl', '')}
-                  />
-                  <View style={s.field}>
-                    <Text style={[s.fieldLabel, { color: colors.foreground, fontFamily: 'Cairo_600SemiBold' }]}>رقم التأشيرة البديلة</Text>
-                    <TextInput
-                      value={form.alternativeVisaNumber}
-                      onChangeText={v => set('alternativeVisaNumber', v)}
-                      placeholder="رقم التأشيرة"
-                      placeholderTextColor={colors.mutedForeground}
-                      style={[s.fieldInput, { backgroundColor: colors.muted, borderColor: colors.border, color: colors.foreground, fontFamily: 'Cairo_400Regular' }]}
-                      textAlign="right"
-                    />
+                {[
+                  { icon: 'person-outline',   label: 'الاسم',        value: `${user?.firstName || ''} ${user?.lastName || ''}`.trim() },
+                  { icon: 'globe-outline',    label: 'الجنسية',      value: (user as any)?.nationality },
+                  { icon: 'card-outline',     label: 'رقم الجواز',   value: (user as any)?.passportNumber },
+                  { icon: 'call-outline',     label: 'رقم الهاتف',   value: (user as any)?.phone },
+                  { icon: 'mail-outline',     label: 'البريد',       value: (user as any)?.email },
+                  { icon: 'calendar-outline', label: 'تاريخ الميلاد', value: (user as any)?.dateOfBirth },
+                ].filter(f => f.value).map((f, i) => (
+                  <View key={i} style={[s.profileRow, { borderColor: colors.border }]}>
+                    <View style={[s.profileRowIcon, { backgroundColor: colors.iconBg }]}>
+                      <Ionicons name={f.icon as any} size={16} color={colors.navy} />
+                    </View>
+                    <View style={s.profileRowText}>
+                      <Text style={[s.profileRowLabel, { color: colors.mutedForeground, fontFamily: 'Cairo_400Regular' }]}>{f.label}</Text>
+                      <Text style={[s.profileRowValue, { color: colors.foreground, fontFamily: 'Cairo_600SemiBold' }]}>{f.value}</Text>
+                    </View>
+                    <Ionicons name="checkmark-circle" size={18} color={colors.success} />
                   </View>
-                </>
-              )}
+                ))}
+                {/* GCC residency badge */}
+                {(user as any)?.isGccResident && (user as any)?.gccResidenceCountry && (
+                  <View style={[s.badge, { backgroundColor: '#DBEAFE', borderColor: '#BFDBFE' }]}>
+                    <Ionicons name="flag-outline" size={14} color="#1D4ED8" />
+                    <Text style={[s.badgeText, { color: '#1D4ED8', fontFamily: 'Cairo_600SemiBold' }]}>
+                      إقامة خليجية · {(user as any).gccResidenceCountry}
+                    </Text>
+                  </View>
+                )}
+                {/* European doc badge */}
+                {(user as any)?.isEuropeanResident && (user as any)?.europeanDocumentType && (
+                  <View style={[s.badge, { backgroundColor: '#F3E8FF', borderColor: '#E9D5FF' }]}>
+                    <Ionicons name="globe-outline" size={14} color="#6D28D9" />
+                    <Text style={[s.badgeText, { color: '#6D28D9', fontFamily: 'Cairo_600SemiBold' }]}>
+                      وثيقة أوروبية · {(user as any).europeanDocumentType}
+                    </Text>
+                  </View>
+                )}
+                <Pressable onPress={() => { setShowApplySheet(false); router.push('/(tabs)/account'); }}>
+                  <Text style={[s.editProfileLink, { color: colors.primary, fontFamily: 'Cairo_600SemiBold' }]}>
+                    ← تعديل الملف الشخصي
+                  </Text>
+                </Pressable>
+              </View>
             </View>
 
-            {/* ── Terms ─────────────────────────────────────────────────── */}
+            {/* ── Custom fields (visa-specific) ───────────────────────── */}
+            {customFields && customFields.length > 0 && (
+              <View style={[s.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                <View style={s.sectionHeader}>
+                  <Ionicons name="list-outline" size={18} color={colors.navy} />
+                  <Text style={[s.sectionTitle, { color: colors.foreground, fontFamily: 'Cairo_700Bold' }]}>معلومات إضافية</Text>
+                </View>
+                {customFields.map((field: any) => {
+                  const key = String(field.id);
+                  const value = customResponses[key] || '';
+                  const setValue = (v: string) =>
+                    setCustomResponses(prev => ({ ...prev, [key]: v }));
+                  return (
+                    <View key={field.id} style={s.field}>
+                      <Text style={[s.fieldLabel, { color: colors.foreground, fontFamily: 'Cairo_600SemiBold' }]}>
+                        {lang === 'ar' ? field.labelAr : field.labelEn}
+                        {field.required && <Text style={{ color: '#EF4444' }}> *</Text>}
+                      </Text>
+                      {field.fieldType === 'select' && (field.options?.length ?? 0) > 0 ? (
+                        <View style={s.tags}>
+                          {(field.options as string[]).map(opt => (
+                            <Pressable
+                              key={opt}
+                              onPress={() => setValue(opt)}
+                              style={[s.tag, {
+                                backgroundColor: value === opt ? colors.navy : colors.muted,
+                                borderColor: value === opt ? colors.navy : colors.border,
+                              }]}
+                            >
+                              <Text style={[s.tagText, {
+                                color: value === opt ? '#FFF' : colors.foreground,
+                                fontFamily: 'Cairo_600SemiBold',
+                              }]}>{opt}</Text>
+                            </Pressable>
+                          ))}
+                        </View>
+                      ) : (
+                        <TextInput
+                          value={value}
+                          onChangeText={setValue}
+                          placeholder={(lang === 'ar' ? field.placeholderAr : field.placeholderEn) || ''}
+                          placeholderTextColor={colors.mutedForeground}
+                          style={[s.fieldInput, {
+                            backgroundColor: colors.muted,
+                            borderColor: colors.border,
+                            color: colors.foreground,
+                            fontFamily: 'Cairo_400Regular',
+                            padding: 12,
+                            textAlign: 'right',
+                          }]}
+                        />
+                      )}
+                    </View>
+                  );
+                })}
+              </View>
+            )}
+
+            {/* ── Terms ───────────────────────────────────────────────── */}
             <Pressable
-              style={[s.termsRow, { backgroundColor: colors.card, borderColor: colors.border }]}
-              onPress={() => set('agreedToTerms', !form.agreedToTerms)}
+              style={[s.termsRow, { backgroundColor: colors.card, borderColor: agreed ? colors.navy : colors.border }]}
+              onPress={() => setAgreed(a => !a)}
             >
               <Ionicons
-                name={form.agreedToTerms ? 'checkbox' : 'square-outline'}
+                name={agreed ? 'checkbox' : 'square-outline'}
                 size={24}
-                color={form.agreedToTerms ? colors.navy : colors.mutedForeground}
+                color={agreed ? colors.navy : colors.mutedForeground}
               />
               <Text style={[s.termsText, { color: colors.foreground, fontFamily: 'Cairo_400Regular' }]}>
-                أوافق على الشروط والأحكام وسياسة الخصوصية وأقر بصحة المعلومات المُدخلة
+                أقر بأن جميع بياناتي الشخصية في ملفي صحيحة وأوافق على الشروط والأحكام وسياسة الخصوصية.
               </Text>
             </Pressable>
 
-            {/* ── Submit ────────────────────────────────────────────────── */}
+            {/* ── Visa summary ────────────────────────────────────────── */}
+            <View style={[s.summaryCard, { backgroundColor: colors.iconBg, borderColor: colors.border }]}>
+              <View style={s.summaryRow}>
+                <Text style={[s.summaryLabel, { color: colors.mutedForeground, fontFamily: 'Cairo_400Regular' }]}>التأشيرة</Text>
+                <Text style={[s.summaryValue, { color: colors.foreground, fontFamily: 'Cairo_700Bold' }]}>{countryName}</Text>
+              </View>
+              <View style={s.summaryRow}>
+                <Text style={[s.summaryLabel, { color: colors.mutedForeground, fontFamily: 'Cairo_400Regular' }]}>الرسوم</Text>
+                <Text style={[s.summaryValue, { color: colors.primary, fontFamily: 'Cairo_700Bold' }]}>
+                  {Number(visa.fee).toLocaleString()} {visa.currency}
+                </Text>
+              </View>
+              <View style={s.summaryRow}>
+                <Text style={[s.summaryLabel, { color: colors.mutedForeground, fontFamily: 'Cairo_400Regular' }]}>المعالجة</Text>
+                <Text style={[s.summaryValue, { color: colors.foreground, fontFamily: 'Cairo_700Bold' }]}>{visa.processingDays} يوم</Text>
+              </View>
+            </View>
+
+            {/* ── Submit button ────────────────────────────────────────── */}
             <Pressable
-              style={({ pressed }) => [s.submitBtn, { backgroundColor: colors.navy, opacity: pressed ? 0.9 : 1 }]}
+              style={({ pressed }) => [
+                s.submitBtn,
+                { backgroundColor: agreed ? colors.navy : colors.border, opacity: pressed ? 0.9 : 1 },
+              ]}
               onPress={submit}
-              disabled={createApp.isPending}
+              disabled={createApp.isPending || !agreed}
             >
               {createApp.isPending ? (
                 <ActivityIndicator color="#FFFFFF" />
@@ -568,104 +566,115 @@ export default function VisaDetailScreen() {
                 </>
               )}
             </Pressable>
+
+            <Text style={[s.footerNote, { color: colors.mutedForeground, fontFamily: 'Cairo_400Regular' }]}>
+              سيتم إرسال طلبك فوراً وستصلك إشعارات بحالة الطلب.
+            </Text>
           </ScrollView>
         </View>
-
-        {activeConfig && (
-          <DatePickerModal
-            visible={activePicker !== null}
-            onClose={() => setActivePicker(null)}
-            mode={activeConfig.mode}
-            value={form[activePicker!] as string}
-            onSelect={d => { set(activePicker! as any, d); setActivePicker(null); }}
-            minDate={activeConfig.minDate}
-            maxDate={activeConfig.maxDate}
-            label={activeConfig.label}
-          />
-        )}
       </Modal>
     </View>
   );
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+
 const s = StyleSheet.create({
-  container:       { flex: 1 },
-  loading:         { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  
-  topBar: { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingBottom: 10 },
-  iconBtn: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', elevation: 2, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8 },
-  logo: { width: 120, height: 40 },
-  headerRight: { flexDirection: 'row-reverse', gap: 8 },
-  langPill: { flexDirection: 'row-reverse', gap: 4, alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, elevation: 2, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8 },
-  langText: { fontFamily: 'Cairo_700Bold', fontSize: 12 },
+  container:  { flex: 1 },
+  center:     { flex: 1, alignItems: 'center', justifyContent: 'center' },
 
-  heroSection: { alignItems: 'center', paddingHorizontal: 24, paddingTop: 24, paddingBottom: 24 },
-  heroTitle: { fontSize: 24, textAlign: 'center', marginBottom: 8 },
-  heroSub: { fontSize: 14, textAlign: 'center', lineHeight: 22 },
-  heroIllustration: { position: 'relative', width: 200, height: 220, alignItems: 'center', justifyContent: 'center', marginTop: 10 },
-  heroCircle: { position: 'absolute', width: 160, height: 160, borderRadius: 80, alignItems: 'center', justifyContent: 'center' },
-  passport: { width: 110, height: 160, borderRadius: 8, padding: 16, alignItems: 'center', elevation: 8, shadowColor: '#0A2342', shadowOpacity: 0.2, shadowRadius: 12, shadowOffset: { width: -4, height: 8 }, transform: [{ rotate: '5deg' }] },
-  passportTitle: { color: '#C9A24B', fontSize: 20, fontFamily: 'Cairo_700Bold', marginTop: 10 },
-  passportSub: { color: '#C9A24B', fontSize: 12, fontFamily: 'Cairo_600SemiBold', letterSpacing: 2 },
+  topBar: {
+    flexDirection: 'row-reverse', justifyContent: 'space-between',
+    alignItems: 'center', paddingHorizontal: 20, paddingBottom: 10,
+  },
+  iconBtn: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  logo:    { width: 120, height: 40 },
 
-  progressStrip: { flexDirection: 'row-reverse', justifyContent: 'center', alignItems: 'flex-start', paddingHorizontal: 16, marginBottom: 24 },
-  stepItem: { alignItems: 'center', width: 60 },
-  stepNum: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
-  stepNumText: { fontSize: 14 },
-  stepLabel: { fontSize: 10, textAlign: 'center', marginBottom: 2 },
-  stepSub: { fontSize: 8, textAlign: 'center' },
-  stepLine: { width: 16, height: 2, marginTop: 14 },
+  heroWrap:    { height: 260, position: 'relative' },
+  heroImg:     { ...StyleSheet.absoluteFillObject },
+  heroOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(10,35,66,0.60)' },
+  heroContent: { position: 'absolute', bottom: 24, right: 20, left: 20 },
+  heroFlag:    { fontSize: 36, marginBottom: 4 },
+  heroTitle:   { fontSize: 22, color: '#FFF', marginBottom: 4 },
+  heroSub:     { fontSize: 13, color: 'rgba(255,255,255,0.75)', marginBottom: 10 },
+  statusBadge: { flexDirection: 'row-reverse', alignItems: 'center', gap: 6, alignSelf: 'flex-end',
+                 paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, borderWidth: 1 },
+  statusDot:   { width: 7, height: 7, borderRadius: 4 },
+  statusText:  { fontSize: 12 },
 
-  contentCard: { marginHorizontal: 20, borderRadius: 16, padding: 20, elevation: 2, shadowColor: '#0A2342', shadowOpacity: 0.05, shadowRadius: 8 },
-  cardTitle: { fontSize: 16, textAlign: 'right', marginBottom: 4 },
-  cardSub: { fontSize: 12, textAlign: 'right', marginBottom: 16 },
-  dropdown: { flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'space-between', borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 14 },
-  dropdownText: { fontSize: 14, flex: 1, textAlign: 'right', marginHorizontal: 10 },
+  statsRow: { flexDirection: 'row-reverse', justifyContent: 'space-around', paddingVertical: 16, marginHorizontal: 16,
+              marginTop: 16, borderRadius: 16, elevation: 2, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8 },
+  statItem:  { alignItems: 'center', gap: 4 },
+  statLabel: { fontSize: 10, textAlign: 'center' },
+  statValue: { fontSize: 13, textAlign: 'center' },
 
-  flagsGrid: { flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 12, justifyContent: 'space-between' },
-  flagCard: { width: '31%', alignItems: 'center', borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 12, padding: 12 },
-  flagCircle: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
-  flagEmoji: { fontSize: 24 },
-  flagName: { fontSize: 10, textAlign: 'center', marginBottom: 8, height: 28 },
-  allowedChip: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
-  allowedText: { fontSize: 9 },
+  feeCard: { flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'space-between',
+             marginHorizontal: 16, marginTop: 12, borderRadius: 16, padding: 20 },
+  feeLabel:  { color: 'rgba(255,255,255,0.7)', fontSize: 12, textAlign: 'right' },
+  feeAmount: { color: '#FFF', fontSize: 22, textAlign: 'right', marginTop: 2 },
 
-  infoBanner: { flexDirection: 'row-reverse', alignItems: 'center', borderRadius: 12, padding: 16, marginTop: 16 },
-  infoBannerIcon: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  infoBannerTitle: { fontSize: 13, textAlign: 'right', marginBottom: 4 },
-  infoBannerSub: { fontSize: 11, textAlign: 'right', lineHeight: 18 },
+  section: { marginHorizontal: 16, marginTop: 12, borderRadius: 16, borderWidth: 1, padding: 16, gap: 10 },
+  sectionHeader: { flexDirection: 'row-reverse', alignItems: 'center', gap: 8, marginBottom: 4 },
+  sectionTitle:  { fontSize: 15 },
+  bodyText:      { fontSize: 13, lineHeight: 22, textAlign: 'right' },
 
-  trustStrip: { flexDirection: 'row-reverse', alignItems: 'center', marginHorizontal: 20, marginTop: 24, borderRadius: 16, padding: 16, elevation: 2, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 6 },
-  trustStripLeft: { marginLeft: 12 },
-  trustShield: { width: 46, height: 46, borderRadius: 23, backgroundColor: 'rgba(201,162,75,0.1)', alignItems: 'center', justifyContent: 'center' },
-  trustStripRight: { flex: 1, alignItems: 'flex-end' },
-  trustTitle: { fontSize: 14, marginBottom: 2 },
-  trustSub: { fontSize: 10, textAlign: 'right', lineHeight: 16 },
+  docRow:  { flexDirection: 'row-reverse', alignItems: 'center', gap: 10, paddingVertical: 10,
+             borderBottomWidth: StyleSheet.hairlineWidth },
+  docIcon: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  docLabel:{ flex: 1, fontSize: 13, textAlign: 'right' },
 
-  footer:          { padding: 16, borderTopWidth: 1, position: 'absolute', bottom: 0, left: 0, right: 0 },
-  applyBtn:        { borderRadius: 14, alignItems: 'center', justifyContent: 'center', paddingVertical: 16 },
-  applyBtnText:    { color: '#FFFFFF', fontSize: 16 },
-  // ── Modal ────────────────────────────────────────────────────────────────
-  modal:           { flex: 1 },
-  modalHeader:     { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16, borderBottomWidth: 1 },
-  modalTitle:      { fontSize: 16 },
-  formContent:     { padding: 16, gap: 14, paddingBottom: 60 },
-  // ── Sections ─────────────────────────────────────────────────────────────
-  section:         { borderRadius: 16, borderWidth: 1, padding: 16, gap: 14 },
-  sectionHeader:   { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 2 },
-  sectionHeaderText:{ fontSize: 15 },
-  // ── Fields ───────────────────────────────────────────────────────────────
-  field:           { gap: 6 },
-  fieldLabel:      { fontSize: 14, textAlign: 'right' },
-  fieldInput:      { borderRadius: 10, borderWidth: 1, padding: 13, fontSize: 14 },
-  twoCol:          { flexDirection: 'row', gap: 10 },
-  warn:            { fontSize: 11, color: '#EF4444', textAlign: 'right', marginTop: 3 },
-  genderRow:       { flexDirection: 'row', gap: 10 },
-  genderBtn:       { flex: 1, borderRadius: 10, borderWidth: 1, paddingVertical: 12, alignItems: 'center' },
-  genderText:      { fontSize: 14 },
-  // ── Terms / Submit ────────────────────────────────────────────────────────
-  termsRow:        { flexDirection: 'row', alignItems: 'flex-start', gap: 10, borderRadius: 12, borderWidth: 1, padding: 14 },
-  termsText:       { fontSize: 13, flex: 1, textAlign: 'right', lineHeight: 20 },
-  submitBtn:       { borderRadius: 14, paddingVertical: 16, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 8, marginTop: 4 },
-  submitBtnText:   { color: '#FFFFFF', fontSize: 16 },
+  tagWrap:      { gap: 6 },
+  tagGroupLabel:{ fontSize: 11, textAlign: 'right' },
+  tags:         { flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 6 },
+  tag:          { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, borderWidth: 1 },
+  tagText:      { fontSize: 11 },
+
+  footer:    { padding: 16, borderTopWidth: 1 },
+  footerTop: { flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'space-between' },
+  footerFeeLabel: { fontSize: 11, textAlign: 'right' },
+  footerFee:      { fontSize: 18, textAlign: 'right' },
+  applyBtn:     { flexDirection: 'row-reverse', alignItems: 'center', gap: 8,
+                  borderRadius: 14, paddingVertical: 14, paddingHorizontal: 24 },
+  applyBtnText: { color: '#FFF', fontSize: 15 },
+
+  // ── Modal ──────────────────────────────────────────────────────────────────
+  modal:       { flex: 1 },
+  modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+                 padding: 16, borderBottomWidth: 1 },
+  modalTitle:  { fontSize: 16 },
+  modalContent:{ padding: 16, gap: 14, paddingBottom: 40 },
+
+  profileCard:       { borderRadius: 16, borderWidth: 1, overflow: 'hidden' },
+  profileCardHeader: { flexDirection: 'row-reverse', alignItems: 'center', gap: 8, padding: 14 },
+  profileCardHeaderText: { color: '#FFF', fontSize: 14 },
+  profileCardBody:   { padding: 14, gap: 10 },
+  profileCardNote:   { fontSize: 12, textAlign: 'right', lineHeight: 18, marginBottom: 6 },
+  profileRow:        { flexDirection: 'row-reverse', alignItems: 'center', gap: 10,
+                       paddingVertical: 8, borderBottomWidth: StyleSheet.hairlineWidth },
+  profileRowIcon:    { width: 32, height: 32, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  profileRowText:    { flex: 1 },
+  profileRowLabel:   { fontSize: 10, textAlign: 'right' },
+  profileRowValue:   { fontSize: 13, textAlign: 'right' },
+  badge:             { flexDirection: 'row-reverse', alignItems: 'center', gap: 6,
+                       borderWidth: 1, borderRadius: 20, paddingHorizontal: 10, paddingVertical: 5, alignSelf: 'flex-end' },
+  badgeText:         { fontSize: 12 },
+  editProfileLink:   { fontSize: 12, textAlign: 'right', marginTop: 6 },
+
+  field:      { gap: 6 },
+  fieldLabel: { fontSize: 13, textAlign: 'right' },
+  fieldInput: { borderRadius: 10, borderWidth: 1 },
+
+  termsRow: { flexDirection: 'row-reverse', alignItems: 'flex-start', gap: 10,
+              borderRadius: 12, borderWidth: 1.5, padding: 14 },
+  termsText: { flex: 1, fontSize: 12, textAlign: 'right', lineHeight: 20 },
+
+  summaryCard: { borderRadius: 12, borderWidth: 1, padding: 14, gap: 8 },
+  summaryRow:  { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center' },
+  summaryLabel:{ fontSize: 12 },
+  summaryValue:{ fontSize: 14 },
+
+  submitBtn:     { borderRadius: 14, paddingVertical: 16, alignItems: 'center',
+                   flexDirection: 'row-reverse', justifyContent: 'center', gap: 8 },
+  submitBtnText: { color: '#FFFFFF', fontSize: 16 },
+  footerNote:    { textAlign: 'center', fontSize: 11, lineHeight: 18 },
 });

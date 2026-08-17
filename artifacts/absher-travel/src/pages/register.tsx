@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CountrySelect } from "@/components/country-select";
+import { PhoneDialInput, buildFullPhone } from "@/components/phone-dial-input";
 import { UserPlus } from "lucide-react";
 
 export default function Register() {
@@ -22,6 +23,7 @@ export default function Register() {
   const [form, setForm] = useState({
     firstName: "", lastName: "", email: "", phone: "", password: "", nationality: "",
   });
+  const [dialCountry, setDialCountry] = useState("SA");
   const [submitting, setSubmitting] = useState(false);
 
   const update = (field: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -29,7 +31,8 @@ export default function Register() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.email && !form.phone) {
+    const fullPhone = buildFullPhone(dialCountry, form.phone);
+    if (!form.email && !fullPhone) {
       toast({ variant: "destructive", title: ar ? "مطلوب" : "Required", description: ar ? "يرجى إدخال البريد الإلكتروني أو رقم الهاتف" : "Please enter an email or phone number" });
       return;
     }
@@ -37,7 +40,7 @@ export default function Register() {
     try {
       await register({
         email: form.email || undefined,
-        phone: form.phone || undefined,
+        phone: fullPhone || undefined,
         password: form.password,
         firstName: form.firstName || undefined,
         lastName: form.lastName || undefined,
@@ -82,7 +85,13 @@ export default function Register() {
             </div>
             <div className="space-y-2">
               <Label>{ar ? "رقم الهاتف" : "Phone"}</Label>
-              <Input dir="ltr" value={form.phone} onChange={update("phone")} />
+              <PhoneDialInput
+                value={form.phone}
+                dialCode={dialCountry}
+                onValueChange={(v) => setForm((f) => ({ ...f, phone: v }))}
+                onDialChange={setDialCountry}
+                ar={ar}
+              />
             </div>
             <div className="space-y-2">
               <Label>{ar ? "الجنسية" : "Nationality"}</Label>

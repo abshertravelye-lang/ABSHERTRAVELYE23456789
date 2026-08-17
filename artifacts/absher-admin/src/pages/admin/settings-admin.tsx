@@ -1,7 +1,14 @@
 import { useState, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "@/hooks/use-translation";
-import { customFetch } from "@workspace/api-client-react";
-import { Save, Settings2, Globe, BellRing, Database, CreditCard, Shield, Smartphone } from "lucide-react";
+import {
+  customFetch,
+  useGetWalletSettings,
+  useUpdateWalletSettings,
+  getGetWalletSettingsQueryKey,
+  getGetPaymentConfigQueryKey,
+} from "@workspace/api-client-react";
+import { Save, Settings2, Globe, BellRing, Database, CreditCard, Shield, Smartphone, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -93,6 +100,25 @@ export default function SettingsAdmin() {
 
   const updateLink = (key: keyof AppLinks, value: string) => {
     setAppLinks(prev => ({ ...prev, [key]: value }));
+  };
+
+  // ── Wallet feature toggle (server-backed) ──────────────────────────────
+  const qc = useQueryClient();
+  const { data: walletSettings, isLoading: walletLoading } = useGetWalletSettings();
+  const walletMutation = useUpdateWalletSettings();
+  const handleWalletToggle = async (enabled: boolean) => {
+    try {
+      await walletMutation.mutateAsync({ data: { walletEnabled: enabled } });
+      qc.invalidateQueries({ queryKey: getGetWalletSettingsQueryKey() });
+      qc.invalidateQueries({ queryKey: getGetPaymentConfigQueryKey() });
+      toast.success(
+        enabled
+          ? (ar ? "تم تفعيل المحفظة في التطبيق" : "Wallet enabled in the app")
+          : (ar ? "تم إيقاف المحفظة — ستختفي من التطبيق" : "Wallet disabled — it will disappear from the app"),
+      );
+    } catch {
+      toast.error(ar ? "حدث خطأ أثناء الحفظ" : "Error saving");
+    }
   };
 
   const handleSave = () => {
@@ -208,6 +234,30 @@ export default function SettingsAdmin() {
                   />
                 </div>
               )}
+            </div>
+          </div>
+
+          {/* Wallet feature toggle — SERVER-BACKED, applies instantly to app & web */}
+          <div className="bg-card rounded-3xl border border-card-border p-6 shadow-sm">
+            <div className="flex items-center gap-3 mb-6">
+              <Wallet className="w-5 h-5 text-primary" />
+              <h2 className="text-lg font-bold">{ar ? "المحفظة الإلكترونية" : "E-Wallet"}</h2>
+            </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <Label className="text-base font-semibold">{ar ? "تفعيل المحفظة" : "Enable Wallet"}</Label>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {ar
+                    ? "عند الإيقاف تختفي المحفظة بالكامل من تطبيق الجوال فوراً"
+                    : "When disabled, the wallet disappears entirely from the mobile app immediately"}
+                </p>
+              </div>
+              <Switch
+                checked={walletSettings?.walletEnabled ?? true}
+                disabled={walletLoading || walletMutation.isPending}
+                onCheckedChange={handleWalletToggle}
+                data-testid="switch-wallet-enabled"
+              />
             </div>
           </div>
 

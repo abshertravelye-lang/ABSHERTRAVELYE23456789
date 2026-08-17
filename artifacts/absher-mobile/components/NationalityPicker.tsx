@@ -165,7 +165,7 @@ const p = StyleSheet.create({
   sheet:            { flex: 1 },
   header:           { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16, borderBottomWidth: 1 },
   headerTitle:      { fontSize: 16 },
-  searchWrap:       { flexDirection: 'row', alignItems: 'center', margin: 12, borderRadius: 12, borderWidth: 1, paddingHorizontal: 12, gap: 8 },
+  searchWrap:       { flexDirection: 'row', alignItems: 'center', margin: 12, borderRadius: 12, borderWidth: 1, paddingHorizontal: 12, gap: 8, minHeight: 48 },
   searchInput:      { flex: 1, paddingVertical: 12, fontSize: 14 },
   count:            { fontSize: 12, textAlign: 'right', paddingHorizontal: 16, marginBottom: 4 },
   sep:              { height: StyleSheet.hairlineWidth, marginHorizontal: 16 },

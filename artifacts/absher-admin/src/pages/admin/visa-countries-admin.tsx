@@ -8,6 +8,7 @@ import { useTranslation } from "@/hooks/use-translation";
 import { Plus, Edit2, Trash2, X, Globe, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { ImageUpload } from "@/components/image-upload";
 
 const REGIONS = [
   { value: "gulf",     ar: "الخليج",    en: "Gulf" },
@@ -73,9 +74,8 @@ function Modal({ initial, onSave, onCancel, loading, ar }: {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">{ar ? "رابط الصورة" : "Image URL"}</label>
-            <input className="w-full border rounded-xl px-4 py-2.5 text-sm" value={form.imageUrl} onChange={e => set("imageUrl", e.target.value)} dir="ltr" placeholder="https://..." />
-            {form.imageUrl && <img src={form.imageUrl} alt="" className="mt-2 w-full h-32 object-cover rounded-xl border" onError={e => (e.currentTarget.style.display = "none")} />}
+            <label className="block text-sm font-medium mb-1">{ar ? "صورة الدولة" : "Country Image"}</label>
+            <ImageUpload value={form.imageUrl} onChange={v => set("imageUrl", v)} aspectRatio="16/9" />
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">{ar ? "الوصف بالعربية" : "Description (Arabic)"}</label>

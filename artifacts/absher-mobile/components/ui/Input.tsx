@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { StyleSheet, TextInput, TextInputProps, View, Text, I18nManager } from 'react-native';
+import React, { forwardRef, useState } from 'react';
+import { StyleSheet, TextInput, TextInputProps, View, Text } from 'react-native';
 import { useColors } from '@/hooks/useColors';
 import { useLanguage } from '@/context/LanguageContext';
 
@@ -10,14 +10,25 @@ export interface InputProps extends TextInputProps {
   rightIcon?: React.ReactNode;
 }
 
-export function Input({ label, error, leftIcon, rightIcon, style, ...props }: InputProps) {
+/**
+ * Shared text-input with focus-border, label, error, icon slots.
+ * Uses forwardRef so callers can chain focus between fields with refs.
+ */
+export const Input = forwardRef<TextInput, InputProps>(function Input(
+  { label, error, leftIcon, rightIcon, style, ...props },
+  ref,
+) {
   const c = useColors();
   const { isRTL, writingDirection } = useLanguage();
   const [focused, setFocused] = useState(false);
 
   return (
     <View style={styles.container}>
-      {label && <Text style={[styles.label, { color: c.foreground, writingDirection }]}>{label}</Text>}
+      {label && (
+        <Text style={[styles.label, { color: c.foreground, writingDirection }]}>
+          {label}
+        </Text>
+      )}
       <View
         style={[
           styles.inputContainer,
@@ -30,6 +41,7 @@ export function Input({ label, error, leftIcon, rightIcon, style, ...props }: In
       >
         {leftIcon && <View style={styles.icon}>{leftIcon}</View>}
         <TextInput
+          ref={ref}
           style={[
             styles.input,
             { color: c.foreground, textAlign: isRTL ? 'right' : 'left', writingDirection },
@@ -48,10 +60,12 @@ export function Input({ label, error, leftIcon, rightIcon, style, ...props }: In
         />
         {rightIcon && <View style={styles.icon}>{rightIcon}</View>}
       </View>
-      {error && <Text style={[styles.error, { color: c.error, writingDirection }]}>{error}</Text>}
+      {error && (
+        <Text style={[styles.error, { color: c.error, writingDirection }]}>{error}</Text>
+      )}
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {
@@ -65,7 +79,7 @@ const styles = StyleSheet.create({
   inputContainer: {
     borderWidth: 1.5,
     borderRadius: 14,
-    minHeight: 52, // Touch target
+    minHeight: 52,
     alignItems: 'center',
     paddingHorizontal: 12,
   },

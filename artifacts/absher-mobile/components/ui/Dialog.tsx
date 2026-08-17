@@ -6,6 +6,7 @@ import React from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColors';
+import { haptics } from '@/lib/haptics';
 
 export interface DialogProps {
   visible: boolean;
@@ -57,13 +58,21 @@ export function Dialog({
           <View style={styles.actions}>
             <Pressable
               style={({ pressed }) => [styles.btn, styles.cancelBtn, { borderColor: c.border, backgroundColor: c.background, opacity: pressed ? 0.8 : 1 }]}
-              onPress={onCancel}
+              onPress={() => {
+                haptics.light();
+                onCancel();
+              }}
             >
               <Text style={[styles.cancelText, { color: c.foreground, fontFamily: 'Cairo_600SemiBold' }]}>{cancelLabel}</Text>
             </Pressable>
             <Pressable
               style={({ pressed }) => [styles.btn, { backgroundColor: confirmColors.bg, opacity: pressed ? 0.8 : 1 }]}
-              onPress={onConfirm}
+              onPress={() => {
+                // Destructive confirmations get a warning pulse; others a firm tap.
+                if (confirmStyle === 'destructive') haptics.warning();
+                else haptics.medium();
+                onConfirm();
+              }}
             >
               <Text style={[styles.confirmText, { color: confirmColors.fg, fontFamily: 'Cairo_700Bold' }]}>{confirmLabel}</Text>
             </Pressable>

@@ -21,6 +21,8 @@ import { ThemeProvider } from '@/context/ThemeContext';
 import { LanguageProvider } from '@/context/LanguageContext';
 import { useNotificationObserver } from '@/hooks/useNotificationObserver';
 import { usePreferredLanguageSync } from '@/hooks/usePreferredLanguageSync';
+import { BiometricLockGate } from '@/components/BiometricLockGate';
+import { ToastProvider } from '@/components/ui/Toast';
 
 // Set API base URL — Expo runs outside the proxy and needs an absolute URL
 setBaseUrl(`https://${process.env.EXPO_PUBLIC_DOMAIN}`);
@@ -45,11 +47,20 @@ function RootLayoutNav() {
   useNotificationObserver();
   usePreferredLanguageSync();
   return (
-    <Stack screenOptions={{ headerShown: false }}>
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        // Consistent native slide transition + swipe-back everywhere.
+        animation: 'slide_from_right',
+        gestureEnabled: true,
+        fullScreenGestureEnabled: true,
+      }}
+    >
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="welcome" options={{ headerShown: false }} />
       <Stack.Screen name="onboarding" options={{ headerShown: false }} />
       <Stack.Screen name="program/[id]" options={{ headerShown: false }} />
+      <Stack.Screen name="program-book/[id]" options={{ headerShown: false }} />
       <Stack.Screen name="visa/[id]" options={{ headerShown: false }} />
       <Stack.Screen name="destination/[id]" options={{ headerShown: false }} />
       <Stack.Screen name="flight-results" options={{ headerShown: false }} />
@@ -142,16 +153,19 @@ export default function RootLayout() {
               <LanguageProvider>
               <GestureHandlerRootView style={{ flex: 1 }}>
                 <KeyboardProvider>
-                  <RootLayoutNav />
-                  <BootstrapGate appReady={appReady} onRouted={() => setRouted(true)} />
-                  {!splashHidden && (
-                    <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
-                      <AnimatedSplash
-                        hide={routed}
-                        onFinish={() => setSplashHidden(true)}
-                      />
-                    </View>
-                  )}
+                  <ToastProvider>
+                    <RootLayoutNav />
+                    <BootstrapGate appReady={appReady} onRouted={() => setRouted(true)} />
+                    <BiometricLockGate />
+                    {!splashHidden && (
+                      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
+                        <AnimatedSplash
+                          hide={routed}
+                          onFinish={() => setSplashHidden(true)}
+                        />
+                      </View>
+                    )}
+                  </ToastProvider>
                 </KeyboardProvider>
               </GestureHandlerRootView>
               </LanguageProvider>

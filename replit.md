@@ -9,6 +9,7 @@ _Replace the heading above with the project's name, and this line with one sente
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
+- `pnpm --filter @workspace/absher-mobile run apk [preview|production]` — rebuild the Android APK/AAB via EAS cloud build (~20 min; needs `EXPO_TOKEN` + `EAS_PROJECT_ID` secrets; output lands in `artifacts/absher-mobile/build-output/`)
 - Required env: `DATABASE_URL` — Postgres connection string
 
 ## Stack

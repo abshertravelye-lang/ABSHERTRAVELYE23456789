@@ -1,5 +1,19 @@
-import React from 'react';
-import { Pressable, StyleSheet, Text, ViewStyle, TextStyle, ActivityIndicator } from 'react-native';
+import React, { useRef } from 'react';
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  ViewStyle,
+  TextStyle,
+  ActivityIndicator,
+} from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
+import * as Haptics from 'expo-haptics';
 import { useColors } from '@/hooks/useColors';
 
 export interface ButtonProps {
@@ -12,7 +26,12 @@ export interface ButtonProps {
   style?: ViewStyle;
   textStyle?: TextStyle;
   icon?: React.ReactNode;
+  /** Prevent accidental double-taps. Default: true */
+  preventDoublePress?: boolean;
+  testID?: string;
 }
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export function Button({
   label,
@@ -24,8 +43,17 @@ export function Button({
   style,
   textStyle,
   icon,
+  preventDoublePress = true,
+  testID,
 }: ButtonProps) {
   const c = useColors();
+  const scale = useSharedValue(1);
+  const lastPressRef = useRef(0);
+  const [pressed, setPressed] = React.useState(false);
+
+  const animStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
 
   const getBgColor = (pressed: boolean) => {
     if (disabled) return c.muted;
@@ -57,20 +85,42 @@ export function Button({
     return 'transparent';
   };
 
+  const handlePress = () => {
+    if (disabled || loading) return;
+    if (preventDoublePress) {
+      const now = Date.now();
+      if (now - lastPressRef.current < 700) return;
+      lastPressRef.current = now;
+    }
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onPress();
+  };
+
   return (
-    <Pressable
-      onPress={onPress}
+    <AnimatedPressable
+      onPress={handlePress}
       disabled={disabled || loading}
-      style={({ pressed }) => [
+      onPressIn={() => {
+        setPressed(true);
+        scale.value = withSpring(0.97, { damping: 20, stiffness: 300 });
+      }}
+      onPressOut={() => {
+        setPressed(false);
+        scale.value = withSpring(1, { damping: 18, stiffness: 260 });
+      }}
+      style={[
         styles.base,
         styles[size],
         {
           backgroundColor: getBgColor(pressed),
           borderColor: getBorderColor(),
           borderWidth: variant === 'outline' ? 1.5 : 0,
+          opacity: disabled ? 0.55 : 1,
         },
+        animStyle,
         style,
       ]}
+      testID={testID}
     >
       {loading ? (
         <ActivityIndicator color={getTextColor()} />
@@ -82,7 +132,7 @@ export function Button({
           </Text>
         </>
       )}
-    </Pressable>
+    </AnimatedPressable>
   );
 }
 

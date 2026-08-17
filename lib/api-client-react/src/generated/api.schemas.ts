@@ -92,6 +92,76 @@ export interface OfferUpdate {
   featured?: boolean;
 }
 
+export interface AppImage {
+  id: number;
+  category: string;
+  /** @nullable */
+  titleAr?: string | null;
+  /** @nullable */
+  titleEn?: string | null;
+  imageUrl: string;
+  /** @nullable */
+  linkUrl?: string | null;
+  /** @nullable */
+  relatedEntityType?: string | null;
+  /** @nullable */
+  relatedEntityId?: string | null;
+  sortOrder: number;
+  /** @nullable */
+  startDate?: string | null;
+  /** @nullable */
+  endDate?: string | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AppImageInput {
+  /** @minLength 1 */
+  category: string;
+  /** @nullable */
+  titleAr?: string | null;
+  /** @nullable */
+  titleEn?: string | null;
+  /** @minLength 1 */
+  imageUrl: string;
+  /** @nullable */
+  linkUrl?: string | null;
+  /** @nullable */
+  relatedEntityType?: string | null;
+  /** @nullable */
+  relatedEntityId?: string | null;
+  sortOrder?: number;
+  /** @nullable */
+  startDate?: string | null;
+  /** @nullable */
+  endDate?: string | null;
+  isActive?: boolean;
+}
+
+export interface AppImageUpdate {
+  /** @minLength 1 */
+  category?: string;
+  /** @nullable */
+  titleAr?: string | null;
+  /** @nullable */
+  titleEn?: string | null;
+  /** @minLength 1 */
+  imageUrl?: string;
+  /** @nullable */
+  linkUrl?: string | null;
+  /** @nullable */
+  relatedEntityType?: string | null;
+  /** @nullable */
+  relatedEntityId?: string | null;
+  sortOrder?: number;
+  /** @nullable */
+  startDate?: string | null;
+  /** @nullable */
+  endDate?: string | null;
+  isActive?: boolean;
+}
+
 export interface Destination {
   id: number;
   nameAr: string;
@@ -178,6 +248,18 @@ export interface Program {
   cancellationPolicy?: string | null;
   /** @nullable */
   destination?: string | null;
+  roomTypes?: string[];
+  /** @nullable */
+  meals?: string | null;
+  /** @nullable */
+  transport?: string | null;
+  tours?: string[];
+  /** @nullable */
+  programDate?: string | null;
+  /** @nullable */
+  notesAr?: string | null;
+  /** @nullable */
+  notesEn?: string | null;
   status: ProgramStatus;
   featured: boolean;
   isActive: boolean;
@@ -219,6 +301,13 @@ export interface ProgramInput {
   bookingTerms?: string;
   cancellationPolicy?: string;
   destination?: string;
+  roomTypes?: string[];
+  meals?: string;
+  transport?: string;
+  tours?: string[];
+  programDate?: string;
+  notesAr?: string;
+  notesEn?: string;
   status?: ProgramInputStatus;
   featured?: boolean;
   isActive?: boolean;
@@ -258,9 +347,121 @@ export interface ProgramUpdate {
   bookingTerms?: string;
   cancellationPolicy?: string;
   destination?: string;
+  roomTypes?: string[];
+  meals?: string;
+  transport?: string;
+  tours?: string[];
+  programDate?: string;
+  notesAr?: string;
+  notesEn?: string;
   status?: ProgramUpdateStatus;
   featured?: boolean;
   isActive?: boolean;
+}
+
+export type ProgramBookingStatus = typeof ProgramBookingStatus[keyof typeof ProgramBookingStatus];
+
+
+export const ProgramBookingStatus = {
+  draft: 'draft',
+  submitted: 'submitted',
+  under_review: 'under_review',
+  awaiting_availability: 'awaiting_availability',
+  awaiting_payment: 'awaiting_payment',
+  paid: 'paid',
+  confirmed: 'confirmed',
+  completed: 'completed',
+  rejected: 'rejected',
+  cancelled: 'cancelled',
+} as const;
+
+export interface ProgramBookingHistoryEntry {
+  status: string;
+  at: string;
+  /** @nullable */
+  note?: string | null;
+  by?: string;
+}
+
+export interface ProgramBooking {
+  id: string;
+  requestNumber: string;
+  userId: string;
+  programId: number;
+  programTitleAr: string;
+  programTitleEn: string;
+  /** @nullable */
+  programDestination?: string | null;
+  programPrice: number;
+  programCurrency: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  nationality: string;
+  nationalityCode: string;
+  adults: number;
+  children: number;
+  infants: number;
+  travelDate: string;
+  /** @nullable */
+  returnDate?: string | null;
+  rooms: number;
+  /** @nullable */
+  roomType?: string | null;
+  /** @nullable */
+  specialRequirements?: string | null;
+  /** @nullable */
+  customerNotes?: string | null;
+  status: ProgramBookingStatus;
+  statusHistory: ProgramBookingHistoryEntry[];
+  /** @nullable */
+  adminNotes?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProgramBookingInput {
+  programId: number;
+  /** @minLength 3 */
+  fullName: string;
+  email: string;
+  /** @minLength 6 */
+  phone: string;
+  /** ISO alpha-2 code or canonical country name (resolved server-side against the master list) */
+  nationality: string;
+  /**
+     * @minimum 1
+     * @maximum 50
+     */
+  adults: number;
+  /**
+     * @minimum 0
+     * @maximum 50
+     */
+  children?: number;
+  /**
+     * @minimum 0
+     * @maximum 20
+     */
+  infants?: number;
+  /** YYYY-MM-DD */
+  travelDate: string;
+  returnDate?: string;
+  /**
+     * @minimum 1
+     * @maximum 50
+     */
+  rooms: number;
+  roomType?: string;
+  specialRequirements?: string;
+  customerNotes?: string;
+}
+
+export interface ProgramBookingStatusUpdate {
+  status: ProgramBookingStatus;
+  /** Optional message to the customer recorded on the timeline and included in the notification */
+  note?: string;
+  adminNotes?: string;
 }
 
 export type VisaCountryRegion = typeof VisaCountryRegion[keyof typeof VisaCountryRegion];
@@ -937,6 +1138,12 @@ export interface VisaApplication {
   trackingNumber?: string | null;
   visaId: number;
   /** @nullable */
+  visaType?: string | null;
+  /** @nullable */
+  countryAr?: string | null;
+  /** @nullable */
+  countryEn?: string | null;
+  /** @nullable */
   userId?: string | null;
   eligibilityPath: VisaApplicationEligibilityPath;
   /** @nullable */
@@ -1569,6 +1776,8 @@ export interface Notification {
   relatedEntityId?: string | null;
   /** @nullable */
   url?: string | null;
+  /** @nullable */
+  imageUrl?: string | null;
   isRead: boolean;
   /** @nullable */
   sentBy?: string | null;
@@ -1603,12 +1812,40 @@ export interface PushTokenDelete {
   token: string;
 }
 
+export interface NotificationPreferences {
+  notifyBooking: boolean;
+  notifyVisa: boolean;
+  notifyPromo: boolean;
+  notifySystem: boolean;
+  pushEnabled: boolean;
+  updatedAt: string;
+}
+
+export interface NotificationPreferencesUpdate {
+  notifyBooking?: boolean;
+  notifyVisa?: boolean;
+  notifyPromo?: boolean;
+  notifySystem?: boolean;
+  pushEnabled?: boolean;
+}
+
 export type NotificationSendRequestAudience = typeof NotificationSendRequestAudience[keyof typeof NotificationSendRequestAudience];
 
 
 export const NotificationSendRequestAudience = {
   all: 'all',
   users: 'users',
+  group: 'group',
+} as const;
+
+export type NotificationSendRequestRolesItem = typeof NotificationSendRequestRolesItem[keyof typeof NotificationSendRequestRolesItem];
+
+
+export const NotificationSendRequestRolesItem = {
+  customer: 'customer',
+  agent: 'agent',
+  admin: 'admin',
+  super_admin: 'super_admin',
 } as const;
 
 export interface NotificationSendRequest {
@@ -1618,7 +1855,9 @@ export interface NotificationSendRequest {
   messageEn: string;
   audience: NotificationSendRequestAudience;
   userIds?: string[];
+  roles?: NotificationSendRequestRolesItem[];
   url?: string;
+  imageUrl?: string;
 }
 
 export interface NotificationSendResponse {
@@ -1942,6 +2181,16 @@ export const AgencyInputStatus = {
   pending: 'pending',
 } as const;
 
+/**
+ * Optional primary portal login created atomically with the agency.
+ */
+export type AgencyInputAgentAccount = {
+  email: string;
+  password: string;
+  firstName?: string;
+  lastName?: string;
+};
+
 export interface AgencyInput {
   name: string;
   contactEmail?: string;
@@ -1949,6 +2198,8 @@ export interface AgencyInput {
   address?: string;
   notes?: string;
   status?: AgencyInputStatus;
+  /** Optional primary portal login created atomically with the agency. */
+  agentAccount?: AgencyInputAgentAccount;
 }
 
 export type AgencyUpdateStatus = typeof AgencyUpdateStatus[keyof typeof AgencyUpdateStatus];
@@ -2097,6 +2348,14 @@ export const AgentApplicationInputGender = {
 
 export type AgentApplicationInputCustomFieldResponses = { [key: string]: unknown };
 
+export type AgentApplicationInputDocumentsItem = {
+  documentKey?: string;
+  nameAr?: string;
+  nameEn?: string;
+  description?: string;
+  storagePath: string;
+};
+
 export interface AgentApplicationInput {
   visaId: number;
   applicantNationality: string;
@@ -2118,6 +2377,8 @@ export interface AgentApplicationInput {
   visaImageUrl?: string;
   customFieldResponses?: AgentApplicationInputCustomFieldResponses;
   agreedToTerms?: boolean;
+  /** Dynamic document uploads. Entries with a documentKey matching the visa's required-documents config attach to that slot; entries without a matching key create an ad-hoc slot named by nameAr/nameEn. */
+  documents?: AgentApplicationInputDocumentsItem[];
 }
 
 export type AgentApplicationUpdateStatus = typeof AgentApplicationUpdateStatus[keyof typeof AgentApplicationUpdateStatus];
@@ -2198,13 +2459,118 @@ export interface AgentDashboard {
   stats: AgentDashboardStats;
 }
 
+export interface PaymentMethod {
+  id: number;
+  nameAr: string;
+  nameEn: string;
+  /** @nullable */
+  descriptionAr?: string | null;
+  /** @nullable */
+  descriptionEn?: string | null;
+  /** @nullable */
+  logoUrl?: string | null;
+  feePercent: number;
+  feeFixed: number;
+  isActive: boolean;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PaymentMethodInput {
+  nameAr: string;
+  nameEn: string;
+  /** @nullable */
+  descriptionAr?: string | null;
+  /** @nullable */
+  descriptionEn?: string | null;
+  /** @nullable */
+  logoUrl?: string | null;
+  feePercent?: number;
+  feeFixed?: number;
+  isActive?: boolean;
+  sortOrder?: number;
+}
+
+export interface PaymentMethodUpdate {
+  nameAr?: string;
+  nameEn?: string;
+  /** @nullable */
+  descriptionAr?: string | null;
+  /** @nullable */
+  descriptionEn?: string | null;
+  /** @nullable */
+  logoUrl?: string | null;
+  feePercent?: number;
+  feeFixed?: number;
+  isActive?: boolean;
+  sortOrder?: number;
+}
+
+export interface PaymentConfig {
+  walletEnabled: boolean;
+  paymentMethods: PaymentMethod[];
+}
+
+export type WalletTransactionType = typeof WalletTransactionType[keyof typeof WalletTransactionType];
+
+
+export const WalletTransactionType = {
+  credit: 'credit',
+  debit: 'debit',
+} as const;
+
+export type WalletTransactionStatus = typeof WalletTransactionStatus[keyof typeof WalletTransactionStatus];
+
+
+export const WalletTransactionStatus = {
+  completed: 'completed',
+  pending: 'pending',
+  failed: 'failed',
+} as const;
+
+export interface WalletTransaction {
+  id: string;
+  type: WalletTransactionType;
+  amount: number;
+  titleAr: string;
+  titleEn: string;
+  status: WalletTransactionStatus;
+  /** @nullable */
+  reference?: string | null;
+  createdAt: string;
+}
+
+export interface WalletResponse {
+  enabled: boolean;
+  balance: number;
+  currency: string;
+  transactions: WalletTransaction[];
+}
+
+export interface WalletSettings {
+  walletEnabled: boolean;
+}
+
 export type ListOffersParams = {
 featured?: boolean;
 limit?: number;
 };
 
+export type ListAppImagesParams = {
+category?: string;
+};
+
+export type ListAppImagesAdminParams = {
+category?: string;
+};
+
 export type ListProgramsParams = {
 featured?: boolean;
+};
+
+export type ListProgramBookingsAdminParams = {
+status?: ProgramBookingStatus;
 };
 
 export type ListVisaCountriesParams = {
@@ -2407,6 +2773,14 @@ export type MarkAllNotificationsRead200 = {
   updated: number;
 };
 
+export type GetUnreadNotificationCount200 = {
+  unread: number;
+};
+
+export type DeleteNotification200 = {
+  deleted: number;
+};
+
 export type DeletePushToken200 = {
   deleted: number;
 };
@@ -2431,20 +2805,12 @@ agencyId?: number;
 status?: string;
 };
 
-export interface NotificationPreferences {
-  notifyBooking: boolean;
-  notifyVisa:    boolean;
-  notifyPromo:   boolean;
-  notifySystem:  boolean;
-  pushEnabled:   boolean;
-  updatedAt:     string;
-}
+export type ReorderPaymentMethodsBodyOrderItem = {
+  id: number;
+  sortOrder: number;
+};
 
-export interface NotificationPreferencesUpdate {
-  notifyBooking?: boolean;
-  notifyVisa?:    boolean;
-  notifyPromo?:   boolean;
-  notifySystem?:  boolean;
-  pushEnabled?:   boolean;
-}
+export type ReorderPaymentMethodsBody = {
+  order: ReorderPaymentMethodsBodyOrderItem[];
+};
 

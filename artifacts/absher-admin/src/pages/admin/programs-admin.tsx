@@ -7,6 +7,7 @@ import { useTranslation } from "@/hooks/use-translation";
 import { Plus, Edit2, Trash2, X, Map } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { ImageUpload, resolveImageSrc } from "@/components/image-upload";
 
 interface ProgramForm {
   titleAr: string; titleEn: string;
@@ -145,17 +146,8 @@ function Modal({ initial, onSave, onCancel, loading, ar }: {
           <section>
             <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">{ar ? "الصورة" : "Image"}</h3>
             <div>
-              <label className="block text-sm font-medium mb-1">{ar ? "رابط الصورة (URL)" : "Image URL"}</label>
-              <input
-                className="w-full border rounded-xl px-4 py-2.5 text-sm"
-                placeholder="https://example.com/image.jpg"
-                value={form.imageUrl}
-                onChange={e => set("imageUrl", e.target.value)}
-                dir="ltr"
-              />
-              {form.imageUrl && (
-                <img src={form.imageUrl} alt="preview" className="mt-2 w-full h-40 object-cover rounded-xl border" onError={e => (e.currentTarget.style.display = "none")} />
-              )}
+              <label className="block text-sm font-medium mb-1">{ar ? "صورة البرنامج" : "Program Image"}</label>
+              <ImageUpload value={form.imageUrl} onChange={v => set("imageUrl", v)} aspectRatio="16/9" />
             </div>
           </section>
 

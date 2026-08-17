@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView, Platform } from 'react-native';
-import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
+import { AppImage } from '@/components/AppImage';
 import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColors';
 import { getImageUrl } from '@/hooks/useImageUrl';
@@ -48,7 +48,7 @@ export function DestinationCard({
       onPress={onPress}
     >
       <View style={styles.destImageWrap}>
-        <Image
+        <AppImage
           source={imgUrl ? { uri: imgUrl } : require('@/assets/images/hero.jpg')}
           style={styles.destImage}
           contentFit="cover"

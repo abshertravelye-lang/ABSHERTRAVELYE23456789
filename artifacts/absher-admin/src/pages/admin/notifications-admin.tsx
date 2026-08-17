@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "@/hooks/use-translation";
 import {
@@ -7,7 +7,7 @@ import {
   getListAdminNotificationHistoryQueryKey,
   type Notification,
 } from "@workspace/api-client-react";
-import { Send, Bell, CheckCircle, Search, Users, X } from "lucide-react";
+import { Send, Bell, CheckCircle, Search, Users, X, ImagePlus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,7 +17,20 @@ import { Label } from "@/components/ui/label";
 
 const ADMIN_ACCESS_TOKEN_KEY = "absher_admin_access_token";
 
-type Audience = "all" | "users";
+type Audience = "all" | "users" | "group";
+type RoleGroup = "customer" | "agent" | "admin" | "super_admin";
+
+/** In-app pages an admin can deep-link a notification to. */
+const APP_PAGES: Array<{ value: string; ar: string; en: string }> = [
+  { value: "/(tabs)/", ar: "الرئيسية", en: "Home" },
+  { value: "/(tabs)/visas", ar: "التأشيرات", en: "Visas" },
+  { value: "/(tabs)/umrah", ar: "العمرة", en: "Umrah" },
+  { value: "/(tabs)/programs", ar: "البرامج السياحية", en: "Programs" },
+  { value: "/(tabs)/bookings", ar: "الحجوزات", en: "Bookings" },
+  { value: "/(tabs)/notifications", ar: "الإشعارات", en: "Notifications" },
+  { value: "/(tabs)/account", ar: "الحساب", en: "Account" },
+  { value: "/support-chat", ar: "الدعم الفني", en: "Support Chat" },
+];
 
 interface UserRecord {
   id: string;
@@ -101,9 +114,14 @@ export default function NotificationsAdmin() {
   const [messageAr, setMessageAr] = useState("");
   const [messageEn, setMessageEn] = useState("");
   const [url, setUrl] = useState("");
+  const [pagePick, setPagePick] = useState<string>("none");
   const [audience, setAudience] = useState<Audience>("all");
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
+  const [selectedRoles, setSelectedRoles] = useState<RoleGroup[]>([]);
   const [userSearch, setUserSearch] = useState("");
+  const [imageUrl, setImageUrl] = useState<string>("");
+  const [imageUploading, setImageUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const sendMut = useSendNotification();
   const { data: users = [] } = useAllUsers();
@@ -130,6 +148,38 @@ export default function NotificationsAdmin() {
     setSelectedUserIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   };
 
+  const toggleRole = (role: RoleGroup) => {
+    setSelectedRoles((prev) => (prev.includes(role) ? prev.filter((r) => r !== role) : [...prev, role]));
+  };
+
+  const handleImagePick = async (file: File | null | undefined) => {
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error(ar ? "حجم الصورة يجب أن يكون أقل من 5 ميجابايت" : "Image must be smaller than 5 MB");
+      return;
+    }
+    setImageUploading(true);
+    try {
+      const token = localStorage.getItem(ADMIN_ACCESS_TOKEN_KEY);
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/storage/uploads/public", {
+        method: "POST",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: formData,
+      });
+      if (!res.ok) throw new Error("upload failed");
+      const data = await res.json();
+      setImageUrl(data.imageUrl);
+      toast.success(ar ? "تم رفع الصورة" : "Image uploaded");
+    } catch {
+      toast.error(ar ? "تعذّر رفع الصورة" : "Failed to upload image");
+    } finally {
+      setImageUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
   const handleSend = async () => {
     // Bilingual — never mix languages: both AR and EN are required.
     if (!titleAr.trim() || !messageAr.trim()) {
@@ -144,6 +194,13 @@ export default function NotificationsAdmin() {
       toast.error(ar ? "يرجى اختيار عميل واحد على الأقل" : "Please select at least one user");
       return;
     }
+    if (audience === "group" && selectedRoles.length === 0) {
+      toast.error(ar ? "يرجى اختيار مجموعة واحدة على الأقل" : "Please select at least one group");
+      return;
+    }
+
+    // Deep link: explicit URL wins over the page picker.
+    const finalUrl = url.trim() || (pagePick !== "none" ? pagePick : "");
 
     try {
       const res = await sendMut.mutateAsync({
@@ -154,7 +211,9 @@ export default function NotificationsAdmin() {
           messageEn: messageEn.trim(),
           audience,
           userIds: audience === "users" ? selectedUserIds : undefined,
-          url: url.trim() || undefined,
+          roles: audience === "group" ? selectedRoles : undefined,
+          url: finalUrl || undefined,
+          imageUrl: imageUrl || undefined,
         },
       });
       await qc.invalidateQueries({ queryKey: getListAdminNotificationHistoryQueryKey() });
@@ -167,8 +226,11 @@ export default function NotificationsAdmin() {
       setMessageAr("");
       setMessageEn("");
       setUrl("");
+      setPagePick("none");
       setSelectedUserIds([]);
+      setSelectedRoles([]);
       setUserSearch("");
+      setImageUrl("");
     } catch {
       toast.error(ar ? "تعذّر إرسال الإشعار" : "Failed to send notification");
     }
@@ -202,11 +264,46 @@ export default function NotificationsAdmin() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">{ar ? "جميع العملاء" : "All Customers"}</SelectItem>
+                  <SelectItem value="all">{ar ? "جميع المستخدمين" : "All Users"}</SelectItem>
+                  <SelectItem value="group">{ar ? "مجموعة (حسب الدور)" : "Group (by role)"}</SelectItem>
                   <SelectItem value="users">{ar ? "عملاء محددون" : "Specific Users"}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Role-group picker */}
+            {audience === "group" && (
+              <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
+                <Label>{ar ? "اختيار المجموعات" : "Select Groups"}</Label>
+                <div className="flex flex-wrap gap-2">
+                  {(
+                    [
+                      { role: "customer" as RoleGroup, ar: "العملاء", en: "Customers" },
+                      { role: "agent" as RoleGroup, ar: "الوكلاء", en: "Agents" },
+                      { role: "admin" as RoleGroup, ar: "المشرفون", en: "Admins" },
+                      { role: "super_admin" as RoleGroup, ar: "المشرفون العامون", en: "Super Admins" },
+                    ]
+                  ).map((g) => {
+                    const checked = selectedRoles.includes(g.role);
+                    return (
+                      <button
+                        key={g.role}
+                        type="button"
+                        onClick={() => toggleRole(g.role)}
+                        className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-sm transition-colors ${
+                          checked
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "bg-background border-border hover:bg-muted/50"
+                        }`}
+                      >
+                        {checked && <CheckCircle className="w-3.5 h-3.5" />}
+                        {ar ? g.ar : g.en}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* User picker */}
             {audience === "users" && (
@@ -322,9 +419,65 @@ export default function NotificationsAdmin() {
               </div>
             </div>
 
+            {/* Image (optional) */}
+            <div className="space-y-2">
+              <Label>{ar ? "صورة الإشعار (اختياري)" : "Notification Image (optional)"}</Label>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                className="hidden"
+                onChange={(e) => handleImagePick(e.target.files?.[0])}
+              />
+              {imageUrl ? (
+                <div className="relative rounded-xl overflow-hidden border border-border">
+                  <img src={imageUrl} alt="" className="w-full max-h-44 object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => setImageUrl("")}
+                    className="absolute top-2 end-2 bg-background/90 rounded-lg p-1.5 shadow hover:text-red-600 transition-colors"
+                    aria-label={ar ? "إزالة الصورة" : "Remove image"}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full rounded-xl border-dashed"
+                  disabled={imageUploading}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <ImagePlus className="w-4 h-4 me-2" />
+                  {imageUploading
+                    ? ar ? "جارٍ الرفع..." : "Uploading..."
+                    : ar ? "رفع صورة" : "Upload Image"}
+                </Button>
+              )}
+            </div>
+
+            {/* In-app page picker */}
+            <div className="space-y-2">
+              <Label>{ar ? "صفحة داخل التطبيق (اختياري)" : "In-App Page (optional)"}</Label>
+              <Select value={pagePick} onValueChange={setPagePick}>
+                <SelectTrigger className="rounded-xl">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">{ar ? "بدون" : "None"}</SelectItem>
+                  {APP_PAGES.map((p) => (
+                    <SelectItem key={p.value} value={p.value}>
+                      {ar ? p.ar : p.en}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             {/* Deep link */}
             <div className="space-y-2">
-              <Label>{ar ? "رابط (اختياري)" : "Deep Link (optional)"}</Label>
+              <Label>{ar ? "رابط مخصص (اختياري — يتجاوز اختيار الصفحة)" : "Custom Deep Link (optional — overrides page)"}</Label>
               <Input
                 placeholder="/umrah/track/UM-2025-000000"
                 className="rounded-xl"
@@ -366,17 +519,24 @@ export default function NotificationsAdmin() {
                       ? "نص الرسالة سيظهر هنا ليعطي العميل التفاصيل الكاملة."
                       : "Message body will appear here to give the customer full details.")}
                 </p>
+                {imageUrl && (
+                  <img src={imageUrl} alt="" className="w-full max-h-36 object-cover rounded-xl mt-2" />
+                )}
                 <div className="text-[10px] text-muted-foreground/60 mt-3 flex justify-between">
                   <span>{ar ? "الآن" : "Just now"}</span>
                   <span className="inline-flex items-center gap-1">
                     <Users className="w-3 h-3" />
                     {audience === "all"
                       ? ar
-                        ? "جميع العملاء"
-                        : "All customers"
-                      : ar
-                        ? `${selectedUserIds.length} عميل`
-                        : `${selectedUserIds.length} user(s)`}
+                        ? "جميع المستخدمين"
+                        : "All users"
+                      : audience === "group"
+                        ? ar
+                          ? `${selectedRoles.length} مجموعة`
+                          : `${selectedRoles.length} group(s)`
+                        : ar
+                          ? `${selectedUserIds.length} عميل`
+                          : `${selectedUserIds.length} user(s)`}
                   </span>
                 </div>
               </div>

@@ -23,16 +23,18 @@ import ConfirmDialog from '@/components/ConfirmDialog';
 import { useColors } from '@/hooks/useColors';
 import { useLanguage } from '@/context/LanguageContext';
 import { getImageSource, getImageUrl } from '@/hooks/useImageUrl';
+import { AppImage } from '@/components/AppImage';
 import {
   useListNotifications,
   useListOffers,
+  useListAppImages,
   useGetCurrentUser,
   useListVisas,
   useListVisaCountries,
   useListVisaApplications,
   useListMyBookings,
 } from '@workspace/api-client-react';
-import type { Offer } from '@workspace/api-client-react';
+import type { Offer, AppImage as AppImageRecord } from '@workspace/api-client-react';
 
 const NAVY = '#0A2342';
 const NAVY_2 = '#163354';
@@ -109,7 +111,7 @@ function OffersCarousel({ offers }: { offers: Offer[] }) {
         >
           {/* Offer photo — right side circular-masked feel per mockup */}
           <View style={styles.slideImageWrap} pointerEvents="none">
-            <Image source={resolveOfferImage(item.imageUrl)} style={styles.slideImage} contentFit="cover" />
+            <AppImage source={resolveOfferImage(item.imageUrl)} style={styles.slideImage} contentFit="cover" />
             <LinearGradient
               colors={['rgba(10,35,66,0.95)', 'rgba(10,35,66,0.35)', 'rgba(10,35,66,0)']}
               start={{ x: 0, y: 0 }}
@@ -188,6 +190,105 @@ function OffersCarousel({ offers }: { offers: Offer[] }) {
 }
 
 /* ---------------------------------------------------------------------------
+ * Admin-managed home banners — image carousel fed by the app_images catalog
+ * (category "home_banner"). Hidden entirely when the catalog is empty; each
+ * slide falls back to the bundled hero image if its remote image fails.
+ * ------------------------------------------------------------------------- */
+function HomeBannersCarousel({ banners }: { banners: AppImageRecord[] }) {
+  const { lang, isRTL } = useLanguage();
+  const listRef = useRef<FlatList<AppImageRecord>>(null);
+  const indexRef = useRef(0);
+  const [index, setIndex] = useState(0);
+
+  const goTo = useCallback(
+    (i: number, animated = true) => {
+      if (banners.length === 0) return;
+      const clamped = ((i % banners.length) + banners.length) % banners.length;
+      indexRef.current = clamped;
+      setIndex(clamped);
+      listRef.current?.scrollToOffset({ offset: clamped * CAROUSEL_W, animated });
+    },
+    [banners.length],
+  );
+
+  useEffect(() => {
+    if (banners.length <= 1) return;
+    const id = setInterval(() => goTo(indexRef.current + 1), AUTO_ADVANCE_MS);
+    return () => clearInterval(id);
+  }, [banners.length, goTo]);
+
+  const onMomentumEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const i = Math.round(e.nativeEvent.contentOffset.x / CAROUSEL_W);
+    indexRef.current = i;
+    setIndex(i);
+  };
+
+  const renderItem = ({ item }: { item: AppImageRecord }) => {
+    const title = lang === 'ar' ? item.titleAr : item.titleEn;
+    const url = getImageUrl(item.imageUrl);
+    return (
+      <Pressable
+        onPress={() => {
+          if (item.linkUrl) router.push(item.linkUrl as never);
+        }}
+        style={{ width: CAROUSEL_W }}
+      >
+        <View style={styles.bannerSlide}>
+          <AppImage
+            source={url ? { uri: url } : undefined}
+            style={StyleSheet.absoluteFill as never}
+            contentFit="cover"
+          />
+          {title ? (
+            <>
+              <LinearGradient
+                colors={['transparent', 'rgba(10,35,66,0.85)']}
+                style={StyleSheet.absoluteFill}
+              />
+              <Text
+                style={[
+                  styles.bannerTitle,
+                  { fontFamily: 'Cairo_700Bold', textAlign: isRTL ? 'right' : 'left' },
+                ]}
+                numberOfLines={2}
+              >
+                {title}
+              </Text>
+            </>
+          ) : null}
+        </View>
+      </Pressable>
+    );
+  };
+
+  return (
+    <View>
+      <FlatList
+        ref={listRef}
+        data={banners}
+        keyExtractor={(b) => String(b.id)}
+        renderItem={renderItem}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        onMomentumScrollEnd={onMomentumEnd}
+        getItemLayout={(_, i) => ({ length: CAROUSEL_W, offset: CAROUSEL_W * i, index: i })}
+      />
+      {banners.length > 1 && (
+        <View style={styles.bannerDots}>
+          {banners.map((_, i) => (
+            <View
+              key={i}
+              style={[styles.bannerDot, i === index && styles.bannerDotActive]}
+            />
+          ))}
+        </View>
+      )}
+    </View>
+  );
+}
+
+/* ---------------------------------------------------------------------------
  * Services 2x2 grid.
  * ------------------------------------------------------------------------- */
 type ServiceDef = {
@@ -196,6 +297,8 @@ type ServiceDef = {
   descKey: string;
   icon: keyof typeof Ionicons.glyphMap;
   image: ImageSourcePropType;
+  /** Local/bundled fallback shown if the (possibly remote) image fails. */
+  fallbackImage?: ImageSourcePropType;
   route: string;
   distinctive?: boolean;
 };
@@ -217,7 +320,7 @@ function ServiceCard({ service }: { service: ServiceDef }) {
     >
       {/* Background image */}
       <View style={StyleSheet.absoluteFillObject}>
-        <Image source={service.image} style={StyleSheet.absoluteFill as never} contentFit="cover" />
+        <AppImage source={service.image} fallback={service.fallbackImage ?? service.image} style={StyleSheet.absoluteFill as never} contentFit="cover" />
         {/* Two-stop gradient: top transparent → bottom dark navy */}
         <LinearGradient
           colors={['rgba(8,28,58,0.08)', 'rgba(8,28,58,0.55)', 'rgba(8,28,58,0.96)']}
@@ -276,6 +379,9 @@ export default function HomeScreen() {
   useGetCurrentUser();
   const { data: notifications, refetch: refetchNotifs } = useListNotifications();
   const { data: offers, refetch: refetchOffers } = useListOffers();
+  // Admin-managed image catalog (service cards, banners) — falls back to
+  // bundled defaults when a category is empty or the request fails.
+  const { data: appImages, refetch: refetchAppImages } = useListAppImages();
   const { refetch: refetchVisas } = useListVisas();
   const { refetch: refetchCountries } = useListVisaCountries({ activeOnly: true });
   const { refetch: refetchApps } = useListVisaApplications();
@@ -292,14 +398,40 @@ export default function HomeScreen() {
     return [...list].sort((a, b) => a.sortOrder - b.sortOrder);
   }, [offers]);
 
-  const services: ServiceDef[] = useMemo(
-    () => [
+  // Admin-managed service card images override the bundled defaults. A card is
+  // assigned via the explicit service key: relatedEntityType "service" +
+  // relatedEntityId = one of flights/hotels/evisas(visas)/umrah/programs.
+  // Same convention as the web client.
+  const serviceCardImages = useMemo(
+    () => (appImages || []).filter((i: AppImageRecord) => i.category === 'service_card'),
+    [appImages],
+  );
+
+  // Admin-managed home banners (scheduling/activation already enforced by the
+  // public API). Hidden when empty — no bundled demo banners.
+  const homeBanners = useMemo(
+    () => (appImages || []).filter((i: AppImageRecord) => i.category === 'home_banner'),
+    [appImages],
+  );
+
+  const services: ServiceDef[] = useMemo(() => {
+    const managedImage = (key: string, fallback: ImageSourcePropType): { image: ImageSourcePropType; fallbackImage: ImageSourcePropType } => {
+      const managed = serviceCardImages.find(
+        (i: AppImageRecord) => i.relatedEntityType === 'service' && i.relatedEntityId === key,
+      );
+      if (managed) {
+        const url = getImageUrl(managed.imageUrl);
+        if (url) return { image: { uri: url }, fallbackImage: fallback };
+      }
+      return { image: fallback, fallbackImage: fallback };
+    };
+    return [
       {
         key: 'flights',
         titleKey: 'home.services.flights.title',
         descKey: 'home.services.flights.desc',
         icon: 'airplane-outline',
-        image: FLIGHTS_IMG,
+        ...managedImage('flights', FLIGHTS_IMG),
         route: '/coming-soon?service=flights',
       },
       {
@@ -307,7 +439,7 @@ export default function HomeScreen() {
         titleKey: 'home.services.hotels.title',
         descKey: 'home.services.hotels.desc',
         icon: 'bed-outline',
-        image: HOTELS_IMG,
+        ...managedImage('hotels', HOTELS_IMG),
         route: '/coming-soon?service=hotels',
       },
       {
@@ -315,7 +447,7 @@ export default function HomeScreen() {
         titleKey: 'home.services.evisas.title',
         descKey: 'home.services.evisas.desc',
         icon: 'document-text-outline',
-        image: VISAS_IMG,
+        ...managedImage('visas', VISAS_IMG),
         route: '/(tabs)/visas',
       },
       {
@@ -323,13 +455,12 @@ export default function HomeScreen() {
         titleKey: 'home.services.umrah.title',
         descKey: 'home.services.umrah.desc',
         icon: 'moon-outline',
-        image: require('@/assets/images/umrah-hero.jpg'),
+        ...managedImage('umrah', require('@/assets/images/umrah-hero.jpg')),
         route: '/(tabs)/umrah',
         distinctive: true,
       },
-    ],
-    [],
-  );
+    ];
+  }, [serviceCardImages]);
 
   useFocusEffect(
     useCallback(() => {
@@ -347,6 +478,7 @@ export default function HomeScreen() {
     await Promise.all([
       refetchNotifs(),
       refetchOffers(),
+      refetchAppImages(),
       refetchVisas(),
       refetchCountries(),
       refetchApps(),
@@ -382,6 +514,13 @@ export default function HomeScreen() {
             </Pressable>
           </View>
         </View>
+
+        {/* Admin-managed home banners — hidden when the catalog is empty */}
+        {homeBanners.length > 0 && (
+          <View style={[styles.carouselPad, { marginBottom: 14 }]}>
+            <HomeBannersCarousel banners={homeBanners} />
+          </View>
+        )}
 
         {/* Promotional carousel — hidden entirely when no active offers */}
         {activeOffers.length > 0 && (
@@ -456,6 +595,18 @@ const styles = StyleSheet.create({
 
   /* Carousel */
   carouselPad: { paddingHorizontal: H_PAD },
+  bannerSlide: {
+    width: CAROUSEL_W,
+    height: 160,
+    borderRadius: 20,
+    overflow: 'hidden',
+    justifyContent: 'flex-end',
+    backgroundColor: NAVY_2,
+  },
+  bannerTitle: { color: '#FFFFFF', fontSize: 17, padding: 16 },
+  bannerDots: { flexDirection: 'row', justifyContent: 'center', gap: 6, marginTop: 8 },
+  bannerDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(10,35,66,0.25)' },
+  bannerDotActive: { width: 16, backgroundColor: GOLD },
   slide: {
     width: CAROUSEL_W,
     height: 200,

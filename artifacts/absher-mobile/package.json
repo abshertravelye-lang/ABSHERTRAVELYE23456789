@@ -8,6 +8,7 @@
     "build": "node scripts/build.js",
     "serve": "node server/serve.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
+    "apk": "bash scripts/build-apk.sh",
     "eas:build:android:preview": "eas build --platform android --profile preview",
     "eas:build:android:production": "eas build --platform android --profile production",
     "eas:submit:android": "eas submit --platform android --profile production"
@@ -64,6 +65,8 @@
     "@workspace/i18n": "workspace:*",
     "expo-device": "~8.0.10",
     "expo-document-picker": "~14.0.8",
-    "expo-notifications": "~0.32.17"
+    "expo-local-authentication": "~17.0.8",
+    "expo-notifications": "~0.32.17",
+    "expo-secure-store": "~15.0.8"
   }
 }

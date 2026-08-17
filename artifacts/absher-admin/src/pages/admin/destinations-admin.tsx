@@ -5,6 +5,7 @@ import { useTranslation } from "@/hooks/use-translation";
 import { Plus, Edit2, Trash2, Star, X, AlertCircle, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { ImageUpload, resolveImageSrc } from "@/components/image-upload";
 
 interface DestForm {
   nameAr: string; nameEn: string;
@@ -43,18 +44,14 @@ function DestFormModal({ initial, onSave, onCancel, loading }: {
               <label className="block text-sm font-medium mb-1">{ar ? "الاسم بالإنجليزية" : "Name (English)"} *</label>
               <input className="w-full border rounded-xl px-4 py-2.5 text-sm" value={form.nameEn} onChange={e => set("nameEn", e.target.value)} dir="ltr" />
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
+            <div>
                 <label className="block text-sm font-medium mb-1">{ar ? "الدولة" : "Country"} *</label>
                 <input className="w-full border rounded-xl px-4 py-2.5 text-sm" value={form.country} onChange={e => set("country", e.target.value)} />
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">{ar ? "رابط الصورة" : "Image URL"}</label>
-                <input className="w-full border rounded-xl px-4 py-2.5 text-sm" value={form.imageUrl} onChange={e => set("imageUrl", e.target.value)} dir="ltr" />
-              </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">{ar ? "صورة الوجهة" : "Destination Image"}</label>
+              <ImageUpload value={form.imageUrl} onChange={v => set("imageUrl", v)} aspectRatio="16/9" />
             </div>
-          </div>
-          {form.imageUrl && <img src={form.imageUrl} alt="" className="w-full h-36 object-cover rounded-xl border" onError={e => (e.currentTarget.style.display = "none")} />}
           <div>
             <label className="block text-sm font-medium mb-1">{ar ? "الوصف بالعربية" : "Description (Arabic)"}</label>
             <textarea rows={3} className="w-full border rounded-xl px-4 py-2.5 text-sm resize-none" value={form.descriptionAr} onChange={e => set("descriptionAr", e.target.value)} />
@@ -69,6 +66,7 @@ function DestFormModal({ initial, onSave, onCancel, loading }: {
             </div>
             <span className="text-sm font-medium text-amber-800">{ar ? "وجهة شائعة (تظهر في الصفحة الرئيسية)" : "Popular (shown on homepage)"}</span>
           </label>
+          </div>
         </div>
         <div className="p-4 sm:p-6 border-t flex gap-3 justify-end sticky bottom-0 bg-white sm:rounded-b-2xl">
           <Button variant="outline" onClick={onCancel}>{ar ? "إلغاء" : "Cancel"}</Button>
@@ -140,7 +138,7 @@ export default function DestinationsAdmin() {
           destinations.map((dest) => (
             <div key={dest.id} className="bg-card rounded-2xl border border-card-border overflow-hidden shadow-sm hover:shadow-md transition-shadow">
               <div className="relative h-44">
-                <img src={dest.imageUrl || "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=800"} alt="" className="w-full h-full object-cover" />
+                <img src={resolveImageSrc(dest.imageUrl) || "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=800"} alt="" className="w-full h-full object-cover" onError={e => { (e.currentTarget as HTMLImageElement).src = "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=800"; }} />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                 {dest.popular && (
                   <div className="absolute top-3 end-3 bg-amber-400 text-amber-900 text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1">

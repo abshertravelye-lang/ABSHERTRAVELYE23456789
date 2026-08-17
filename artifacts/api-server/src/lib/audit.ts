@@ -1,7 +1,14 @@
 import type { Request } from "express";
 import { db, auditLogsTable } from "@workspace/db";
 
-/** Fire-and-forget audit log entry. Never throws. */
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Fire-and-forget audit log entry. Never throws.
+ *
+ * audit_logs.entity_id is a uuid column; non-UUID entity ids (integer PKs)
+ * are moved into the newValue JSON payload instead so the insert never fails.
+ */
 export function logAudit(
   req: Request,
   action: string,
@@ -13,14 +20,20 @@ export function logAudit(
     newValue?: unknown;
   } = {},
 ): void {
+  const isUuid = opts.entityId != null && UUID_RE.test(opts.entityId);
+  let newValue = opts.newValue ?? null;
+  if (opts.entityId != null && !isUuid) {
+    const base = typeof newValue === "object" && newValue !== null ? newValue : {};
+    newValue = { ...(base as Record<string, unknown>), entityId: opts.entityId };
+  }
   db.insert(auditLogsTable)
     .values({
       userId: opts.userId ?? req.user?.sub ?? null,
       action,
       entityType: opts.entityType,
-      entityId: opts.entityId,
+      entityId: isUuid ? opts.entityId : null,
       oldValue: opts.oldValue ?? null,
-      newValue: opts.newValue ?? null,
+      newValue,
       ipAddress: req.ip,
       userAgent: req.headers["user-agent"] ?? null,
     })

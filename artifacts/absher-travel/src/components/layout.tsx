@@ -3,7 +3,7 @@ import { useTranslation } from "@/hooks/use-translation";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Globe, Menu, X, User, LogOut, Mail, MessageCircle, Headphones, Building2 } from "lucide-react";
-import logo from "@assets/absher-business-logo.png";
+import logoMark from "@assets/absher-business-logo.png";
 import { useState } from "react";
 import { AppDownloadLinks } from "@/components/app-download-links";
 import { LogoutConfirmDialog } from "@/components/logout-confirm-dialog";
@@ -96,11 +96,21 @@ export function Layout({ children }: { children: React.ReactNode }) {
       {/* Main Navbar */}
       <header className="bg-white border-b sticky top-0 z-50">
         <div className="container mx-auto px-4 h-20 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <img src={logo} alt="Absher Travel Logo" className="h-16 w-36 object-contain" />
+          <Link href="/" className="flex items-center gap-4" aria-label="ABSHER TRAVEL">
+            {/* Icon mark — standalone, no background */}
+            <img
+              src={logoMark}
+              alt=""
+              className="h-14 w-14 shrink-0 object-contain mix-blend-multiply"
+            />
+            {/* Divider */}
+            <span className="h-10 w-px bg-slate-200 hidden sm:block shrink-0" aria-hidden="true" />
+            {/* Wordmark */}
             <span className="hidden sm:flex flex-col leading-tight">
               <span className="text-lg font-extrabold tracking-wide text-primary">ABSHER TRAVEL</span>
-              <span className="text-[10px] text-slate-400 font-medium">{language === "ar" ? "شريكك المتميز في السفر" : "Your premium travel partner"}</span>
+              <span className="text-[10px] text-slate-400 font-medium">
+                {language === "ar" ? "شريكك المتميز في السفر" : "Your premium travel partner"}
+              </span>
             </span>
           </Link>
 
@@ -193,7 +203,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <footer className="bg-primary text-primary-foreground pt-16 pb-8">
         <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
           <div className="space-y-4">
-            <img src={logo} alt="Absher Travel Logo" className="h-16 w-52 object-contain" />
+            <div className="flex items-center gap-3">
+              <img src={logoMark} alt="Absher Travel" className="h-16 w-16 object-contain shrink-0" />
+              <div className="flex flex-col leading-tight">
+                <span className="text-lg font-extrabold tracking-wide text-white">ABSHER TRAVEL</span>
+                <span className="text-[10px] text-slate-300 font-medium">
+                  {language === "ar" ? "شريكك المتميز في السفر" : "Your premium travel partner"}
+                </span>
+              </div>
+            </div>
             <p className="text-sm text-slate-300">
               {t("heroSub")}
             </p>

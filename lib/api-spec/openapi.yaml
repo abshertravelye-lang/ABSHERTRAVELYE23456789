@@ -12,6 +12,8 @@ tags:
     description: Health operations
   - name: offers
     description: Travel offers
+  - name: app-images
+    description: Unified admin-managed app image catalog (banners, service cards, promos)
   - name: destinations
     description: Tourist destinations
   - name: bookings
@@ -24,6 +26,8 @@ tags:
     description: Visa custom application form fields
   - name: programs
     description: Tourist programs
+  - name: program-bookings
+    description: Tourism program booking requests (in-platform, replaces WhatsApp)
   - name: contact
     description: Contact messages
   - name: dashboard
@@ -168,6 +172,101 @@ paths:
       operationId: deleteOffer
       tags: [offers]
       summary: Delete an offer
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /app-images:
+    get:
+      operationId: listAppImages
+      tags: [app-images]
+      summary: List active app images within their schedule window, ordered by sortOrder
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of active app images
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AppImage"
+    post:
+      operationId: createAppImage
+      tags: [app-images]
+      summary: Create an app image (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AppImageInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AppImage"
+
+  /app-images/admin/list:
+    get:
+      operationId: listAppImagesAdmin
+      tags: [app-images]
+      summary: List all app images (admin, includes inactive/out-of-window)
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of all app images
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AppImage"
+
+  /app-images/{id}:
+    patch:
+      operationId: updateAppImage
+      tags: [app-images]
+      summary: Update an app image (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AppImageUpdate"
+      responses:
+        "200":
+          description: Updated app image
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AppImage"
+    delete:
+      operationId: deleteAppImage
+      tags: [app-images]
+      summary: Delete an app image (admin)
       parameters:
         - name: id
           in: path
@@ -356,6 +455,121 @@ paths:
       responses:
         "204":
           description: Deleted
+
+  /program-bookings:
+    get:
+      operationId: listMyProgramBookings
+      tags: [program-bookings]
+      summary: List the authenticated customer's program booking requests
+      responses:
+        "200":
+          description: The customer's booking requests, newest first
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProgramBooking"
+    post:
+      operationId: createProgramBooking
+      tags: [program-bookings]
+      summary: Submit a program booking request (auth required)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProgramBookingInput"
+      responses:
+        "201":
+          description: Booking request created with an official TRV reference number
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProgramBooking"
+
+  /program-bookings/{id}:
+    get:
+      operationId: getProgramBooking
+      tags: [program-bookings]
+      summary: Get one booking request (owner or staff)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Booking request details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProgramBooking"
+
+  /program-bookings/{id}/cancel:
+    post:
+      operationId: cancelProgramBooking
+      tags: [program-bookings]
+      summary: Customer cancels their own booking request (only before confirmation)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Cancelled booking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProgramBooking"
+
+  /admin/program-bookings:
+    get:
+      operationId: listProgramBookingsAdmin
+      tags: [program-bookings]
+      summary: List all program booking requests (staff with bookings permission)
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: "#/components/schemas/ProgramBookingStatus"
+      responses:
+        "200":
+          description: All booking requests, newest first
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProgramBooking"
+
+  /admin/program-bookings/{id}/status:
+    patch:
+      operationId: updateProgramBookingStatus
+      tags: [program-bookings]
+      summary: Update a booking request status (staff); notifies the customer
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProgramBookingStatusUpdate"
+      responses:
+        "200":
+          description: Updated booking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProgramBooking"
 
   /visa-countries:
     get:
@@ -1651,6 +1865,43 @@ paths:
                 properties:
                   updated: { type: integer }
 
+  /notifications/unread-count:
+    get:
+      operationId: getUnreadNotificationCount
+      tags: [notifications]
+      summary: Count of the authenticated user's unread notifications (app-icon badge)
+      responses:
+        "200":
+          description: Unread count
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [unread]
+                properties:
+                  unread: { type: integer }
+
+  /notifications/{id}:
+    delete:
+      operationId: deleteNotification
+      tags: [notifications]
+      summary: Delete one of the authenticated user's notifications
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [deleted]
+                properties:
+                  deleted: { type: integer }
+
   /notifications/send:
     post:
       operationId: sendNotification
@@ -1733,6 +1984,40 @@ paths:
                 required: [deleted]
                 properties:
                   deleted: { type: integer }
+
+  /notification-preferences:
+    get:
+      operationId: getNotificationPreferences
+      tags: [notifications]
+      security:
+        - bearerAuth: []
+      summary: Get the authenticated user's notification preferences
+      responses:
+        "200":
+          description: Preferences (defaults if none saved yet)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationPreferences"
+    put:
+      operationId: updateNotificationPreferences
+      tags: [notifications]
+      security:
+        - bearerAuth: []
+      summary: Update (upsert) the authenticated user's notification preferences
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NotificationPreferencesUpdate"
+      responses:
+        "200":
+          description: Updated preferences
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationPreferences"
 
   # ── EMPLOYEES / STAFF ────────────────────────────────────────────────────
 
@@ -2496,6 +2781,184 @@ paths:
         "404":
           description: Not found
 
+  # ── Payments & wallet ──────────────────────────────────────────────────────
+  /payment-config:
+    get:
+      operationId: getPaymentConfig
+      tags: [payments]
+      summary: Public payment config — wallet flag + active payment methods (sorted)
+      responses:
+        "200":
+          description: Payment configuration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentConfig"
+
+  /wallet:
+    get:
+      operationId: getMyWallet
+      tags: [payments]
+      summary: Authenticated user's wallet (balance + recent transactions)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Wallet state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WalletResponse"
+
+  /admin/payment-methods:
+    get:
+      operationId: listAdminPaymentMethods
+      tags: [payments]
+      summary: All payment methods including inactive (staff, payments permission)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Payment methods
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PaymentMethod"
+    post:
+      operationId: createPaymentMethod
+      tags: [payments]
+      summary: Create a payment method
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentMethodInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentMethod"
+        "400":
+          description: Invalid input
+
+  /admin/payment-methods/reorder:
+    put:
+      operationId: reorderPaymentMethods
+      tags: [payments]
+      summary: Bulk reorder payment methods
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [order]
+              properties:
+                order:
+                  type: array
+                  items:
+                    type: object
+                    required: [id, sortOrder]
+                    properties:
+                      id: { type: integer }
+                      sortOrder: { type: integer }
+      responses:
+        "200":
+          description: Reordered list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PaymentMethod"
+
+  /admin/payment-methods/{id}:
+    put:
+      operationId: updatePaymentMethod
+      tags: [payments]
+      summary: Update a payment method (partial)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentMethodUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentMethod"
+        "404":
+          description: Not found
+    delete:
+      operationId: deletePaymentMethod
+      tags: [payments]
+      summary: Delete a payment method
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Deleted
+        "404":
+          description: Not found
+
+  /admin/wallet-settings:
+    get:
+      operationId: getWalletSettings
+      tags: [payments]
+      summary: Wallet feature flag (staff)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Wallet settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WalletSettings"
+    put:
+      operationId: updateWalletSettings
+      tags: [payments]
+      summary: Enable/disable the wallet feature globally
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WalletSettings"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WalletSettings"
+
 components:
   schemas:
     HealthStatus:
@@ -2591,6 +3054,56 @@ components:
         duration: { type: string }
         destination: { type: string }
         featured: { type: boolean }
+
+    AppImage:
+      type: object
+      required: [id, category, imageUrl, sortOrder, isActive, createdAt, updatedAt]
+      properties:
+        id: { type: integer }
+        category: { type: string }
+        titleAr: { type: ["string", "null"] }
+        titleEn: { type: ["string", "null"] }
+        imageUrl: { type: string }
+        linkUrl: { type: ["string", "null"] }
+        relatedEntityType: { type: ["string", "null"] }
+        relatedEntityId: { type: ["string", "null"] }
+        sortOrder: { type: integer }
+        startDate: { type: ["string", "null"] }
+        endDate: { type: ["string", "null"] }
+        isActive: { type: boolean }
+        createdAt: { type: string }
+        updatedAt: { type: string }
+
+    AppImageInput:
+      type: object
+      required: [category, imageUrl]
+      properties:
+        category: { type: string, minLength: 1 }
+        titleAr: { type: ["string", "null"] }
+        titleEn: { type: ["string", "null"] }
+        imageUrl: { type: string, minLength: 1 }
+        linkUrl: { type: ["string", "null"] }
+        relatedEntityType: { type: ["string", "null"] }
+        relatedEntityId: { type: ["string", "null"] }
+        sortOrder: { type: integer }
+        startDate: { type: ["string", "null"] }
+        endDate: { type: ["string", "null"] }
+        isActive: { type: boolean }
+
+    AppImageUpdate:
+      type: object
+      properties:
+        category: { type: string, minLength: 1 }
+        titleAr: { type: ["string", "null"] }
+        titleEn: { type: ["string", "null"] }
+        imageUrl: { type: string, minLength: 1 }
+        linkUrl: { type: ["string", "null"] }
+        relatedEntityType: { type: ["string", "null"] }
+        relatedEntityId: { type: ["string", "null"] }
+        sortOrder: { type: integer }
+        startDate: { type: ["string", "null"] }
+        endDate: { type: ["string", "null"] }
+        isActive: { type: boolean }
 
     Destination:
       type: object
@@ -2688,6 +3201,17 @@ components:
         bookingTerms: { type: ["string", "null"] }
         cancellationPolicy: { type: ["string", "null"] }
         destination: { type: ["string", "null"] }
+        roomTypes:
+          type: array
+          items: { type: string }
+        meals: { type: ["string", "null"] }
+        transport: { type: ["string", "null"] }
+        tours:
+          type: array
+          items: { type: string }
+        programDate: { type: ["string", "null"] }
+        notesAr: { type: ["string", "null"] }
+        notesEn: { type: ["string", "null"] }
         status:
           type: string
           enum: [active, featured, new, special_offer, expired, hidden]
@@ -2735,6 +3259,17 @@ components:
         bookingTerms: { type: string }
         cancellationPolicy: { type: string }
         destination: { type: string }
+        roomTypes:
+          type: array
+          items: { type: string }
+        meals: { type: string }
+        transport: { type: string }
+        tours:
+          type: array
+          items: { type: string }
+        programDate: { type: string }
+        notesAr: { type: string }
+        notesEn: { type: string }
         status:
           type: string
           enum: [active, featured, new, special_offer, expired, hidden]
@@ -2779,11 +3314,101 @@ components:
         bookingTerms: { type: string }
         cancellationPolicy: { type: string }
         destination: { type: string }
+        roomTypes:
+          type: array
+          items: { type: string }
+        meals: { type: string }
+        transport: { type: string }
+        tours:
+          type: array
+          items: { type: string }
+        programDate: { type: string }
+        notesAr: { type: string }
+        notesEn: { type: string }
         status:
           type: string
           enum: [active, featured, new, special_offer, expired, hidden]
         featured: { type: boolean }
         isActive: { type: boolean }
+
+    ProgramBookingStatus:
+      type: string
+      enum: [draft, submitted, under_review, awaiting_availability, awaiting_payment, paid, confirmed, completed, rejected, cancelled]
+
+    ProgramBookingHistoryEntry:
+      type: object
+      required: [status, at]
+      properties:
+        status: { type: string }
+        at: { type: string }
+        note: { type: ["string", "null"] }
+        by: { type: string }
+
+    ProgramBooking:
+      type: object
+      required: [id, requestNumber, userId, programId, programTitleAr, programTitleEn, programPrice, programCurrency, fullName, email, phone, nationality, nationalityCode, adults, children, infants, travelDate, rooms, status, statusHistory, createdAt, updatedAt]
+      properties:
+        id: { type: string }
+        requestNumber: { type: string }
+        userId: { type: string }
+        programId: { type: integer }
+        programTitleAr: { type: string }
+        programTitleEn: { type: string }
+        programDestination: { type: ["string", "null"] }
+        programPrice: { type: number }
+        programCurrency: { type: string }
+        fullName: { type: string }
+        email: { type: string }
+        phone: { type: string }
+        nationality: { type: string }
+        nationalityCode: { type: string }
+        adults: { type: integer }
+        children: { type: integer }
+        infants: { type: integer }
+        travelDate: { type: string }
+        returnDate: { type: ["string", "null"] }
+        rooms: { type: integer }
+        roomType: { type: ["string", "null"] }
+        specialRequirements: { type: ["string", "null"] }
+        customerNotes: { type: ["string", "null"] }
+        status: { $ref: "#/components/schemas/ProgramBookingStatus" }
+        statusHistory:
+          type: array
+          items: { $ref: "#/components/schemas/ProgramBookingHistoryEntry" }
+        adminNotes: { type: ["string", "null"] }
+        createdAt: { type: string }
+        updatedAt: { type: string }
+
+    ProgramBookingInput:
+      type: object
+      required: [programId, fullName, email, phone, nationality, adults, travelDate, rooms]
+      properties:
+        programId: { type: integer }
+        fullName: { type: string, minLength: 3 }
+        email: { type: string, format: email }
+        phone: { type: string, minLength: 6 }
+        nationality:
+          type: string
+          description: ISO alpha-2 code or canonical country name (resolved server-side against the master list)
+        adults: { type: integer, minimum: 1, maximum: 50 }
+        children: { type: integer, minimum: 0, maximum: 50 }
+        infants: { type: integer, minimum: 0, maximum: 20 }
+        travelDate: { type: string, description: "YYYY-MM-DD" }
+        returnDate: { type: string }
+        rooms: { type: integer, minimum: 1, maximum: 50 }
+        roomType: { type: string }
+        specialRequirements: { type: string }
+        customerNotes: { type: string }
+
+    ProgramBookingStatusUpdate:
+      type: object
+      required: [status]
+      properties:
+        status: { $ref: "#/components/schemas/ProgramBookingStatus" }
+        note:
+          type: string
+          description: Optional message to the customer recorded on the timeline and included in the notification
+        adminNotes: { type: string }
 
     VisaCountry:
       type: object
@@ -3209,6 +3834,9 @@ components:
         id: { type: integer }
         trackingNumber: { type: ["string", "null"] }
         visaId: { type: integer }
+        visaType: { type: ["string", "null"] }
+        countryAr: { type: ["string", "null"] }
+        countryEn: { type: ["string", "null"] }
         userId: { type: ["string", "null"] }
         eligibilityPath:
           type: string
@@ -3655,6 +4283,7 @@ components:
         relatedEntityType: { type: ["string", "null"] }
         relatedEntityId: { type: ["string", "null"] }
         url: { type: ["string", "null"] }
+        imageUrl: { type: ["string", "null"] }
         isRead: { type: boolean }
         sentBy: { type: ["string", "null"] }
         createdAt: { type: string }
@@ -3682,6 +4311,26 @@ components:
       properties:
         token: { type: string }
 
+    NotificationPreferences:
+      type: object
+      required: [notifyBooking, notifyVisa, notifyPromo, notifySystem, pushEnabled, updatedAt]
+      properties:
+        notifyBooking: { type: boolean }
+        notifyVisa: { type: boolean }
+        notifyPromo: { type: boolean }
+        notifySystem: { type: boolean }
+        pushEnabled: { type: boolean }
+        updatedAt: { type: string }
+
+    NotificationPreferencesUpdate:
+      type: object
+      properties:
+        notifyBooking: { type: boolean }
+        notifyVisa: { type: boolean }
+        notifyPromo: { type: boolean }
+        notifySystem: { type: boolean }
+        pushEnabled: { type: boolean }
+
     NotificationSendRequest:
       type: object
       required: [titleAr, titleEn, messageAr, messageEn, audience]
@@ -3690,11 +4339,15 @@ components:
         titleEn: { type: string }
         messageAr: { type: string }
         messageEn: { type: string }
-        audience: { type: string, enum: [all, users] }
+        audience: { type: string, enum: [all, users, group] }
         userIds:
           type: array
           items: { type: string }
+        roles:
+          type: array
+          items: { type: string, enum: [customer, agent, admin, super_admin] }
         url: { type: string }
+        imageUrl: { type: string }
 
     NotificationSendResponse:
       type: object
@@ -3948,6 +4601,15 @@ components:
         address: { type: string }
         notes: { type: string }
         status: { type: string, enum: [active, suspended, pending] }
+        agentAccount:
+          type: object
+          description: "Optional primary portal login created atomically with the agency."
+          required: [email, password]
+          properties:
+            email: { type: string }
+            password: { type: string }
+            firstName: { type: string }
+            lastName: { type: string }
 
     AgencyUpdate:
       type: object
@@ -4121,6 +4783,18 @@ components:
         visaImageUrl: { type: string }
         customFieldResponses: { type: object, additionalProperties: true }
         agreedToTerms: { type: boolean }
+        documents:
+          type: array
+          description: "Dynamic document uploads. Entries with a documentKey matching the visa's required-documents config attach to that slot; entries without a matching key create an ad-hoc slot named by nameAr/nameEn."
+          items:
+            type: object
+            required: [storagePath]
+            properties:
+              documentKey: { type: string }
+              nameAr: { type: string }
+              nameEn: { type: string }
+              description: { type: string }
+              storagePath: { type: string }
 
     AgentApplicationUpdate:
       type: object
@@ -4167,6 +4841,91 @@ components:
             rejected: { type: integer }
             inProgress: { type: integer }
             byStatus: { type: object, additionalProperties: { type: integer } }
+
+    PaymentMethod:
+      type: object
+      required: [id, nameAr, nameEn, feePercent, feeFixed, isActive, sortOrder, createdAt, updatedAt]
+      properties:
+        id: { type: integer }
+        nameAr: { type: string }
+        nameEn: { type: string }
+        descriptionAr: { type: ["string", "null"] }
+        descriptionEn: { type: ["string", "null"] }
+        logoUrl: { type: ["string", "null"] }
+        feePercent: { type: number }
+        feeFixed: { type: number }
+        isActive: { type: boolean }
+        sortOrder: { type: integer }
+        createdAt: { type: string }
+        updatedAt: { type: string }
+
+    PaymentMethodInput:
+      type: object
+      required: [nameAr, nameEn]
+      properties:
+        nameAr: { type: string }
+        nameEn: { type: string }
+        descriptionAr: { type: ["string", "null"] }
+        descriptionEn: { type: ["string", "null"] }
+        logoUrl: { type: ["string", "null"] }
+        feePercent: { type: number }
+        feeFixed: { type: number }
+        isActive: { type: boolean }
+        sortOrder: { type: integer }
+
+    PaymentMethodUpdate:
+      type: object
+      properties:
+        nameAr: { type: string }
+        nameEn: { type: string }
+        descriptionAr: { type: ["string", "null"] }
+        descriptionEn: { type: ["string", "null"] }
+        logoUrl: { type: ["string", "null"] }
+        feePercent: { type: number }
+        feeFixed: { type: number }
+        isActive: { type: boolean }
+        sortOrder: { type: integer }
+
+    PaymentConfig:
+      type: object
+      required: [walletEnabled, paymentMethods]
+      properties:
+        walletEnabled: { type: boolean }
+        paymentMethods:
+          type: array
+          items:
+            $ref: "#/components/schemas/PaymentMethod"
+
+    WalletTransaction:
+      type: object
+      required: [id, type, amount, titleAr, titleEn, status, createdAt]
+      properties:
+        id: { type: string }
+        type: { type: string, enum: [credit, debit] }
+        amount: { type: number }
+        titleAr: { type: string }
+        titleEn: { type: string }
+        status: { type: string, enum: [completed, pending, failed] }
+        reference: { type: ["string", "null"] }
+        createdAt: { type: string }
+
+    WalletResponse:
+      type: object
+      required: [enabled, balance, currency, transactions]
+      properties:
+        enabled: { type: boolean }
+        balance: { type: number }
+        currency: { type: string }
+        transactions:
+          type: array
+          items:
+            $ref: "#/components/schemas/WalletTransaction"
+
+    WalletSettings:
+      type: object
+      required: [walletEnabled]
+      properties:
+        walletEnabled: { type: boolean }
 
   securitySchemes:
     bearerAuth:

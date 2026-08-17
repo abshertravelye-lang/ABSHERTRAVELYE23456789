@@ -2,16 +2,12 @@ import { useTranslation } from "@/hooks/use-translation";
 import { useListPrograms } from "@workspace/api-client-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, MapPin, CheckCircle2 } from "lucide-react";
+import { Calendar, MapPin, CheckCircle2, ArrowLeft } from "lucide-react";
+import { Link } from "wouter";
 
 export default function Programs() {
   const { t, language } = useTranslation();
   const { data: programs, isLoading } = useListPrograms();
-
-  const handleWhatsAppBook = (programTitle: string) => {
-    const text = encodeURIComponent(`أرغب في حجز البرنامج السياحي: ${programTitle}`);
-    window.open(`https://wa.me/967779055511?text=${text}`, "_blank");
-  };
 
   return (
     <div className="bg-slate-50 min-h-screen pb-24">
@@ -89,13 +85,12 @@ export default function Programs() {
                     </div>
                   )}
                   
-                  <Button 
-                    className="w-full bg-[#25D366] hover:bg-[#1ebd5a] text-white"
-                    onClick={() => handleWhatsAppBook(language === 'ar' ? program.titleAr : program.titleEn)}
-                  >
-                    <svg xmlns="http://www.0000.com/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 rtl:ml-2 rtl:mr-0"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
-                    {t("bookViaWhatsApp")}
-                  </Button>
+                  <Link href={`/programs/${program.id}`} className="block">
+                    <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
+                      {language === 'ar' ? 'التفاصيل وطلب الحجز' : 'Details & Book'}
+                      <ArrowLeft className={`h-4 w-4 ms-2 ${language === 'ar' ? '' : 'rotate-180'}`} />
+                    </Button>
+                  </Link>
                 </CardContent>
               </Card>
             ))}

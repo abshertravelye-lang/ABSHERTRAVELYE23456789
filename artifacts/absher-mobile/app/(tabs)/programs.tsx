@@ -9,6 +9,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { useListPrograms } from '@workspace/api-client-react';
 import { ProgramCard } from '@/components/ProgramCard';
 import { EmptyState } from '@/components/EmptyState';
+import { SkeletonList } from '@/components/ui/SkeletonLoader';
 
 const SORT_OPTIONS = [
   { value: 'default', labelKey: 'programsTab.sort.newest' },
@@ -88,6 +89,8 @@ export default function ProgramsScreen() {
 
       {error ? (
         <EmptyState icon="globe-outline" title={t('programsTab.loadError')} actionLabel={t('programsTab.retry')} onAction={() => refetch()} />
+      ) : isLoading ? (
+        <SkeletonList count={4} style={{ padding: 16 }} />
       ) : (
         <FlatList
           data={filtered}
@@ -103,9 +106,7 @@ export default function ProgramsScreen() {
           showsVerticalScrollIndicator={false}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#D4AF37" colors={['#D4AF37']} />}
           ListEmptyComponent={
-            isLoading
-              ? <EmptyState loading title="" />
-              : <EmptyState icon="globe-outline" title={t('programsTab.empty')} description={t('programsTab.emptyDesc')} />
+            <EmptyState icon="globe-outline" title={t('programsTab.empty')} description={t('programsTab.emptyDesc')} />
           }
         />
       )}
@@ -118,7 +119,7 @@ const styles = StyleSheet.create({
   header: { paddingHorizontal: 16, paddingBottom: 16, borderBottomLeftRadius: 24, borderBottomRightRadius: 24 },
   headerTitle: { fontSize: 22, color: '#D4AF37', textAlign: 'right' },
   headerSub: { fontSize: 13, color: 'rgba(255,255,255,0.65)', textAlign: 'right', marginTop: 4, marginBottom: 12 },
-  searchBar: { flexDirection: 'row', alignItems: 'center', borderRadius: 14, borderWidth: 1, paddingHorizontal: 14, paddingVertical: 11, gap: 10 },
+  searchBar: { flexDirection: 'row', alignItems: 'center', borderRadius: 14, borderWidth: 1, paddingHorizontal: 14, paddingVertical: 11, gap: 10, minHeight: 48 },
   searchInput: { flex: 1, fontSize: 15, textAlign: 'right' },
   chips: { borderBottomWidth: 1 },
   chip: { borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8 },

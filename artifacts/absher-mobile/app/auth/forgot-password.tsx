@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAwareForm } from '@/components/KeyboardAwareForm';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
@@ -29,8 +30,7 @@ export default function ForgotPasswordScreen() {
   };
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={{ flexGrow: 1 }}>
+    <KeyboardAwareForm style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={{ flexGrow: 1 }}>
         {/* Header */}
         <LinearGradient colors={['#071525', '#052B5B', '#1E3A5F']} style={[styles.header, { paddingTop: insets.top + 16 }]}>
           <Pressable onPress={() => router.back()} style={styles.backBtn}>
@@ -64,6 +64,8 @@ export default function ForgotPasswordScreen() {
                     placeholderTextColor={colors.mutedForeground}
                     autoCapitalize="none"
                     keyboardType="email-address"
+                    returnKeyType="send"
+                    onSubmitEditing={handleSendLink}
                     style={[styles.input, { color: colors.foreground, fontFamily: 'Cairo_400Regular', writingDirection }]}
                   />
                   <Ionicons name="person-circle-outline" size={20} color={colors.mutedForeground} />
@@ -113,8 +115,7 @@ export default function ForgotPasswordScreen() {
             </>
           )}
         </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+    </KeyboardAwareForm>
   );
 }
 

@@ -10,6 +10,8 @@ import { useColors } from '@/hooks/useColors';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import ConfirmDialog from '@/components/ConfirmDialog';
+import { authenticateBiometric, isBiometricAvailable } from '@/lib/biometrics';
+import { haptics } from '@/lib/haptics';
 
 export default function SettingsScreen() {
   const colors = useColors();
@@ -51,15 +53,56 @@ export default function SettingsScreen() {
     Alert.alert(t('settings.comingSoonTitle') as string || 'قريباً', t('settings.comingSoonBody') as string || 'هذه الميزة ستكون متاحة في التحديث القادم.');
   };
 
-  const handleBiometricsToggle = (v: boolean) => {
-    if (v) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  // Alert.alert is a no-op in react-native-web — use window.alert on web.
+  const showAlert = (title: string, message: string) => {
+    if (Platform.OS === 'web') {
+      // eslint-disable-next-line no-alert
+      window.alert(`${title}\n\n${message}`);
+    } else {
+      Alert.alert(title, message);
+    }
+  };
+
+  const handleBiometricsToggle = async (v: boolean) => {
+    if (!v) {
+      // Turning off — no verification needed.
+      updateSetting('biometrics', false);
+      return;
+    }
+    haptics.light();
+    if (Platform.OS === 'web') {
+      showAlert(
+        lang === 'ar' ? 'غير متاح على الويب' : 'Not available on web',
+        lang === 'ar'
+          ? 'قفل البصمة متاح فقط على تطبيق الجوال (iOS و Android).'
+          : 'Biometric lock is only available in the mobile app (iOS & Android).'
+      );
+      return;
+    }
+    const available = await isBiometricAvailable();
+    if (!available) {
+      haptics.warning();
       Alert.alert(
-        (t('common.comingSoon') as string) || 'قريباً',
-        (t('settings.biometricSoonBody') as string) || 'الدخول بالبصمة سيكون متاحاً قريباً.'
+        lang === 'ar' ? 'البصمة غير متاحة' : 'Biometrics unavailable',
+        lang === 'ar'
+          ? 'لم يتم العثور على بصمة أو Face ID مسجلة على هذا الجهاز. فعّلها من إعدادات الجهاز أولاً.'
+          : 'No fingerprint or Face ID is enrolled on this device. Set it up in your device settings first.'
+      );
+      return;
+    }
+    // Verify identity once before enabling the lock.
+    const ok = await authenticateBiometric(lang);
+    if (ok) {
+      haptics.success();
+      updateSetting('biometrics', true);
+      Alert.alert(
+        lang === 'ar' ? 'تم التفعيل' : 'Enabled',
+        lang === 'ar'
+          ? 'سيُطلب منك التحقق بالبصمة أو Face ID عند فتح التطبيق.'
+          : 'You will be asked to verify with biometrics when opening the app.'
       );
     } else {
-      updateSetting('biometrics', v);
+      haptics.error();
     }
   };
 
@@ -188,7 +231,7 @@ export default function SettingsScreen() {
           <Section title={lang === 'ar' ? 'إعدادات الأمان' : 'Security Settings'}>
             <RowItem icon="lock-closed-outline" title={lang === 'ar' ? 'كلمة المرور' : 'Password'} subtitle={lang === 'ar' ? 'قم بتغيير كلمة المرور الخاصة بحسابك' : 'Change your account password'} onPress={() => router.push('/profile-edit' as never)} />
             <RowItem icon="shield-checkmark-outline" title={lang === 'ar' ? 'التحقق بخطوتين' : 'Two-Factor Auth'} subtitle={lang === 'ar' ? 'تفعيل ميزة التحقق بخطوتين لزيادة الحماية' : 'Enable 2FA for extra security'} type="switch" boolValue={true} onToggle={() => {}} />
-            <RowItem icon="finger-print-outline" title={lang === 'ar' ? 'الدخول بالبصمة' : 'Biometrics'} subtitle={lang === 'ar' ? 'استخدام البصمة لتسجيل الدخول' : 'Use biometrics to login'} type="switch" boolValue={settings.biometrics} onToggle={handleBiometricsToggle} />
+            <RowItem icon="finger-print-outline" title={lang === 'ar' ? 'قفل البصمة / Face ID' : 'Biometric Lock'} subtitle={lang === 'ar' ? 'طلب البصمة أو Face ID عند فتح التطبيق' : 'Require biometrics when opening the app'} type="switch" boolValue={settings.biometrics} onToggle={handleBiometricsToggle} />
             <RowItem icon="desktop-outline" title={lang === 'ar' ? 'جلسات الأجهزة' : 'Active Sessions'} subtitle={lang === 'ar' ? 'عرض وإدارة الأجهزة التي تم تسجيل الدخول منها' : 'Manage your active logged-in devices'} />
             <RowItem icon="time-outline" title={lang === 'ar' ? 'تاريخ الدخول' : 'Login History'} subtitle={lang === 'ar' ? 'عرض سجل الدخول إلى حسابك' : 'View your account login history'} isLast />
           </Section>

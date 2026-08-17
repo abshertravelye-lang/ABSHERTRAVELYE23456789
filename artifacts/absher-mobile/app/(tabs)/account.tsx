@@ -9,7 +9,7 @@ import { useColors } from '@/hooks/useColors';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import ConfirmDialog from '@/components/ConfirmDialog';
-import { useListVisaApplications, useListMyBookings } from '@workspace/api-client-react';
+import { useListVisaApplications, useListMyBookings, useGetPaymentConfig } from '@workspace/api-client-react';
 
 const COMPLETION_FIELDS = [
   'firstName', 'lastName', 'phone', 'nationality', 'dateOfBirth',
@@ -28,6 +28,10 @@ export default function AccountScreen() {
   
   const { data: apps, refetch: refetchApps } = useListVisaApplications();
   const { data: bookings, refetch: refetchBookings } = useListMyBookings();
+  // Wallet visibility is controlled from the admin dashboard: when disabled,
+  // the wallet entry disappears from the account menu entirely.
+  const { data: paymentConfig } = useGetPaymentConfig();
+  const walletEnabled = paymentConfig?.walletEnabled !== false;
   const [refreshing, setRefreshing] = useState(false);
 
   const refresh = async () => {
@@ -111,7 +115,9 @@ export default function AccountScreen() {
   const menuItems = [
     { id: 'info', icon: 'person-outline', title: t('account.menu.info') as string, sub: t('account.menu.infoSub') as string, route: '/profile-edit' },
     { id: 'docs', icon: 'id-card-outline', title: t('account.menu.docs') as string, sub: t('account.menu.docsSub') as string, route: '/profile-edit' },
-    { id: 'pay', icon: 'wallet-outline', title: t('account.menu.pay') as string, sub: t('account.menu.paySub') as string, route: '/wallet' },
+    ...(walletEnabled
+      ? [{ id: 'pay', icon: 'wallet-outline', title: t('account.menu.pay') as string, sub: t('account.menu.paySub') as string, route: '/wallet' }]
+      : []),
     { id: 'sec', icon: 'shield-checkmark-outline', title: t('account.menu.sec') as string, sub: t('account.menu.secSub') as string, route: '/settings' },
     { id: 'notif', icon: 'notifications-outline', title: t('account.menu.notif') as string, sub: t('account.menu.notifSub') as string, route: '/notification-settings' },
     { id: 'help', icon: 'headset-outline', title: t('account.menu.help') as string, sub: t('account.menu.helpSub') as string, action: () => router.push('/support-chat') },

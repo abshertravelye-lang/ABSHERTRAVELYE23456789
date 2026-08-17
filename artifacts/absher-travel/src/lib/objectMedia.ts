@@ -88,6 +88,46 @@ export async function uploadFileAuthenticated(file: File): Promise<{ objectPath:
   return res.json();
 }
 
+/**
+ * Upload a file with real progress reporting (XMLHttpRequest — fetch cannot
+ * report upload progress). Refreshes an expired token on 401 and retries once.
+ * Returns the stored object path, or throws with a readable message.
+ */
+export function uploadFileWithProgress(
+  file: File,
+  onProgress: (percent: number) => void,
+): Promise<{ objectPath: string }> {
+  const attempt = (): Promise<{ status: number; body: string }> =>
+    new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", `${apiBase()}/api/storage/uploads`);
+      const token = localStorage.getItem(TOKEN_KEY);
+      if (token) xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100));
+      };
+      xhr.onload = () => resolve({ status: xhr.status, body: xhr.responseText });
+      xhr.onerror = () => reject(new Error("network"));
+      const fd = new FormData();
+      fd.append("file", file);
+      xhr.send(fd);
+    });
+
+  return (async () => {
+    let res = await attempt();
+    if (res.status === 401) {
+      const newToken = await refreshAccessToken();
+      if (newToken) res = await attempt();
+    }
+    if (res.status < 200 || res.status >= 300) {
+      let msg = `upload failed: ${res.status}`;
+      try { msg = JSON.parse(res.body)?.error ?? msg; } catch { /* keep default */ }
+      throw new Error(msg);
+    }
+    return JSON.parse(res.body) as { objectPath: string };
+  })();
+}
+
 /** Normalize a stored value to a canonical "/objects/..." path, else return as-is. */
 export function toObjectPath(url: string): string {
   if (url.startsWith("/objects/")) return url;

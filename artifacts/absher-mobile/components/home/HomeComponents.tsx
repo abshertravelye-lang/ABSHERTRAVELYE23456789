@@ -5,8 +5,8 @@
  */
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
+import { AppImage } from '@/components/AppImage';
 import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColors';
 import { getImageUrl } from '@/hooks/useImageUrl';
@@ -120,12 +120,11 @@ export function CountryCard({ country, onPress }: { country: VisaCountry; onPres
       style={({ pressed }) => [styles.country, { opacity: pressed ? 0.92 : 1, shadowColor: NAVY }, isRTL ? { marginLeft: 12 } : { marginRight: 12 }]}
       onPress={onPress}
     >
-      <Image
+      <AppImage
         source={img ? { uri: img } : require('@/assets/images/hero.jpg')}
         style={StyleSheet.absoluteFillObject}
         contentFit="cover"
         transition={250}
-        cachePolicy="memory-disk"
       />
       <LinearGradient colors={['transparent', 'rgba(5,43,91,0.92)']} style={StyleSheet.absoluteFill} />
       <View style={styles.countryBadge}>

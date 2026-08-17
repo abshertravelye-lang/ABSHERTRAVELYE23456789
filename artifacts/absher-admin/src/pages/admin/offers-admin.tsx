@@ -5,6 +5,7 @@ import { useTranslation } from "@/hooks/use-translation";
 import { Plus, Edit2, Trash2, Star, X, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { ImageUpload, resolveImageSrc } from "@/components/image-upload";
 
 interface OfferForm {
   titleAr: string; titleEn: string;
@@ -74,9 +75,8 @@ function OfferFormModal({ initial, onSave, onCancel, loading }: {
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">{ar ? "رابط الصورة (URL)" : "Image URL"}</label>
-              <input className="w-full border rounded-xl px-4 py-2.5 text-sm" value={form.imageUrl} onChange={e => set("imageUrl", e.target.value)} dir="ltr" />
-              {form.imageUrl && <img src={form.imageUrl} alt="" className="mt-2 w-full h-32 object-cover rounded-xl border" onError={e => (e.currentTarget.style.display = "none")} />}
+              <label className="block text-sm font-medium mb-1">{ar ? "صورة العرض" : "Offer Image"}</label>
+              <ImageUpload value={form.imageUrl} onChange={v => set("imageUrl", v)} aspectRatio="16/9" />
             </div>
             <label className="flex items-center gap-3 bg-amber-50 border border-amber-100 rounded-xl px-4 py-3 cursor-pointer">
               <div onClick={() => set("featured", !form.featured)} className={`w-12 h-6 rounded-full transition-colors flex-shrink-0 ${form.featured ? "bg-amber-400" : "bg-slate-200"} relative`}>
@@ -157,7 +157,7 @@ export default function OffersAdmin() {
           offers.map((offer) => (
             <div key={offer.id} className="bg-card rounded-2xl border border-card-border overflow-hidden shadow-sm hover:shadow-md transition-shadow">
               <div className="relative h-44">
-                <img src={offer.imageUrl || "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=800"} alt="" className="w-full h-full object-cover" />
+                <img src={resolveImageSrc(offer.imageUrl) || "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=800"} alt="" className="w-full h-full object-cover" onError={e => { (e.currentTarget as HTMLImageElement).src = "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=800"; }} />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                 {offer.featured && (
                   <div className="absolute top-3 end-3 bg-amber-400 text-amber-900 text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1">

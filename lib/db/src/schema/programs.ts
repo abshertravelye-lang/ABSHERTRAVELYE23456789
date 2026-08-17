@@ -35,6 +35,20 @@ export const programsTable = pgTable("programs", {
   bookingTerms: text("booking_terms"),
   cancellationPolicy: text("cancellation_policy"),
   destination: text("destination"),
+  // ── Booking-request detail fields (all managed from the admin panel) ──────
+  /** Room type options offered to the customer in the booking form. */
+  roomTypes: text("room_types").array().notNull().default([]),
+  /** Meals plan description (e.g. "إفطار يومي / Half board"). */
+  meals: text("meals"),
+  /** Transportation description (e.g. "مواصلات من وإلى المطار"). */
+  transport: text("transport"),
+  /** Included excursions / tours. */
+  tours: text("tours").array().notNull().default([]),
+  /** Fixed program date (free text or YYYY-MM-DD) when the program runs on a set date. */
+  programDate: text("program_date"),
+  /** Extra admin notes shown to the customer on the program page. */
+  notesAr: text("notes_ar"),
+  notesEn: text("notes_en"),
   status: programStatusEnum("status").notNull().default("active"),
   featured: boolean("featured").notNull().default(false),
   isActive: boolean("is_active").notNull().default(true),
@@ -50,6 +64,8 @@ export const insertProgramSchema = createInsertSchema(programsTable, {
   airlines: z.array(z.string()).optional().default([]),
   includedServices: z.array(z.string()).optional().default([]),
   excludedServices: z.array(z.string()).optional().default([]),
+  roomTypes: z.array(z.string()).optional().default([]),
+  tours: z.array(z.string()).optional().default([]),
 }).omit({ id: true, createdAt: true, updatedAt: true, deletedAt: true });
 
 export const updateProgramSchema = insertProgramSchema.partial();

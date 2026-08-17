@@ -1,6 +1,6 @@
 import { db } from "@workspace/db";
 import { notificationsTable, pushTokensTable, usersTable, notificationPreferencesTable } from "@workspace/db";
-import { and, eq, inArray, isNull } from "drizzle-orm";
+import { and, count, eq, inArray, isNull } from "drizzle-orm";
 import { logger } from "./logger";
 
 /**
@@ -33,6 +33,11 @@ export interface NotifyPayload {
   relatedEntityType?: string | null;
   relatedEntityId?: string | null;
   url?: string | null;
+  /**
+   * Optional PUBLIC image path (e.g. /api/storage/public-objects/notifications/<id>)
+   * rendered in the in-app inbox and attached to the push payload.
+   */
+  imageUrl?: string | null;
   /** Admin user id when this is an admin broadcast; null/undefined for system. */
   sentBy?: string | null;
 }
@@ -42,10 +47,20 @@ interface ExpoMessage {
   title: string;
   body: string;
   sound: "default";
+  /** iOS app-icon badge — the recipient's unread count after this notification. */
+  badge?: number;
+  priority: "high";
+  /** Android channel created client-side with sound + vibration enabled. */
+  channelId: "default";
+  /** iOS: allow a service extension to attach rich media (harmless without one). */
+  mutableContent?: boolean;
+  /** Android rich image (Expo push `richContent`). */
+  richContent?: { image: string };
   data: {
     relatedEntityType?: string | null;
     relatedEntityId?: string | null;
     url?: string | null;
+    imageUrl?: string | null;
   };
 }
 
@@ -193,6 +208,46 @@ async function sendExpoPush(messages: Array<ExpoMessage>): Promise<void> {
 }
 
 /**
+ * Resolve a notification image path to an absolute HTTPS URL for the push
+ * payload. Relative public paths (/api/storage/public-objects/...) are turned
+ * absolute using the app's public domain; already-absolute URLs pass through.
+ * Returns undefined when no domain is available (push still sends, no image).
+ */
+function absoluteImageUrl(imageUrl?: string | null): string | undefined {
+  if (!imageUrl) return undefined;
+  if (/^https?:\/\//i.test(imageUrl)) return imageUrl;
+  const domain =
+    process.env.PUBLIC_APP_DOMAIN ||
+    (process.env.REPLIT_DOMAINS ? process.env.REPLIT_DOMAINS.split(",")[0] : "") ||
+    process.env.REPLIT_DEV_DOMAIN ||
+    "";
+  if (!domain) return undefined;
+  return `https://${domain}${imageUrl.startsWith("/") ? "" : "/"}${imageUrl}`;
+}
+
+/**
+ * Load the unread notification count per user (for iOS badge numbers).
+ * Returns a map userId → unread count. Never throws (returns empty map).
+ */
+async function loadUnreadCounts(userIds: string[]): Promise<Map<string, number>> {
+  const map = new Map<string, number>();
+  try {
+    for (let i = 0; i < userIds.length; i += DB_CHUNK) {
+      const slice = userIds.slice(i, i + DB_CHUNK);
+      const rows = await db
+        .select({ userId: notificationsTable.userId, unread: count() })
+        .from(notificationsTable)
+        .where(and(inArray(notificationsTable.userId, slice), eq(notificationsTable.isRead, false)))
+        .groupBy(notificationsTable.userId);
+      for (const row of rows) map.set(row.userId, Number(row.unread));
+    }
+  } catch (err) {
+    logger.error({ err }, "Failed to load unread counts for badge numbers");
+  }
+  return map;
+}
+
+/**
  * Load push tokens for the given recipients and build Expo messages.
  * Never throws.
  */
@@ -214,6 +269,12 @@ async function buildMessagesForRecipients(
       .where(inArray(pushTokensTable.userId, slice));
     tokens.push(...rows);
   }
+  if (tokens.length === 0) return [];
+
+  // Badge = unread count AFTER the in-app row insert (insertInAppRows runs
+  // before push in every caller), so the number matches the inbox.
+  const unreadCounts = await loadUnreadCounts([...new Set(tokens.map((t) => t.userId))]);
+  const pushImage = absoluteImageUrl(payload.imageUrl);
 
   const messages: Array<ExpoMessage> = [];
   for (const t of tokens) {
@@ -223,10 +284,15 @@ async function buildMessagesForRecipients(
       title,
       body,
       sound: "default",
+      badge: unreadCounts.get(t.userId) ?? undefined,
+      priority: "high",
+      channelId: "default",
+      ...(pushImage ? { mutableContent: true, richContent: { image: pushImage } } : {}),
       data: {
         relatedEntityType: payload.relatedEntityType ?? null,
         relatedEntityId: payload.relatedEntityId ?? null,
         url: payload.url ?? null,
+        imageUrl: payload.imageUrl ?? null,
       },
     });
   }
@@ -246,6 +312,7 @@ async function insertInAppRows(userIds: Array<string>, payload: NotifyPayload): 
     relatedEntityType: payload.relatedEntityType ?? null,
     relatedEntityId: payload.relatedEntityId ?? null,
     url: payload.url ?? null,
+    imageUrl: payload.imageUrl ?? null,
     sentBy: payload.sentBy ?? null,
     isRead: false,
   }));
@@ -321,6 +388,45 @@ export async function notifyManyUsers(userIds: Array<string>, payload: NotifyPay
     return recipients.length;
   } catch (err) {
     logger.error({ err }, "notifyManyUsers failed");
+    return 0;
+  }
+}
+
+/**
+ * Notify every active, non-deleted user with one of the given roles (group
+ * targeting, e.g. all customers or all agents). Records in-app rows for ALL
+ * matched users, pushes only to those opted in for the category.
+ */
+export async function notifyUsersByRole(
+  roles: Array<"customer" | "agent" | "admin" | "super_admin">,
+  payload: NotifyPayload,
+): Promise<number> {
+  try {
+    if (roles.length === 0) return 0;
+    const recipients: Array<Recipient> = await db
+      .select({ userId: usersTable.id, preferredLanguage: usersTable.preferredLanguage })
+      .from(usersTable)
+      .where(
+        and(
+          eq(usersTable.isActive, true),
+          isNull(usersTable.deletedAt),
+          inArray(usersTable.role, roles),
+        ),
+      );
+    if (recipients.length === 0) return 0;
+
+    await insertInAppRows(recipients.map((r) => r.userId), payload);
+
+    const category = entityTypeToCategory(payload.relatedEntityType);
+    const prefsMap = await loadPreferences(recipients.map((r) => r.userId));
+    const pushRecipients = filterForPush(recipients, prefsMap, category);
+    if (pushRecipients.length > 0) {
+      const messages = await buildMessagesForRecipients(pushRecipients, payload);
+      void sendExpoPush(messages);
+    }
+    return recipients.length;
+  } catch (err) {
+    logger.error({ err }, "notifyUsersByRole failed");
     return 0;
   }
 }

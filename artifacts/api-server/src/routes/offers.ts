@@ -12,6 +12,7 @@ import {
 } from "@workspace/api-zod";
 
 import { requireAuth, requirePermission } from "../middleware/auth";
+import { notifyAllActiveUsers } from "../lib/notify";
 
 const router = Router();
 
@@ -87,6 +88,27 @@ router.post("/offers", requireAuth, requirePermission("visa_config"), async (req
     if (typeof data.endDate === "string") data.endDate = new Date(data.endDate);
     const [row] = await db.insert(offersTable).values(data as any).returning();
     res.status(201).json(toResponse(row));
+
+    // Fire-and-forget: notify all active users about the new offer — but only
+    // when it is immediately visible (active and within its date window).
+    const now = new Date();
+    const visible =
+      row.isActive &&
+      (!row.startDate || row.startDate <= now) &&
+      (!row.endDate || row.endDate >= now);
+    if (visible) {
+      const nameAr = row.titleAr || row.titleEn || "";
+      const nameEn = row.titleEn || row.titleAr || "";
+      void notifyAllActiveUsers({
+        titleAr: "عرض جديد متاح 🎉",
+        titleEn: "New offer available 🎉",
+        messageAr: `تم إضافة عرض جديد: ${nameAr}. اكتشف التفاصيل الآن.`,
+        messageEn: `A new offer has been added: ${nameEn}. Check it out now.`,
+        relatedEntityType: "offer",
+        relatedEntityId: String(row.id),
+        imageUrl: row.imageUrl ?? null,
+      });
+    }
   } catch (e) {
     req.log.error(e);
     res.status(400).json({ error: "Invalid input" });

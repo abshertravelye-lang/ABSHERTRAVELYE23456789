@@ -2,9 +2,9 @@
  * Push notification registration for ABSHER TRAVEL.
  *
  * IMPORTANT: Everything here is wrapped in try/catch and MUST fail silently.
- * Expo Go on SDK 53+ does not support remote push notifications on Android, so
- * calling getExpoPushTokenAsync there will throw — we swallow the error and
- * never crash the app.
+ * Expo Go on SDK 53+ does not support remote push notifications on Android —
+ * the expo-notifications module is loaded lazily via getNotifications() so it
+ * is never even evaluated there (importing it logs a hard ERROR in Expo Go).
  *
  * - registerForPush(): native-only. Requests permission, gets the Expo push
  *   token, and POSTs it to /push-tokens via the generated client.
@@ -13,9 +13,9 @@
  */
 import { Platform } from 'react-native';
 import * as Device from 'expo-device';
-import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getNotifications } from './notificationsModule';
 import {
   registerPushToken,
   deletePushToken,
@@ -26,6 +26,45 @@ const STORED_TOKEN_KEY = '@absher_push_token';
 
 // Module-state cache so unregisterPush works even if AsyncStorage is empty.
 let cachedToken: string | null = null;
+
+/**
+ * Ensure the Android "default" notification channel exists with MAX importance,
+ * sound and vibration — required for heads-up banners, lock-screen display and
+ * sound on Android 8+. Safe to call repeatedly; no-op on iOS/web/Expo Go.
+ */
+export async function ensureAndroidChannel(): Promise<void> {
+  try {
+    if (Platform.OS !== 'android') return;
+    const Notifications = getNotifications();
+    if (!Notifications) return;
+    await Notifications.setNotificationChannelAsync('default', {
+      name: 'Default',
+      importance: Notifications.AndroidImportance.MAX,
+      sound: 'default',
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: '#0A2342',
+      enableVibrate: true,
+      showBadge: true,
+      lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+    });
+  } catch {
+    // Fail silently — unsupported runtimes.
+  }
+}
+
+/**
+ * Set the app-icon badge number. No-op on web/Expo Go. Fails silently.
+ */
+export async function setAppBadgeCount(count: number): Promise<void> {
+  try {
+    if (Platform.OS === 'web') return;
+    const Notifications = getNotifications();
+    if (!Notifications) return;
+    await Notifications.setBadgeCountAsync(Math.max(0, count));
+  } catch {
+    // Fail silently.
+  }
+}
 
 /**
  * Resolve the EAS/Expo projectId used by getExpoPushTokenAsync.
@@ -60,12 +99,19 @@ function resolveProjectId(): string | undefined {
 
 /**
  * Register this device for push notifications and persist the token server-side.
- * Native-only; no-op on web. Fails silently on any error (incl. Expo Go limits).
+ * Native-only; no-op on web and in Expo Go on Android. Fails silently on any error.
  */
 export async function registerForPush(): Promise<void> {
   try {
     if (Platform.OS === 'web') return;
     if (!Device.isDevice) return; // Simulators/emulators cannot get a real token.
+
+    const Notifications = getNotifications();
+    if (!Notifications) return; // Unsupported runtime (e.g. Expo Go on Android).
+
+    // Android 8+: channel must exist BEFORE any notification arrives for
+    // sound/vibration/heads-up to work.
+    await ensureAndroidChannel();
 
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;

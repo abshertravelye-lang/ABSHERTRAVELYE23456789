@@ -1,13 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
-  ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Pressable,
-  ScrollView, StyleSheet, Text, TextInput, View,
+  ActivityIndicator, Platform, Pressable,
+  StyleSheet, Text, TextInput, View,
 } from 'react-native';
+import PhoneDialField, { parseFullPhone, buildFullPhone } from '@/components/PhoneDialField';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { KeyboardAwareForm } from '@/components/KeyboardAwareForm';
 import * as Haptics from 'expo-haptics';
 import * as ImagePicker from 'expo-image-picker';
 import { useColors } from '@/hooks/useColors';
@@ -17,6 +19,7 @@ import { getImageSource } from '@/hooks/useImageUrl';
 import { uploadFile } from '@/lib/uploadFile';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import { useQueryClient } from '@tanstack/react-query';
+import { useToast } from '@/components/ui/Toast';
 import { useOcrPassport, useUpdateProfile, getGetCurrentUserQueryKey } from '@workspace/api-client-react';
 import type { ProfileUpdate, SafeUser } from '@workspace/api-client-react';
 
@@ -50,7 +53,7 @@ async function pickImage(
 ): Promise<ImagePicker.ImagePickerAsset | null> {
   const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
   if (!perm.granted) {
-    Alert.alert(t('profileEdit.permTitle'), t('profileEdit.permBody'));
+    // Permission denied — caller shows Toast
     return null;
   }
   const result = await ImagePicker.launchImageLibraryAsync({
@@ -88,19 +91,28 @@ function SectionCard({
   );
 }
 
-function Field({
-  label, value, onChange, colors, placeholder, ltr, keyboardType, editable = true,
-}: {
+type FieldProps = {
   label: string; value?: string | null; onChange: (v: string) => void;
   colors: ReturnType<typeof useColors>;
   placeholder?: string; ltr?: boolean;
   keyboardType?: 'default' | 'email-address' | 'phone-pad';
   editable?: boolean;
-}) {
+  /** Focus chaining: "next" keeps the keyboard open and jumps to the next field. */
+  returnKeyType?: 'next' | 'done';
+  onSubmitEditing?: () => void;
+};
+
+// forwardRef enables focus chaining between fields so the keyboard stays
+// open while the user moves through the form with the "next" key.
+const Field = React.forwardRef<TextInput, FieldProps>(function Field({
+  label, value, onChange, colors, placeholder, ltr, keyboardType, editable = true,
+  returnKeyType = 'next', onSubmitEditing,
+}, ref) {
   return (
     <View style={s.field}>
       <Text style={[s.fieldLabel, { color: colors.mutedForeground, fontFamily: 'Cairo_600SemiBold' }]}>{label}</Text>
       <TextInput
+        ref={ref}
         style={[
           s.input,
           {
@@ -118,14 +130,19 @@ function Field({
         keyboardType={keyboardType}
         editable={editable}
         autoCapitalize="none"
+        returnKeyType={returnKeyType}
+        blurOnSubmit={returnKeyType !== 'next'}
+        onSubmitEditing={onSubmitEditing}
       />
     </View>
   );
-}
+});
 
-function DateField(props: Omit<Parameters<typeof Field>[0], 'ltr' | 'placeholder'>) {
-  return <Field {...props} value={(props.value ?? '').split('T')[0]} ltr placeholder="YYYY-MM-DD" />;
-}
+const DateField = React.forwardRef<TextInput, Omit<FieldProps, 'ltr' | 'placeholder'>>(
+  function DateField(props, ref) {
+    return <Field {...props} ref={ref} value={(props.value ?? '').split('T')[0]} ltr placeholder="YYYY-MM-DD" />;
+  },
+);
 
 function YesNo({
   value, onChange, colors,
@@ -238,6 +255,12 @@ export default function ProfileEditScreen() {
   const [profile, setProfile] = useState<ProfileState>({});
   const set = (patch: Partial<ProfileState>) => setProfile((p) => ({ ...p, ...patch }));
 
+  // Dial-code state for phone + WhatsApp (split from stored international value)
+  const [phoneDialCountry, setPhoneDialCountry] = useState('SA');
+  const [phoneLocal, setPhoneLocal] = useState('');
+  const [whatsappDialCountry, setWhatsappDialCountry] = useState('SA');
+  const [whatsappLocal, setWhatsappLocal] = useState('');
+
   // photo state
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [isValidatingPhoto, setIsValidatingPhoto] = useState(false);
@@ -256,11 +279,30 @@ export default function ProfileEditScreen() {
   // success confirmation (branded, replaces native Alert)
   const [savedVisible, setSavedVisible] = useState(false);
 
+  // Focus-chain refs — keyboard stays open while moving between fields.
+  const lastNameRef = useRef<TextInput>(null);
+  const passportNumberRef = useRef<TextInput>(null);
+  const nationalityRef = useRef<TextInput>(null);
+  const dobRef = useRef<TextInput>(null);
+  const passportExpiryRef = useRef<TextInput>(null);
+  const issueCountryRef = useRef<TextInput>(null);
+  const issuePlaceRef = useRef<TextInput>(null);
+  const addressRef = useRef<TextInput>(null);
+
   const ocrMutation = useOcrPassport();
   const updateProfileMutation = useUpdateProfile();
+  const { showToast } = useToast();
 
   useEffect(() => {
     if (!user) return;
+    // Parse stored international numbers into dial-code + local parts
+    const parsedPhone = parseFullPhone(user.phone || '');
+    const parsedWhatsapp = parseFullPhone(user.whatsapp || '');
+    setPhoneDialCountry(parsedPhone.dialCode);
+    setPhoneLocal(parsedPhone.local);
+    setWhatsappDialCountry(parsedWhatsapp.dialCode);
+    setWhatsappLocal(parsedWhatsapp.local);
+
     setProfile({
       firstName: user.firstName || '',
       lastName: user.lastName || '',
@@ -344,7 +386,7 @@ export default function ProfileEditScreen() {
         setIsValidatingPhoto(false);
       }
     } catch {
-      Alert.alert(t('profileEdit.photoUploadFailTitle'), t('profileEdit.photoUploadFailBody'));
+      showToast({ type: 'error', message: t('profileEdit.photoUploadFailBody') });
     } finally {
       setIsUploadingPhoto(false);
     }
@@ -408,7 +450,7 @@ export default function ProfileEditScreen() {
         setIsOcrRunning(false);
       }
     } catch {
-      Alert.alert(t('profileEdit.passportUploadFailTitle'), t('profileEdit.passportUploadFailBody'));
+      showToast({ type: 'error', message: t('profileEdit.passportUploadFailBody') });
     } finally {
       setIsUploadingPassport(false);
     }
@@ -427,7 +469,7 @@ export default function ProfileEditScreen() {
       });
       set({ [key]: objectPath } as Partial<ProfileState>);
     } catch {
-      Alert.alert(t('profileEdit.uploadFailTitle'), t('profileEdit.photoUploadFailBody'));
+      showToast({ type: 'error', message: t('profileEdit.photoUploadFailBody') });
     } finally {
       setBusyDoc(null);
     }
@@ -435,6 +477,13 @@ export default function ProfileEditScreen() {
 
   const handleSave = () => {
     const { email: _email, ...data } = profile;
+    // Merge dial-code + local parts back into full international numbers.
+    // phone is required — keep the stored value if the field was emptied;
+    // whatsapp is optional — send "" explicitly so clearing it persists.
+    const fullPhone = buildFullPhone(phoneDialCountry, phoneLocal);
+    const fullWhatsapp = buildFullPhone(whatsappDialCountry, whatsappLocal);
+    if (fullPhone) data.phone = fullPhone;
+    data.whatsapp = fullWhatsapp;
     updateProfileMutation.mutate(
       { data },
       {
@@ -449,7 +498,8 @@ export default function ProfileEditScreen() {
           setSavedVisible(true);
         },
         onError: () => {
-          Alert.alert(t('profileEdit.errorTitle'), t('profileEdit.saveFailBody'));
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+          showToast({ type: 'error', message: t('profileEdit.saveFailBody') });
         },
       },
     );
@@ -474,23 +524,26 @@ export default function ProfileEditScreen() {
   const passportSource = getImageSource(profile.passportImageUrl);
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <View style={[s.container, { backgroundColor: colors.background }]}>
-        {/* Header */}
-        <LinearGradient colors={['#071525', '#052B5B', '#1E3A5F']} style={[s.header, { paddingTop: (Platform.OS === 'web' ? 24 : insets.top) + 12 }]}>
-          <Pressable onPress={() => router.back()} hitSlop={8} style={s.closeBtn}>
-            <Ionicons name="close" size={24} color="rgba(255,255,255,0.9)" />
-          </Pressable>
-          <Text style={[s.headerTitle, { fontFamily: 'Cairo_700Bold' }]}>{t('profileEdit.header')}</Text>
-          <View style={s.progressRow}>
-            <Text style={[s.progressText, { fontFamily: 'Cairo_600SemiBold' }]}>{completion}%</Text>
-            <View style={s.progressTrack}>
-              <View style={[s.progressFill, { width: `${completion}%` }]} />
-            </View>
+    <View style={[s.container, { backgroundColor: colors.background }]}>
+      {/* Header */}
+      <LinearGradient colors={['#071525', '#052B5B', '#1E3A5F']} style={[s.header, { paddingTop: (Platform.OS === 'web' ? 24 : insets.top) + 12 }]}>
+        <Pressable onPress={() => router.back()} hitSlop={8} style={s.closeBtn}>
+          <Ionicons name="close" size={24} color="rgba(255,255,255,0.9)" />
+        </Pressable>
+        <Text style={[s.headerTitle, { fontFamily: 'Cairo_700Bold' }]}>{t('profileEdit.header')}</Text>
+        <View style={s.progressRow}>
+          <Text style={[s.progressText, { fontFamily: 'Cairo_600SemiBold' }]}>{completion}%</Text>
+          <View style={s.progressTrack}>
+            <View style={[s.progressFill, { width: `${completion}%` }]} />
           </View>
-        </LinearGradient>
+        </View>
+      </LinearGradient>
 
-        <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 110 }}>
+      <KeyboardAwareForm
+        contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 110 }}
+        bottomOffset={24}
+        bottomPadding={insets.bottom + 110}
+      >
           {/* 1 — Personal photo */}
           <SectionCard num={1} title={t('profileEdit.photoTitle')} subtitle={t('profileEdit.photoSubtitle')} colors={colors}>
             {photoRejected && (
@@ -581,11 +634,11 @@ export default function ProfileEditScreen() {
 
             {!!profile.passportImageUrl && !isOcrRunning && (
               <View style={{ marginTop: 14 }}>
-                <Field label={t('profileEdit.firstName')} value={profile.firstName} onChange={(v) => set({ firstName: v })} colors={colors} />
-                <Field label={t('profileEdit.lastName')} value={profile.lastName} onChange={(v) => set({ lastName: v })} colors={colors} />
-                <Field label={t('profileEdit.passportNumber')} value={profile.passportNumber} onChange={(v) => set({ passportNumber: v })} colors={colors} ltr />
-                <Field label={t('profileEdit.nationality')} value={profile.nationality} onChange={(v) => set({ nationality: v })} colors={colors} placeholder={t('profileEdit.nationalityPlaceholder')} />
-                <DateField label={t('profileEdit.dateOfBirth')} value={profile.dateOfBirth} onChange={(v) => set({ dateOfBirth: v })} colors={colors} />
+                <Field label={t('profileEdit.firstName')} value={profile.firstName} onChange={(v) => set({ firstName: v })} colors={colors} onSubmitEditing={() => lastNameRef.current?.focus()} />
+                <Field ref={lastNameRef} label={t('profileEdit.lastName')} value={profile.lastName} onChange={(v) => set({ lastName: v })} colors={colors} onSubmitEditing={() => passportNumberRef.current?.focus()} />
+                <Field ref={passportNumberRef} label={t('profileEdit.passportNumber')} value={profile.passportNumber} onChange={(v) => set({ passportNumber: v })} colors={colors} ltr onSubmitEditing={() => nationalityRef.current?.focus()} />
+                <Field ref={nationalityRef} label={t('profileEdit.nationality')} value={profile.nationality} onChange={(v) => set({ nationality: v })} colors={colors} placeholder={t('profileEdit.nationalityPlaceholder')} onSubmitEditing={() => dobRef.current?.focus()} />
+                <DateField ref={dobRef} label={t('profileEdit.dateOfBirth')} value={profile.dateOfBirth} onChange={(v) => set({ dateOfBirth: v })} colors={colors} returnKeyType="done" />
                 <View style={s.field}>
                   <Text style={[s.fieldLabel, { color: colors.mutedForeground, fontFamily: 'Cairo_600SemiBold' }]}>{t('profileEdit.gender')}</Text>
                   <ChoiceChips
@@ -595,24 +648,41 @@ export default function ProfileEditScreen() {
                     colors={colors}
                   />
                 </View>
-                <DateField label={t('profileEdit.passportIssueDate')} value={profile.passportIssueDate} onChange={(v) => set({ passportIssueDate: v })} colors={colors} />
-                <DateField label={t('profileEdit.passportExpiry')} value={profile.passportExpiryDate} onChange={(v) => set({ passportExpiryDate: v })} colors={colors} />
-                <Field label={t('profileEdit.passportIssueCountry')} value={profile.passportIssueCountry} onChange={(v) => set({ passportIssueCountry: v })} colors={colors} />
-                <Field label={t('profileEdit.passportIssuePlace')} value={profile.passportIssuePlace} onChange={(v) => set({ passportIssuePlace: v })} colors={colors} />
+                <DateField label={t('profileEdit.passportIssueDate')} value={profile.passportIssueDate} onChange={(v) => set({ passportIssueDate: v })} colors={colors} onSubmitEditing={() => passportExpiryRef.current?.focus()} />
+                <DateField ref={passportExpiryRef} label={t('profileEdit.passportExpiry')} value={profile.passportExpiryDate} onChange={(v) => set({ passportExpiryDate: v })} colors={colors} onSubmitEditing={() => issueCountryRef.current?.focus()} />
+                <Field ref={issueCountryRef} label={t('profileEdit.passportIssueCountry')} value={profile.passportIssueCountry} onChange={(v) => set({ passportIssueCountry: v })} colors={colors} onSubmitEditing={() => issuePlaceRef.current?.focus()} />
+                <Field ref={issuePlaceRef} label={t('profileEdit.passportIssuePlace')} value={profile.passportIssuePlace} onChange={(v) => set({ passportIssuePlace: v })} colors={colors} returnKeyType="done" />
               </View>
             )}
           </SectionCard>
 
           {/* 3 — Contact */}
           <SectionCard num={3} title={t('profileEdit.contactTitle')} colors={colors}>
-            <Field label={t('profileEdit.phone')} value={profile.phone} onChange={(v) => set({ phone: v })} colors={colors} ltr keyboardType="phone-pad" placeholder="+9661234567" />
-            <Field label={t('profileEdit.whatsapp')} value={profile.whatsapp} onChange={(v) => set({ whatsapp: v })} colors={colors} ltr keyboardType="phone-pad" placeholder="+9661234567" />
-            <Field label={t('profileEdit.address')} value={profile.address} onChange={(v) => set({ address: v })} colors={colors} />
+            <PhoneDialField
+              label={t('profileEdit.phone')}
+              dialCode={phoneDialCountry}
+              local={phoneLocal}
+              onDialChange={setPhoneDialCountry}
+              onLocalChange={setPhoneLocal}
+              colors={colors}
+              onSubmitEditing={() => addressRef.current?.focus()}
+            />
+            <PhoneDialField
+              label={t('profileEdit.whatsapp')}
+              dialCode={whatsappDialCountry}
+              local={whatsappLocal}
+              onDialChange={setWhatsappDialCountry}
+              onLocalChange={setWhatsappLocal}
+              colors={colors}
+              returnKeyType="next"
+              onSubmitEditing={() => addressRef.current?.focus()}
+            />
+            <Field ref={addressRef} label={t('profileEdit.address')} value={profile.address} onChange={(v) => set({ address: v })} colors={colors} returnKeyType="done" />
             <Field label={t('profileEdit.email')} value={profile.email} onChange={() => {}} colors={colors} ltr editable={false} />
           </SectionCard>
 
           {/* 4 — GCC residency */}
-          <SectionCard num={4} title="إقامة دول مجلس التعاون" subtitle="هل أنت مقيم في إحدى دول مجلس التعاون الخليجي؟" colors={colors}>
+          <SectionCard num={4} title={t('profileEdit.gccTitle')} subtitle={t('profileEdit.gccSubtitle')} colors={colors}>
             <YesNo
               value={profile.isGccResident}
               onChange={(v) => set(v ? { isGccResident: true } : { isGccResident: false, gccResidenceCountry: '', gccResidenceFrontUrl: '', gccResidenceBackUrl: '' })}
@@ -621,13 +691,13 @@ export default function ProfileEditScreen() {
             {profile.isGccResident && (
               <View style={{ marginTop: 14 }}>
                 <View style={s.field}>
-                  <Text style={[s.fieldLabel, { color: colors.mutedForeground, fontFamily: 'Cairo_600SemiBold' }]}>دولة الإقامة</Text>
+                  <Text style={[s.fieldLabel, { color: colors.mutedForeground, fontFamily: 'Cairo_600SemiBold' }]}>{t('profileEdit.gccCountry')}</Text>
                   <ChoiceChips options={GCC_COUNTRIES} value={profile.gccResidenceCountry} onChange={(v) => set({ gccResidenceCountry: v })} colors={colors} />
                 </View>
-                <Field label="رقم الإقامة" value={profile.gccResidenceNumber} onChange={(v) => set({ gccResidenceNumber: v })} colors={colors} ltr />
-                <DateField label="تاريخ الانتهاء" value={profile.gccResidenceExpiry} onChange={(v) => set({ gccResidenceExpiry: v })} colors={colors} />
+                <Field label={t('profileEdit.gccNumber')} value={profile.gccResidenceNumber} onChange={(v) => set({ gccResidenceNumber: v })} colors={colors} ltr />
+                <DateField label={t('profileEdit.gccExpiry')} value={profile.gccResidenceExpiry} onChange={(v) => set({ gccResidenceExpiry: v })} colors={colors} />
                 <DocUpload
-                  label="صورة الإقامة (الوجه الأمامي)"
+                  label={t('profileEdit.gccFront')}
                   value={profile.gccResidenceFrontUrl}
                   busy={busyDoc === 'gccResidenceFrontUrl'}
                   onPick={() => handleDocUpload('gccResidenceFrontUrl')}
@@ -635,7 +705,7 @@ export default function ProfileEditScreen() {
                   colors={colors}
                 />
                 <DocUpload
-                  label="صورة الإقامة (الوجه الخلفي)"
+                  label={t('profileEdit.gccBack')}
                   value={profile.gccResidenceBackUrl}
                   busy={busyDoc === 'gccResidenceBackUrl'}
                   onPick={() => handleDocUpload('gccResidenceBackUrl')}
@@ -647,7 +717,7 @@ export default function ProfileEditScreen() {
           </SectionCard>
 
           {/* 5 — European residency */}
-          <SectionCard num={5} title="الإقامة الأوروبية / تأشيرة شنغن" subtitle="هل لديك إقامة أوروبية أو تأشيرة شنغن سارية؟" colors={colors}>
+          <SectionCard num={5} title={t('profileEdit.euroTitle')} subtitle={t('profileEdit.euroSubtitle')} colors={colors}>
             <YesNo
               value={profile.isEuropeanResident}
               onChange={(v) => set(v ? { isEuropeanResident: true } : { isEuropeanResident: false, europeanDocumentType: '', europeanDocumentUrl: '' })}
@@ -656,12 +726,12 @@ export default function ProfileEditScreen() {
             {profile.isEuropeanResident && (
               <View style={{ marginTop: 14 }}>
                 <View style={s.field}>
-                  <Text style={[s.fieldLabel, { color: colors.mutedForeground, fontFamily: 'Cairo_600SemiBold' }]}>نوع الوثيقة</Text>
+                  <Text style={[s.fieldLabel, { color: colors.mutedForeground, fontFamily: 'Cairo_600SemiBold' }]}>{t('profileEdit.euroDocType')}</Text>
                   <ChoiceChips options={EURO_DOC_TYPES} value={profile.europeanDocumentType} onChange={(v) => set({ europeanDocumentType: v })} colors={colors} />
                 </View>
-                <DateField label="تاريخ الانتهاء" value={profile.europeanDocumentExpiry} onChange={(v) => set({ europeanDocumentExpiry: v })} colors={colors} />
+                <DateField label={t('profileEdit.euroExpiry')} value={profile.europeanDocumentExpiry} onChange={(v) => set({ europeanDocumentExpiry: v })} colors={colors} />
                 <DocUpload
-                  label="صورة الوثيقة"
+                  label={t('profileEdit.euroDocImage')}
                   value={profile.europeanDocumentUrl}
                   busy={busyDoc === 'europeanDocumentUrl'}
                   onPick={() => handleDocUpload('europeanDocumentUrl')}
@@ -671,39 +741,38 @@ export default function ProfileEditScreen() {
               </View>
             )}
           </SectionCard>
-        </ScrollView>
+      </KeyboardAwareForm>
 
-        {/* Save bar */}
-        <View style={[s.saveBar, { paddingBottom: insets.bottom + 12, backgroundColor: colors.background, borderTopColor: colors.border }]}>
-          <Pressable
-            onPress={handleSave}
-            disabled={updateProfileMutation.isPending}
-            style={({ pressed }) => [s.saveBtn, { backgroundColor: GOLD, opacity: pressed || updateProfileMutation.isPending ? 0.85 : 1 }]}
-          >
-            {updateProfileMutation.isPending ? (
-              <ActivityIndicator color={NAVY} />
-            ) : (
-              <Ionicons name="save-outline" size={20} color={NAVY} />
-            )}
-            <Text style={[s.saveBtnText, { fontFamily: 'Cairo_700Bold' }]}>حفظ الملف الشخصي</Text>
-          </Pressable>
-        </View>
-
-        {/* Branded success confirmation — replaces the native Alert. On
-            dismiss it exits the profile screen back to the account tab. */}
-        <ConfirmDialog
-          visible={savedVisible}
-          icon="checkmark-circle-outline"
-          confirmStyle="brand"
-          title="تم حفظ الملف الشخصي"
-          message="تم حفظ بيانات ملفك الشخصي بنجاح."
-          cancelLabel="حسناً"
-          confirmLabel="العودة للحساب"
-          onCancel={handleSavedDismiss}
-          onConfirm={handleSavedDismiss}
-        />
+      {/* Save bar */}
+      <View style={[s.saveBar, { paddingBottom: insets.bottom + 12, backgroundColor: colors.background, borderTopColor: colors.border }]}>
+        <Pressable
+          onPress={handleSave}
+          disabled={updateProfileMutation.isPending}
+          style={({ pressed }) => [s.saveBtn, { backgroundColor: GOLD, opacity: pressed || updateProfileMutation.isPending ? 0.85 : 1 }]}
+        >
+          {updateProfileMutation.isPending ? (
+            <ActivityIndicator color={NAVY} />
+          ) : (
+            <Ionicons name="save-outline" size={20} color={NAVY} />
+          )}
+          <Text style={[s.saveBtnText, { fontFamily: 'Cairo_700Bold' }]}>{t('profileEdit.saveButton')}</Text>
+        </Pressable>
       </View>
-    </KeyboardAvoidingView>
+
+      {/* Branded success confirmation — replaces the native Alert. On
+          dismiss it exits the profile screen back to the account tab. */}
+      <ConfirmDialog
+        visible={savedVisible}
+        icon="checkmark-circle-outline"
+        confirmStyle="brand"
+        title={t('profileEdit.savedTitle')}
+        message={t('profileEdit.savedBody')}
+        cancelLabel={t('profileEdit.savedOk')}
+        confirmLabel={t('profileEdit.savedBack')}
+        onCancel={handleSavedDismiss}
+        onConfirm={handleSavedDismiss}
+      />
+    </View>
   );
 }
 
@@ -730,7 +799,7 @@ const s = StyleSheet.create({
 
   field: { marginBottom: 12 },
   fieldLabel: { fontSize: 12, marginBottom: 6, textAlign: 'right' },
-  input: { borderRadius: 12, borderWidth: 1, paddingHorizontal: 14, paddingVertical: 10, fontSize: 15 },
+  input: { borderRadius: 12, borderWidth: 1, paddingHorizontal: 14, paddingVertical: 10, fontSize: 15, minHeight: 48 },
 
   yesNoRow: { flexDirection: 'row', gap: 10 },
   yesNoBtn: { flex: 1, borderRadius: 14, borderWidth: 2, paddingVertical: 12, alignItems: 'center' },
